@@ -1,0 +1,4 @@
+The Catalogue Homogenisation tool is a library for undertaking the process of
+merging catalogues of earthquakes from different agencies and homogenising them
+into a single “standardised” catalogue of earthquakes for use in hazard model
+development.
