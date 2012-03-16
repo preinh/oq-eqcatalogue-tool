@@ -13,35 +13,82 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with EqCatalogueTool. If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Module :mod:`eq_catalogue_tool.reader` defines classes for reading
+different formats of earthquake catalogues.
+"""
+
 from csv import DictReader
 
-from catalogue import CSV_FIELDNAMES, TRANSF_MAP
+from oq_eqcatalogue_tool.catalogue import CSV_FIELDNAMES, TRANSF_MAP
 
-class EqCatalogueReader(object):
 
+class CsvEqCatalogueReader(object):
+    """
+    EqCatalogueReader reads earthquake
+    events descriptions, defined in a csv file.
+
+    :param fileobj: csv file object
+    :type fileobj: file object
+    """
     def __init__(self, fileobj):
         self.fileobj = fileobj
 
-    def read(self, convert):
+    def read(self, converter):
+        """
+        Read method generates csv entries, after applying
+        defined transformations.
+        """
         reader = DictReader(self.fileobj, fieldnames=CSV_FIELDNAMES)
         for entry in reader:
-            converted_entry = convert.do(entry)
+            converted_entry = converter.convert(entry)
             yield converted_entry
 
 
-class Convert(object):
+class Converter(object):
+    """
+    Converter convertes all fields defined in the entry
+    to the appropriate types, if a conversion for a field
+    is not possible its value is updated to None.
 
-    def __init__(self, conversion_map=TRANSF_MAP):
-        self.conv_map = conversion_map
+    :param conversion_map: defines for every key the list of transformations
+            that are going to be applied.
+    :type conversion_map: dict
+    """
 
-    def do(self, entry):
+    def __init__(self, conversion_map=None):
+        if not conversion_map:
+            self.conv_map = TRANSF_MAP
+        else:
+            self.conv_map = conversion_map
+
+    def convert(self, entry):
+        """
+        Convert all values defined in the entry applying
+        a list of transformations.
+
+        :param entry: csv entry to be converted
+        :type entry: dict
+        :returns: csv entry converted
+        :rtype: dict
+        """
+
         for key, value in entry.iteritems():
             try:
-                transformations = TRANSF_MAP[key]
-                for transf in transformations:
-                    value = transf(value)
-                entry[key] = value
+                entry[key] = self._apply_transformations(key, value)
             except ValueError:
                 entry[key] = None
 
         return entry
+
+    def _apply_transformations(self, key, value):
+        """
+        Apply in sequence the transformations defined
+        in the conversion map `self.conv_map` to the value.
+        """
+
+        transformations = self.conv_map[key]
+        for transf in transformations:
+            value = transf(value)
+
+        return value

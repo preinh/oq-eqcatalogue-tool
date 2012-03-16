@@ -16,17 +16,22 @@
 import unittest
 from StringIO import StringIO
 
-from oq_eqcatalogue_tool.reader import EqCatalogueReader, Convert
-
+from oq_eqcatalogue_tool.reader import EqCatalogueReader, Converter
 
 
 class EqCatalogueReaderTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.fst_row_values = StringIO(
+        self.fst_three_rows = StringIO(
             '1009476,1,1_IDC_ML   ,4644028,2002,9,3,21,37,37.110,1.290,0.950,'
             '25.4812,97.9598,61.5,18.6,73,0.0,,6,,156,7.0500,59.3200,4644028,'
-            '3.90,0.30,1,IDC      ,ML   ,IDC')
+            '3.90,0.30,1,IDC      ,ML   ,IDC' '\n'
+            '1009476,1,1_IDC_mb   ,4644028,2002,9,3,21,37,37.110,1.290,0.950,'
+            '25.4812,97.9598,61.5,18.6,73,0.0,,6,,156,7.0500,59.3200,4644028,'
+            '3.70,0.20,3,IDC      ,mb   ,IDC' '\n'
+            '1009476,1,1_IDC_mb   ,4644028,2002,9,3,21,37,37.110,1.290,0.950,'
+            '25.4812,97.9598,61.5,18.6,73,0.0,,6,,156,7.0500,59.3200,4644028,'
+            '3.70,0.20,3,IDC      ,mb   ,IDC')
 
         self.fst_exp_entry = {'azimuthGap': 156.0, 'solutionAgency': 'IDC',
                                 'mag_agency': 'IDC', 'month': 9,
@@ -44,10 +49,37 @@ class EqCatalogueReaderTestCase(unittest.TestCase):
                                 'magnitude': 3.9, 'eventKey': 1009476,
                                 'magnitudeError': 0.3}
 
-        self.reader = EqCatalogueReader(self.fst_row_values)
-        self.convert = Convert()
+        self.reader = EqCatalogueReader(self.fst_three_rows)
+        self.convert = Converter()
+        self.reader_gen = self.reader.read(self.convert)
+
+    def tearDown(self):
+        self.fst_three_rows.close()
 
     def test_read_eq_entry(self):
-        reader_gen = self.reader.read(self.convert)
-        first_entry = reader_gen.next()
+        first_entry = self.reader_gen.next()
         self.assertEqual(self.fst_exp_entry, first_entry)
+
+    def test_number_generated_entries(self):
+        exp_num_gen_entries = 3
+        num_entries = 0
+        for num_entries, _ in enumerate(self.reader_gen, start=1):
+            print _
+        self.assertEqual(exp_num_gen_entries, num_entries)
+
+
+class ConvertTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.conversion_map = {'a': [int], 'b': [str, str.strip]}
+        self.converter = Converter(conversion_map=self.conversion_map)
+
+    def test_conversion_correct_values_for_keys(self):
+        entry = {'a': '45', 'b': '   hazard'}
+        exp_entry = {'a': 45, 'b': 'hazard'}
+        self.assertEqual(exp_entry, self.converter.convert(entry))
+
+    def test_conversion_incorrect_values_for_keys(self):
+        entry = {'a': '45.78', 'b': 'risk8'}
+        exp_entry = {'a': None, 'b': 'risk8'}
+        self.assertEqual(exp_entry, self.converter.convert(entry))
