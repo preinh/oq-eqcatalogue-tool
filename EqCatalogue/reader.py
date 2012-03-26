@@ -20,7 +20,7 @@ different formats of earthquake catalogues.
 
 from csv import DictReader
 
-from oq_eqcatalogue_tool.catalogue import CSV_FIELDNAMES, TRANSF_MAP
+from EqCatalogue.catalogue import CSV_FIELDNAMES, TRANSF_MAP
 
 
 class CsvEqCatalogueReader(object):

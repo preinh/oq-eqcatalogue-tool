@@ -16,8 +16,8 @@
 import unittest
 from StringIO import StringIO
 
-from oq_eqcatalogue_tool.reader import CsvEqCatalogueReader, Converter
-from oq_eqcatalogue_tool.catalogue import STR_TRANSF, INT_TRANSF, FLOAT_TRANSF
+from EqCatalogue.reader import CsvEqCatalogueReader, Converter
+from EqCatalogue.catalogue import STR_TRANSF, INT_TRANSF, FLOAT_TRANSF
 
 
 class EqCatalogueReaderTestCase(unittest.TestCase):
@@ -72,7 +72,8 @@ class EqCatalogueReaderTestCase(unittest.TestCase):
 class ConvertTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.conversion_map = {'a': INT_TRANSF, 'b': STR_TRANSF}
+        self.conversion_map = {'a': INT_TRANSF,
+            'b': STR_TRANSF, 'c': FLOAT_TRANSF}
         self.converter = Converter(conversion_map=self.conversion_map)
 
     def test_conversion_correct_values_for_keys(self):
@@ -85,7 +86,7 @@ class ConvertTestCase(unittest.TestCase):
         exp_entry = {'a': None, 'b': 'risk8'}
         self.assertEqual(exp_entry, self.converter.convert(entry))
 
-    def test_empty_values(self):
-        entry = {'a': '', 'b': ''}
-        exp_entry = {'a': None, 'b': None}
+    def test_conversion_float_and_empty_value(self):
+        entry = {'b': '', 'c': '45.90'}
+        exp_entry = {'b': None, 'c': 45.90}
         self.assertEqual(exp_entry, self.converter.convert(entry))
