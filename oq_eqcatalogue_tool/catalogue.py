@@ -23,7 +23,12 @@ CSV_FIELDNAMES = ['eventKey', 'solutionKey', 'solutionDesc',
                     'magnitude', 'magnitudeError', 'magStations',
                     'solutionAgency', 'mag_type', 'mag_agency']
 
-STR_TRANSF = [str, str.strip]
+def is_empty_transf(str_value):
+    if len(str_value) == 0:
+        return None
+    return str_value
+
+STR_TRANSF = [str, str.strip, is_empty_transf]
 INT_TRANSF = [int]
 FLOAT_TRANSF = [float]
 

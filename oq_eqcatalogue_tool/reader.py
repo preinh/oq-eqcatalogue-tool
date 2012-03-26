@@ -31,6 +31,7 @@ class CsvEqCatalogueReader(object):
     :param fileobj: csv file object
     :type fileobj: file object
     """
+
     def __init__(self, fileobj):
         self.fileobj = fileobj
 
