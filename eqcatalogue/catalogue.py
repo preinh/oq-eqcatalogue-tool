@@ -23,14 +23,28 @@ CSV_FIELDNAMES = ['eventKey', 'solutionKey', 'solutionDesc',
                     'magnitude', 'magnitudeError', 'magStations',
                     'solutionAgency', 'mag_type', 'mag_agency']
 
-def is_empty_transf(str_value):
-    if len(str_value) == 0:
-        return None
-    return str_value
 
-STR_TRANSF = [str, str.strip, is_empty_transf]
-INT_TRANSF = [int]
-FLOAT_TRANSF = [float]
+def convert_to_int(str_value):
+    value = None
+    try:
+        value = int(str_value)
+    except ValueError:
+        pass
+    return value
+
+
+def convert_to_float(str_value):
+    value = None
+    try:
+        value = float(str_value)
+    except ValueError:
+        pass
+    return value
+
+
+STR_TRANSF = [str.strip]
+INT_TRANSF = [convert_to_int]
+FLOAT_TRANSF = [convert_to_float]
 
 TRANSF_MAP = {'eventKey': INT_TRANSF, 'solutionKey': INT_TRANSF,
                 'solutionDesc': STR_TRANSF, 'originID': INT_TRANSF,
@@ -45,5 +59,5 @@ TRANSF_MAP = {'eventKey': INT_TRANSF, 'solutionKey': INT_TRANSF,
                 'azimuthGap': FLOAT_TRANSF, 'minDistance': FLOAT_TRANSF,
                 'maxDistance': FLOAT_TRANSF, 'solutionID': INT_TRANSF,
                 'magnitude': FLOAT_TRANSF, 'solutionAgency': STR_TRANSF,
-                'mag_type':STR_TRANSF, 'mag_agency': STR_TRANSF,
+                'mag_type': STR_TRANSF, 'mag_agency': STR_TRANSF,
                 'magnitudeError': FLOAT_TRANSF, 'magStations': INT_TRANSF}

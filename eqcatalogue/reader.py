@@ -20,7 +20,7 @@ different formats of earthquake catalogues.
 
 from csv import DictReader
 
-from EqCatalogue.catalogue import CSV_FIELDNAMES, TRANSF_MAP
+from eqcatalogue.catalogue import CSV_FIELDNAMES, TRANSF_MAP
 
 
 class CsvEqCatalogueReader(object):
@@ -75,12 +75,15 @@ class Converter(object):
         """
 
         for key, value in entry.iteritems():
-            try:
-                entry[key] = self._apply_transformations(key, value)
-            except ValueError:
+            if self._empty_field(value):
                 entry[key] = None
+            else:
+                entry[key] = self._apply_transformations(key, value)
 
         return entry
+
+    def _empty_field(self, str_value):
+        return len(str_value.strip()) == 0
 
     def _apply_transformations(self, key, value):
         """

@@ -16,8 +16,8 @@
 import unittest
 from StringIO import StringIO
 
-from EqCatalogue.reader import CsvEqCatalogueReader, Converter
-from EqCatalogue.catalogue import STR_TRANSF, INT_TRANSF, FLOAT_TRANSF
+from eqcatalogue.reader import CsvEqCatalogueReader, Converter
+from eqcatalogue.catalogue import STR_TRANSF, INT_TRANSF, FLOAT_TRANSF
 
 
 class EqCatalogueReaderTestCase(unittest.TestCase):
@@ -53,6 +53,7 @@ class EqCatalogueReaderTestCase(unittest.TestCase):
         self.reader = CsvEqCatalogueReader(self.fst_three_rows)
         self.convert = Converter()
         self.reader_gen = self.reader.read(self.convert)
+        self.maxDiff = None
 
     def tearDown(self):
         self.fst_three_rows.close()
@@ -75,6 +76,7 @@ class ConvertTestCase(unittest.TestCase):
         self.conversion_map = {'a': INT_TRANSF,
             'b': STR_TRANSF, 'c': FLOAT_TRANSF}
         self.converter = Converter(conversion_map=self.conversion_map)
+        self.maxDiff = None
 
     def test_conversion_correct_values_for_keys(self):
         entry = {'a': '45', 'b': '   hazard'}
@@ -83,7 +85,7 @@ class ConvertTestCase(unittest.TestCase):
 
     def test_conversion_incorrect_values_for_keys(self):
         entry = {'a': '45.78', 'b': 'risk8'}
-        exp_entry = {'a': None, 'b': 'risk8'}
+        exp_entry = {'a': 46, 'b': 'risk8'}
         self.assertEqual(exp_entry, self.converter.convert(entry))
 
     def test_conversion_float_and_empty_value(self):
