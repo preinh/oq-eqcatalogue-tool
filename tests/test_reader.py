@@ -85,7 +85,7 @@ class ConvertTestCase(unittest.TestCase):
 
     def test_conversion_incorrect_values_for_keys(self):
         entry = {'a': '45.78', 'b': 'risk8'}
-        exp_entry = {'a': 46, 'b': 'risk8'}
+        exp_entry = {'a': None, 'b': 'risk8'}
         self.assertEqual(exp_entry, self.converter.convert(entry))
 
     def test_conversion_float_and_empty_value(self):
