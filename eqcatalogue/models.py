@@ -84,23 +84,21 @@ we import data from
     def __repr__(self):
         return "Event Source: %s" % self.name
 
-class Agency(BaseMixin, Base):
+class Agency(CatalogueBaseMixin, Base):
     """The agency which recorded and measured the events.
 
-    :py:attribute:: short_name
-    agency short name. e.g. ISC, IDC, DMN
-
     :py:attribute:: name
-    agency long name
+    agency long name, short_name (e.g. ISC, IDC, DMN) should be saved
+    into source_key
 
     :py:attribute:: eventsource
     the source object we have imported the agency from. It is unique
     together with `short_name`
 """
-    short_name = sqlalchemy.Column(sqlalchemy.String(255))
     name = sqlalchemy.Column(sqlalchemy.Unicode, nullable=True)
 
-    eventsource = orm.relationship("Source", backref=orm.backref('agencies', order_by='created_at'))
+    eventsource = orm.relationship("EventSource",
+                                   backref=orm.backref('agencies'))
 
     def __repr__(self):
         if self.name:
@@ -116,7 +114,7 @@ class Event(CatalogueBaseMixin, Base):
     together with `source_key`
 """
 
-    eventsource = orm.relationship("Source", backref=orm.backref('events', order_by='created_at'))
+    eventsource = orm.relationship("EventSource", backref=orm.backref('events'))
 
     def __repr__(self):
         return "Event %s (by %s)" % (self.source_key,
@@ -145,16 +143,18 @@ class MagnitudeMeasure(BaseMixin, Base):
 
     """
 
+    SCALES = ('mL', 'mb', 'Mb', 'Ms', 'md', 'MD', 'MS', 'mb1', 'mb1mx', 'ms1', 'ms1mx')
+
     event_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('catalogue_event.id'))
-    event = orm.relationship("Event", backref=orm.backref('measures', order_by=id))
+    event = orm.relationship("Event", backref=orm.backref('measures'))
 
     agency_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('catalogue_agency.id'))
-    agency = orm.relationship("Agency", backref=orm.backref('measures', order_by=id))
+    agency = orm.relationship("Agency", backref=orm.backref('measures'))
 
     origin_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('catalogue_origin.id'))
-    origin = orm.relationship("Origin", backref=orm.backref('measures', order_by=id))
+    origin = orm.relationship("Origin", backref=orm.backref('measures'))
 
-    scale = sqlalchemy.Column(sqlalchemy.String())
+    scale = sqlalchemy.Enum(SCALES)
     value = sqlalchemy.Column(sqlalchemy.Float())
 
     absolute_error = sqlalchemy.Column(sqlalchemy.Float(), nullable=True)
@@ -162,7 +162,7 @@ class MagnitudeMeasure(BaseMixin, Base):
     def __repr__(self):
         return "measure of %s at %s by %s: %s %s" % (self.event, self.origin, self.agency, self.scale, self.value)
 
-class Origin(BaseMixin, Base):
+class Origin(CatalogueBaseMixin, Base):
     """Describes a point at a given depth and a time. For each quantity a measure of the  accuracy is described.
 
     :py:attribute:: time
@@ -193,20 +193,28 @@ class Origin(BaseMixin, Base):
 
     :py:attribute:: depth_error
     Error in km on the hypocentre depth.
+
+    :py:attribute:: eventsource
+    the source object we have imported the origin from. unique
+    together with `source_key`
 """
+
+    eventsource = orm.relationship("EventSource",
+                                   backref=orm.backref('origins'))
 
     time = sqlalchemy.Column(sqlalchemy.DateTime, nullable=False)
 
     time_error = sqlalchemy.Column(sqlalchemy.Float(), nullable=True)
     time_rms = sqlalchemy.Column(sqlalchemy.Float(), nullable=True)
 
-    position = geoalchemy.GeometryColumn(geoalchemy.Point(2))
+    position = geoalchemy.GeometryColumn(geoalchemy.Point(2), nullable=False)
 
     semi_minor_90error = sqlalchemy.Column(sqlalchemy.Float(), nullable=True)
     semi_major_90error = sqlalchemy.Column(sqlalchemy.Float(), nullable=True)
 
     depth = sqlalchemy.Column(sqlalchemy.Float(), nullable=False)
-    depth_error = sqlalchemy.Column(sqlalchemy.Float(), nullable=False)
+
+    depth_error = sqlalchemy.Column(sqlalchemy.Float(), nullable=True)
 
 class MeasureMetadata(BaseMixin, Base):
     """Metadata of a measurement.
@@ -224,16 +232,19 @@ class MeasureMetadata(BaseMixin, Base):
                       'num_stations')
 
     magnitudemeasure_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('catalogue_magnitudemeasure.id'))
-    magnitudemeasure = orm.relationship("MagnitudeMeasure", backref=orm.backref('metadatas', order_by='name'))
+    magnitudemeasure = orm.relationship("MagnitudeMeasure", backref=orm.backref('metadatas'))
 
     name = sqlalchemy.Enum(METADATA_TYPES, nullable=False)
     value = sqlalchemy.Column(sqlalchemy.Float(), nullable=False)
 
 
 def create_all():
-    Base.metadata.create_all(engine)
     geoalchemy.GeometryDDL(Origin.__table__)
+    Base.metadata.create_all(engine)
 
 def recreate_all():
-    Base.metadata.drop_all() # can fail it tables are not present
+    try:
+        Base.metadata.drop_all() # can fail if tables are not present
+    except sqlalchemy.exc.OperationalError:
+        pass
     create_all()
