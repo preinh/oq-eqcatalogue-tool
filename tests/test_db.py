@@ -21,8 +21,8 @@ import geoalchemy
 class ShouldCreateAlchemyTestCase(unittest.TestCase):
 
     def setUp(self):
-        catalogue.recreate_all()
-        self.session = catalogue.session
+        cat = catalogue.CatalogueDatabase(drop=True, memory=True)
+        self.session = cat.session
 
     def test_eventsource(self):
         event_source = catalogue.EventSource(name="test1")
@@ -35,7 +35,7 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
 
         agency = catalogue.Agency(source_key="test", eventsource=eventsource)
         self.session.add(agency)
-        self.assertEqual(self.session.query(catalogue.Agency).filter_by(name='test').count(), 1)
+        self.assertEqual(self.session.query(catalogue.Agency).filter_by(source_key='test').count(), 1)
 
     def test_event(self):
         eventsource = catalogue.EventSource(name="test3")
@@ -43,7 +43,7 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
 
         event = catalogue.Event(source_key="test", eventsource=eventsource)
         self.session.add(event)
-        self.assertEqual(self.session.query(catalogue.Event).filter_by(name='test').count(), 1)
+        self.assertEqual(self.session.query(catalogue.Event).filter_by(source_key='test').count(), 1)
 
     def test_origin(self):
         eventsource = catalogue.EventSource(name="test4")
@@ -75,7 +75,7 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
         measure = catalogue.MagnitudeMeasure(event=event, agency=agency, origin=origin, scale='mL', value=5.0)
         self.session.add(measure)
 
-        self.assertEqual(self.session.query(catalogue.Measure).count(), 1)
+        self.assertEqual(self.session.query(catalogue.MagnitudeMeasure).count(), 1)
 
 
     def tearDown(self):
