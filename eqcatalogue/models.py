@@ -206,8 +206,7 @@ class CatalogueDatabase(object):
 
     DEFAULT_FILENAME = "eqcatalogue.db"
 
-    @staticmethod
-    def connect(dbapi_connection, connection_rec):
+    def connect(self, dbapi_connection, connection_rec, drop=False):
         """Enable load extension on connect"""
         dbapi_connection.enable_load_extension(True)
 
@@ -215,18 +214,8 @@ class CatalogueDatabase(object):
         self.engine = None
         self.session = None
         self.metadata = None
-        self.setup(**setup_args)
 
-    def setup(self, memory=False, filename=None, drop=False):
-        if memory:
-            self.engine = sqlalchemy.create_engine('sqlite://', module=sqlite)
-        else:
-            filename = filename or self.DEFAULT_FILENAME
-            self.engine = sqlalchemy.create_engine('sqlite:///%s' % filename, module=sqlite, echo=True)
-        event.listen(self.engine, "connect", self.connect)
-        session = orm.sessionmaker(bind=self.engine)()
-        self.metadata = sqlalchemy.MetaData(self.engine)
-
+    def _load_extension(self, session):
         try:
             session.execute("select load_extension('libspatialite.so')")
         except sqlalchemy.exc.OperationalError:
@@ -237,15 +226,30 @@ class CatalogueDatabase(object):
                     session.execute("select load_extension('libspatialite.dll')")
                 except:
                     raise RuntimeError("Could not load libspatial extension. Check your spatialite and pysqlite2 installation")
-        session.execute('SELECT InitSpatialMetaData()')
 
-        self.session = session
+    def setup(self, memory=False, filename=None, drop=False):
+        if memory:
+            self.engine = sqlalchemy.create_engine('sqlite://', module=sqlite)
+        else:
+            filename = filename or self.DEFAULT_FILENAME
+            self.engine = sqlalchemy.create_engine('sqlite:///%s' % filename, module=sqlite)
+        event.listen(self.engine, "connect", lambda c,r: self.connect(c,r, drop))
+        self.engine.connect()
+        print "connected"
+        self.session = orm.sessionmaker(bind=self.engine)()
+        self._load_extension(self.session)
+        self.metadata = sqlalchemy.MetaData(self.engine)
         self.create_schema()
-
         if drop:
             self.metadata.drop_all() # can fail if tables are not present
+            try:
+                self.session.execute('SELECT InitSpatialMetaData()')
+                self.session.execute("INSERT INTO spatial_ref_sys (srid, auth_name, auth_srid, ref_sys_name, proj4text) VALUES (4326, 'epsg', 4326, 'WGS 84', '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs')")
+                self.session.commit()
+            except:
+                self.session.rollback()
+        self.metadata.create_all(self.engine)
 
-            self.metadata.create_all(self.engine)
 
     def create_schema(self):
         metadata = self.metadata
