@@ -21,6 +21,7 @@ METADATA_TYPES = ('phases', 'stations',
                   'min_distance', 'max_distance',
                   'num_stations')
 
+
 class EventSource(object):
     """A source of event catalogues. E.g. ISC Web Catalogue
 
@@ -42,6 +43,7 @@ we import data from
 
     def __repr__(self):
         return "Event Source: %s" % self.name
+
 
 class Agency(object):
     """The agency which recorded and measured the events.
@@ -74,6 +76,7 @@ class Agency(object):
         self.eventsource = eventsource
         if name:
             self.name = name
+
 
 class Event(object):
     """Describes a sismic event.
@@ -202,6 +205,7 @@ class Origin(object):
         self.eventsource = eventsource
         self.source_key = source_key
 
+
 class MeasureMetadata(object):
     """Metadata of a measurement.
     :py:attribute:: id
@@ -222,6 +226,7 @@ class MeasureMetadata(object):
     def __repr__(self):
         return "%s = %s" % (self.name, self.value)
 
+
 class CatalogueDatabase(object):
     """
     This is the main class used to access the database
@@ -229,27 +234,32 @@ class CatalogueDatabase(object):
 
     DEFAULT_FILENAME = "eqcatalogue.db"
 
-    def connect(self, dbapi_connection, connection_rec=None):
-        """Enable load extension on connect"""
-        dbapi_connection.enable_load_extension(True)
-        self._load_extension(dbapi_connection)
-        if connection_rec:
-            pass
-
     def __init__(self, filename=None, memory=False, drop=False):
         self._engine = None
         self.session = None
         self._metadata = None
         self._setup(filename=filename, memory=memory, drop=drop)
 
+    def _connect(self, dbapi_connection, connection_rec=None):
+        """Enable load extension on connect. Event handler triggered
+        by sqlalchemy"""
+        dbapi_connection.enable_load_extension(True)
+        self._load_extension(dbapi_connection)
+        if connection_rec:
+            pass
+
     def _load_extension(self, session):
-        """Load spatial lite extension"""
+        """Load spatial lite extension in `session`
+
+        :param:: session:
+        A sqlalchemy session."""
+
         try:
             session.execute("select load_extension('libspatialite.so')")
-        except:
+        except sqlite.OperationalError:
             try:
                 session.execute("select load_extension('libspatialite.dylib')")
-            except:
+            except sqlite.OperationalError:
                 try:
                     session.execute(
                         "select load_extension('libspatialite.dll')")
@@ -261,11 +271,13 @@ Check your spatialite and pysqlite2 installation"""
 
         try:
             session.execute('select * from spatial_ref_sys')
-        except:
-            self._setup_spatialite(session)
+        except sqlite.OperationalError:
+            self._initialize_spatialite_db(session)
 
     def _setup(self, memory=False, filename=None, drop=False):
-        """Setup a sqlalchemy connection to spatialite with the proper setup."""
+        """Setup a sqlalchemy connection to spatialite with the proper
+        setup."""
+
         if memory:
             self._engine = sqlalchemy.create_engine('sqlite://', module=sqlite)
         else:
@@ -276,28 +288,14 @@ Check your spatialite and pysqlite2 installation"""
                 poolclass=sqlalchemy.pool.QueuePool,
                 pool_size=1)
         sqlevent.listen(self._engine,
-                        "connect", lambda c, r: self.connect(c, r))
+                        "first_connect",
+                        lambda c, r: self._connect(c, r))
         self.session = orm.sessionmaker(bind=self._engine)()
         self._metadata = sqlalchemy.MetaData(self._engine)
         self._create_schema()
         if drop:
-            self._metadata.drop_all() # can fail if tables are not present
+            self._metadata.drop_all()
         self._metadata.create_all(self._engine)
-
-    def _setup_spatialite(self, connection):
-        """Initialize Spatialite Database. Needed only when a newly
-        freshed database or a corrupted one have to be used"""
-
-        connection.execute('SELECT InitSpatialMetaData()')
-        try:
-            connection.execute("INSERT INTO spatial_ref_sys"
-                               "(srid, auth_name, auth_srid,"
-                               " ref_sys_name, proj4text)"
-                               "VALUES (4326, 'epsg', 4326, 'WGS 84',"
-                               " '+proj=longlat "
-                               "+ellps=WGS84 +datum=WGS84 +no_defs')")
-        except:
-            pass
 
     def _create_schema(self):
         """Create and contains the model definition"""
@@ -331,8 +329,9 @@ Check your spatialite and pysqlite2 installation"""
                     'catalogue_eventsource.id')),
             sqlalchemy.Column('name', sqlalchemy.String(255), unique=True))
         orm.Mapper(Agency, agency, properties={
-                'eventsource': orm.relationship(EventSource,
-                                                backref=orm.backref('agencies'))
+                'eventsource': orm.relationship(
+                    EventSource,
+                    backref=orm.backref('agencies'))
                 })
         geoalchemy.GeometryDDL(agency)
 
@@ -404,9 +403,10 @@ Check your spatialite and pysqlite2 installation"""
             sqlalchemy.Column('semi_major_90error',
                               sqlalchemy.Float(), nullable=True),
             sqlalchemy.Column('depth', sqlalchemy.Float(), nullable=False),
-            sqlalchemy.Column('depth_error', sqlalchemy.Float(), nullable=True))
+            sqlalchemy.Column('depth_error',
+                              sqlalchemy.Float(), nullable=True))
         orm.Mapper(Origin, origin, properties={
-                'eventsource' : orm.relationship(
+                'eventsource': orm.relationship(
                     EventSource,
                     backref=orm.backref('origins')),
                 'position': geoalchemy.GeometryColumn(origin.c.position)})
@@ -421,10 +421,27 @@ Check your spatialite and pysqlite2 installation"""
                               sqlalchemy.ForeignKey(
                     'catalogue_magnitudemeasure.id')),
             sqlalchemy.Column('name',
-                              sqlalchemy.Enum(*METADATA_TYPES), nullable=False),
+                              sqlalchemy.Enum(*METADATA_TYPES),
+                              nullable=False),
             sqlalchemy.Column('value', sqlalchemy.Float(), nullable=False))
         orm.Mapper(MeasureMetadata, measuremetadata, properties={
-                'magnitudemeasure' : orm.relationship(
+                'magnitudemeasure': orm.relationship(
                     MagnitudeMeasure,
                     backref=orm.backref('metadatas'))})
         geoalchemy.GeometryDDL(measuremetadata)
+
+
+def _initialize_spatialite_db(connection):
+    """Initialize Spatialite Database. Needed only when a newly
+    freshed database or a corrupted one have to be used"""
+
+    connection.execute('SELECT InitSpatialMetaData()')
+    try:
+        connection.execute("INSERT INTO spatial_ref_sys"
+                           "(srid, auth_name, auth_srid,"
+                           " ref_sys_name, proj4text)"
+                           "VALUES (4326, 'epsg', 4326, 'WGS 84',"
+                           " '+proj=longlat "
+                           "+ellps=WGS84 +datum=WGS84 +no_defs')")
+    except sqlite.OperationalError:
+        pass
