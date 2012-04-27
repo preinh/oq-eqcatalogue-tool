@@ -272,7 +272,7 @@ Check your spatialite and pysqlite2 installation"""
         try:
             session.execute('select * from spatial_ref_sys')
         except sqlite.OperationalError:
-            self._initialize_spatialite_db(session)
+            _initialize_spatialite_db(session)
 
     def _setup(self, memory=False, filename=None, drop=False):
         """Setup a sqlalchemy connection to spatialite with the proper
@@ -443,5 +443,5 @@ def _initialize_spatialite_db(connection):
                            "VALUES (4326, 'epsg', 4326, 'WGS 84',"
                            " '+proj=longlat "
                            "+ellps=WGS84 +datum=WGS84 +no_defs')")
-    except sqlite.OperationalError:
+    except sqlite.IntegrityError:
         pass
