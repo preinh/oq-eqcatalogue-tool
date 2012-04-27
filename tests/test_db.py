@@ -21,8 +21,7 @@ import geoalchemy
 class ShouldCreateAlchemyTestCase(unittest.TestCase):
 
     def setUp(self):
-        cat = catalogue.CatalogueDatabase()
-        cat.setup(drop=True, memory=True)
+        cat = catalogue.CatalogueDatabase(memory=False, drop=True)
         self.session = cat.session
 
     def test_eventsource(self):
