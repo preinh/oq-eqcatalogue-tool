@@ -1,2 +1,10 @@
+==Description==
 The Earthquake Catalogue Tool allows to extract informations from earthquake
 catalogues specified in different formats.
+
+
+==Requirements==
+
+You need to install pysqlite2 and spatialite library (>= 3.0). Please, ensure that you are using a sqlite3 with load extension capabilities (the one provided with macports is good) and that spatialite library location is in your ld library path.
+
+Mac OS X user note: you have to download pysqlite2 and install manually as you need to comment out (in the setup.cfg) the line containing `define=SQLITE_OMIT_LOAD_EXTENSION`
