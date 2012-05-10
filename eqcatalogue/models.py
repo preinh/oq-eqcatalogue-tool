@@ -15,7 +15,7 @@ import geoalchemy
 SCALES = ('mL', 'mb', 'Mb',
           'Ms', 'md', 'MD',
           'MS', 'mb1', 'mb1mx',
-          'ms1', 'ms1mx')
+          'ms1', 'ms1mx', 'MW', 'mB', 'ML')
 METADATA_TYPES = ('phases', 'stations',
                   'azimuth_gap', 'azimuth_error',
                   'min_distance', 'max_distance',
@@ -143,6 +143,7 @@ class MagnitudeMeasure(object):
     """
 
     def __init__(self, agency, event, origin, scale, value):
+        assert(scale in SCALES)
         self.agency = agency
         self.event = event
         self.origin = origin
@@ -231,6 +232,12 @@ class MeasureMetadata(object):
     """
     def __repr__(self):
         return "%s = %s" % (self.name, self.value)
+
+    def __init__(self, metadata_type, value, magnitudemeasure):
+        assert(metadata_type in METADATA_TYPES)
+        self.name = metadata_type
+        self.value = value
+        self.magnitudemeasure = magnitudemeasure
 
 
 class CatalogueDatabase(object):
@@ -390,7 +397,7 @@ class CatalogueDatabase(object):
                               nullable=True),
             sqlalchemy.Column('semi_major_90error',
                               sqlalchemy.Float(), nullable=True),
-            sqlalchemy.Column('depth', sqlalchemy.Float(), nullable=False),
+            sqlalchemy.Column('depth', sqlalchemy.Float(), nullable=True),
             sqlalchemy.Column('depth_error',
                               sqlalchemy.Float(), nullable=True))
         orm.Mapper(Origin, origin, properties={
