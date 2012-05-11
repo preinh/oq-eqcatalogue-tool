@@ -4,3 +4,7 @@ nosetest*
 .coverage
 *~
 #*#
+.#*
+*.db-journal
+.ropeproject
+
