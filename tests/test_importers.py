@@ -24,29 +24,39 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 def in_data_dir(filename):
     return os.path.join(DATA_DIR, filename)
 
+# the following data has been downloaded by issuing the
+# following command
+# query_isc_catalogue(cat, start_year=2010, start_month=2,
+# start_day=28, end_year=2010, end_month=3, end_day=01)
+
+DATAFILE = in_data_dir('isc_query_1.html')
+
 
 class ShouldImportFromISFBulletinV1(unittest.TestCase):
 
-    def test_parse_from_isc(self):
-        # the following data has been downloaded by issuing the
-        # following command
-        # query_isc_catalogue(cat, start_year=2010, start_month=2,
-        # start_day=28, end_year=2010, end_month=3, end_day=01)
-        
-        path = in_data_dir('isc_query_1.html')
+    def test_detect_junk_lines(self):
+        # Assess
+        f = file(DATAFILE)
+        cat = catalogue.CatalogueDatabase(memory=True, drop=True)
 
-        with file(path) as f:
-            cat = catalogue.CatalogueDatabase(memory=True, drop=True)
-            importer = isf.V1(f, cat)
-            self.assertRaises(isf.UnexpectedLine,
-                              importer.load,
-                              (False))
+        # Act
+        importer = isf.V1(f, cat)
 
-        with file(path) as f:
-            cat = catalogue.CatalogueDatabase(memory=True, drop=True)
-            summary = isf.V1.import_events(f, cat)
+        # Assert
+        self.assertRaises(isf.UnexpectedLine, importer.load, (False))
 
-            self.assertEqual(summary, {
+        f.close()
+
+    def test_parse_html_file(self):
+        # Assess
+        f = file(DATAFILE)
+        cat = catalogue.CatalogueDatabase(memory=True, drop=True)
+
+        # Act
+        summary = isf.V1.import_events(f, cat)
+
+        # Assert
+        self.assertEqual(summary, {
                     'eventsource_created': 1,
                     'agency_created': 75,
                     'event_created': 1254,
@@ -54,14 +64,16 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
                     'measure_created':  5091,
                     })
 
-            sources = cat.session.query(catalogue.EventSource)
-            agencies = cat.session.query(catalogue.Agency)
-            events = cat.session.query(catalogue.Event)
-            origins = cat.session.query(catalogue.Origin)
-            measures = cat.session.query(catalogue.MagnitudeMeasure)
+        sources = cat.session.query(catalogue.EventSource)
+        agencies = cat.session.query(catalogue.Agency)
+        events = cat.session.query(catalogue.Event)
+        origins = cat.session.query(catalogue.Origin)
+        measures = cat.session.query(catalogue.MagnitudeMeasure)
 
-            self.assertEqual(sources.count(),  1)
-            self.assertEqual(agencies.count(),  75)
-            self.assertEqual(events.count(),  1254)
-            self.assertEqual(origins.count(),  2770)
-            self.assertEqual(measures.count(),  5091)
+        self.assertEqual(sources.count(),  1)
+        self.assertEqual(agencies.count(),  75)
+        self.assertEqual(events.count(),  1254)
+        self.assertEqual(origins.count(),  2770)
+        self.assertEqual(measures.count(),  5091)
+
+        f.close()

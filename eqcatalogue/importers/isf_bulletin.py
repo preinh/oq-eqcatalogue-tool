@@ -102,18 +102,18 @@ class StartState(BaseState):
             return EventState(self.eventsource)
 
     def process_line(self, line):
-        self.eventsource, created = self._save_event_source(line)
-        return {'event_source_created': 1 if created else 0}
+        self.eventsource, created = self._save_eventsource(line)
+        return {'eventsource_created': 1 if created else 0}
 
-    def _save_event_source(self, name):
+    def _save_eventsource(self, name):
         return self._catalogue.get_or_create(catalogue.EventSource,
                                              {'name': name})
 
 
 class EventState(BaseState):
-    def __init__(self, event_source):
+    def __init__(self, eventsource):
         super(EventState, self).__init__()
-        self._event_source = event_source
+        self._eventsource = eventsource
         self.event = None
 
     def _get_next_state(self, line_type):
@@ -136,7 +136,7 @@ class EventState(BaseState):
         self.event, created = self._catalogue.get_or_create(
             catalogue.Event,
             {'source_key': source_event_id,
-              'eventsource': self._event_source})
+              'eventsource': self._eventsource})
         if self.event.name != name:
             self.event.name = name
         self._catalogue.session.commit()
