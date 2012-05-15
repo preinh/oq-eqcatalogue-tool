@@ -108,7 +108,7 @@ class RegressionModel(object):
 
     def long_str(self):
         if self.akaike_corrected:
-            return "%s AICc: %s" % (self, self.akaike_corrected)
+            return "%s. AICc: %s" % (self, self.akaike_corrected)
 
     def func(self, x):
         return self._model_function(self._output.beta, x)

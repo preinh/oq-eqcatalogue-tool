@@ -8,3 +8,4 @@ nosetest*
 *.db-journal
 .ropeproject
 *_flymake.py
+tests/data/actual*
