@@ -5,7 +5,7 @@ from tests.test_importers import in_data_dir
 
 from eqcatalogue import regression
 from eqcatalogue import managers
-from eqcatalogue.serializers.mpl import Plot
+from eqcatalogue.serializers.mpl import plot
 
 
 ACTUAL1 = in_data_dir('actual1.png')
@@ -19,18 +19,16 @@ class ShoudPlotEMSR(unittest.TestCase):
         p2_1 = 0.556
         p2_2 = 0.673
 
-        native_measures = managers.MeasureManager()
-        target_measures = managers.MeasureManager()
-        native_measures.measures = np.random.uniform(3., 8.5, 1000)
-        native_measures.sigma = np.random.uniform(0.02, 0.2, 1000)
+        native_measures = managers.MeasureManager('Mtest')
+        target_measures = managers.MeasureManager('Mtest2')
+        native_measures.measures = np.random.uniform(3., 8.5, 100)
+        native_measures.sigma = np.random.uniform(0.02, 0.2, 100)
         target_measures.measures = p2_0 + p2_1 * native_measures.measures +\
           p2_2 * (native_measures.measures ** 2.)
-        target_measures.sigma = np.random.uniform(0.025, 0.2, 1000)
+        target_measures.sigma = np.random.uniform(0.025, 0.2, 100)
         emsr = regression.EmpiricalMagnitudeScalingRelationship(
             native_measures,
             target_measures)
-
-        # Act
         emsr.apply_regression_model(regression.LinearModel)
         emsr.apply_regression_model(regression.PolynomialModel,
                                     order=2)
@@ -38,7 +36,7 @@ class ShoudPlotEMSR(unittest.TestCase):
                                     order=5)
 
         # Act
-        Plot(emsr, ACTUAL1).save()
+        plot(emsr, ACTUAL1)
 
         # Assert
         self.assertTrue(compare_images(EXPECTED1, ACTUAL1, tol=0.001))
