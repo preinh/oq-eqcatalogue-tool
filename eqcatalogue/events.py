@@ -103,7 +103,6 @@ class Event(object):
         return self.session.query(db.Event).join(db.MagnitudeMeasure).join(
                 db.Origin).filter(db.Origin.position.within(polygon))
 
-    #TODO
     def within_distance_from_point(self, point, distance):
         """
         Returns a query object which allows to get
@@ -114,5 +113,6 @@ class Event(object):
         """
 
         return self.session.query(db.Event).join(db.MagnitudeMeasure).join(
-                db.Origin).filter(db.Origin.position._within_distance
-                    (point, distance))
+                db.Origin).filter(
+                "PtDistWithin(catalogue_origin.position, GeomFromText('%s', "
+                "4326), %s)" % (point, distance))

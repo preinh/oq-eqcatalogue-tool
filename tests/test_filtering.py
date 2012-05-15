@@ -127,7 +127,22 @@ class AnEqCatalogueShould(unittest.TestCase):
         self.assertEqual(1, len(self.event.within_polygon(snd_polygon).all()))
 
     def test_allows_selection_of_events_given_distance_from_point(self):
-        pass
+        distance = 700000  # distance is expressed in meters using srid 4326
+        point = 'POINT(88.20 33.10)'
+        self.assertEqual(3, len(self.event.within_distance_from_point(point,
+            distance).all()))
+
+        distance = 250000
+        self.assertEqual(1, len(self.event.within_distance_from_point(point,
+            distance).all()))
+
+        distance = 228000
+        self.assertEqual(0, len(self.event.within_distance_from_point(point,
+        distance).all()))
+
+        distance = 2400000
+        self.assertEqual(5, len(self.event.within_distance_from_point(point,
+            distance).all()))
 
     def tearDown(self):
         self.session.commit()
