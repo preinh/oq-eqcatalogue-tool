@@ -17,6 +17,7 @@
 import unittest
 from datetime import datetime
 from geoalchemy import WKTSpatialElement
+from geoalchemy.functions import functions
 
 from tests.test_utils import DATA_DIR, get_data_path
 
@@ -34,22 +35,30 @@ def load_fixtures(session):
     event_source = models.EventSource(name='query_catalogue')
     session.add(event_source)
     for entry in entries:
-        inserted_agency = session.query(
-                models.Agency).filter_by(
-                name=entry['solutionAgency']).count()
-        if not inserted_agency:
-            agency = models.Agency(source_key=entry['eventKey'],
-                    eventsource=event_source,
-                    name=entry['solutionAgency'])
+        inserted_agency = session.query(models.Agency).filter(
+                models.Agency.source_key == entry['solutionAgency'])
+        if not inserted_agency.count():
+            agency = models.Agency(source_key=entry['solutionAgency'],
+                    eventsource=event_source)
             session.add(agency)
+        else:
+            agency = inserted_agency.all()[0]
 
-        event = models.Event(source_key=entry['eventKey'],
+        inserted_event = session.query(
+                models.Event).filter_by(
+                source_key=entry['eventKey'])
+        if not inserted_event.count():
+            event = models.Event(source_key=entry['eventKey'],
                 eventsource=event_source)
+            session.add(event)
+        else:
+            event = inserted_event.all()[0]
 
         entry_time = datetime(entry['year'], entry['month'], entry['day'],
                                 entry['hour'], entry['minute'],
                                 int(entry['second']))
         entry_pos = 'POINT(%f %f)' % (entry['Longitude'], entry['Latitude'])
+        print entry_pos
         origin = models.Origin(
             time=entry_time, position=WKTSpatialElement(entry_pos),
             depth=entry['depth'], eventsource=event_source,
@@ -63,7 +72,6 @@ def load_fixtures(session):
                 metadata_type='stations', value=entry['stations'],
                 magnitudemeasure=mag_measure)
 
-        session.add(event)
         session.add(origin)
         session.add(mag_measure)
         session.add(measure_meta)
@@ -91,6 +99,42 @@ class AnEqCatalogueShould(unittest.TestCase):
         self.assertEqual(30, before_time.count())
         self.assertEqual(0, after_time.count())
         self.assertEqual(6, between_time.count())
+
+    def test_allows_selection_of_events_given_two_mag(self):
+        magnitudes = ['MS', 'mb']
+        self.assertEqual(3, self.event.with_magnitudes(magnitudes).count())
+
+        magnitudes = ['MS', 'Inexistent magnitude scale']
+        self.assertEqual(0, self.event.with_magnitudes(magnitudes).count())
+
+    def test_allows_selection_of_events_on_agency_basis(self):
+        agency = 'LDG'
+        self.assertEqual(1, len(self.event.with_agency(agency).all()))
+
+        agency = 'NEIC'
+        self.assertEqual(3, len(self.event.with_agency(agency).all()))
+
+        agency = 'Blabla'
+        self.assertEqual(0, len(self.event.with_agency(agency).all()))
+
+    def test_allows_selection_of_events_given_polygon(self):
+        fst_polygon = 'POLYGON((85 35, 92 35, 92 25, 85 25, 85 35))'
+        snd_polygon = 'POLYGON((92 15, 95 15, 95 10, 92 10, 92 15))'
+        # Events inside first polygon: 1008566, 1008569, 1008570
+        # with a sum for measures equal to 16.
+        self.assertEqual(3, len(self.event.within_polygon(fst_polygon).all()))
+        # Events inside second polygon: 1008567
+        # with a sum for measures of 13.
+        self.assertEqual(1, len(self.event.within_polygon(snd_polygon).all()))
+
+    def test_allows_selection_of_events_given_distance_from_point(self):
+        distance = 250000 # distance is expressed in meters using srid 4326
+        point = 'POINT(88.20 33.10)'
+        a = [id.source_key for id in self.event.within_distance_from_point
+            (point,distance).all()]
+        print a
+        self.assertEqual(10, len(self.event.within_distance_from_point(point,
+            distance).all()))
 
     def tearDown(self):
         self.session.commit()

@@ -13,8 +13,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with EqCatalogueTool. If not, see <http://www.gnu.org/licenses/>.
 
+
 import eqcatalogue.models as db
 from sqlalchemy import and_
+
 
 class Event(object):
 
@@ -22,18 +24,38 @@ class Event(object):
         self.session = session
 
     def all(self):
-        return self.session.query(db.Event).join(db.MagnitudeMeasure).join\
-            (db.Origin)
+        return self.session.query(db.Event).join(db.MagnitudeMeasure).join(
+            db.Origin)
 
     def before(self, time):
-        return self.session.query(db.Event).join(db.MagnitudeMeasure).join\
-            (db.Origin).filter(db.Origin.time < time)
+        return self.session.query(db.Event).join(db.MagnitudeMeasure).join(
+            db.Origin).filter(db.Origin.time < time)
 
     def after(self, time):
-        return self.session.query(db.Event).join(db.MagnitudeMeasure).join\
-            (db.Origin).filter(db.Origin.time > time)
+        return self.session.query(db.Event).join(db.MagnitudeMeasure).join(
+            db.Origin).filter(db.Origin.time > time)
 
     def between(self, time_lb, time_ub):
-        return self.session.query(db.Event).join(db.MagnitudeMeasure).join\
-            (db.Origin).filter(and_(db.Origin.time >= time_lb,
+        return self.session.query(db.Event).join(db.MagnitudeMeasure).join(
+            db.Origin).filter(and_(db.Origin.time >= time_lb,
             db.Origin.time <= time_ub))
+
+    def with_agency(self, agency):
+        return self.session.query(db.Event).join(db.MagnitudeMeasure).join(
+            db.Agency).filter(db.Agency.source_key == agency)
+
+    def with_magnitudes(self, magnitudes):
+        return self.session.query(db.Event).filter(
+            db.Event.measures.any(
+                db.MagnitudeMeasure.scale == magnitudes[0])).filter(
+                db.Event.measures.any(db.MagnitudeMeasure.scale ==
+                                      magnitudes[1]))
+
+    def within_polygon(self, polygon):
+        return self.session.query(db.Event).join(db.MagnitudeMeasure).join(
+                db.Origin).filter(db.Origin.position.within(polygon))
+
+    def within_distance_from_point(self, point, distance):
+        return self.session.query(db.Event).join(db.MagnitudeMeasure).join(
+                db.Origin).filter(db.Origin.position._within_distance
+                    (point, distance))

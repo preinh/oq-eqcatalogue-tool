@@ -126,7 +126,7 @@ class Event(object):
 
     def __repr__(self):
         return "Event %s (by %s)" % (self.source_key,
-                                     self.source)
+                                     self.eventsource)
 
 
 class MagnitudeMeasure(object):
@@ -279,7 +279,8 @@ class CatalogueDatabase(object):
                 'sqlite:///%s' % filename,
                 module=sqlite,
                 poolclass=sqlalchemy.pool.QueuePool,
-                pool_size=1)
+                pool_size=1,
+                )
         sqlevent.listen(self._engine,
                         "first_connect",
                         _connect)
@@ -404,7 +405,7 @@ class CatalogueDatabase(object):
             sqlalchemy.Column('time_error', sqlalchemy.Float(), nullable=True),
             sqlalchemy.Column('time_rms', sqlalchemy.Float(), nullable=True),
             geoalchemy.GeometryExtensionColumn('position',
-                                               geoalchemy.Point(2),
+                                               geoalchemy.Point(2, srid=4326),
                                                nullable=False),
             sqlalchemy.Column('semi_minor_90error',
                               sqlalchemy.Float(),
@@ -465,7 +466,7 @@ def _initialize_spatialite_db(connection):
     try:
         connection.execute("INSERT INTO spatial_ref_sys"
                            "(srid, auth_name, auth_srid,"
-                           " ref_sys_name, proj4text)"
+                           " ref_sys_name,proj4text)"
                            "VALUES (4326, 'epsg', 4326, 'WGS 84',"
                            " '+proj=longlat "
                            "+ellps=WGS84 +datum=WGS84 +no_defs')")
