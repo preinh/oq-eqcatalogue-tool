@@ -17,7 +17,6 @@
 import unittest
 from datetime import datetime
 from geoalchemy import WKTSpatialElement
-from geoalchemy.functions import functions
 
 from tests.test_utils import DATA_DIR, get_data_path
 
@@ -27,6 +26,7 @@ from eqcatalogue.events import Event
 
 
 def load_fixtures(session):
+    # Allows to insert test entries in the earthquake db.
     csv_filename = get_data_path(DATA_DIR, 'query_catalogue.csv')
     with open(csv_filename) as eq_source:
         reader = CsvEqCatalogueReader(eq_source)
@@ -58,7 +58,6 @@ def load_fixtures(session):
                                 entry['hour'], entry['minute'],
                                 int(entry['second']))
         entry_pos = 'POINT(%f %f)' % (entry['Longitude'], entry['Latitude'])
-        print entry_pos
         origin = models.Origin(
             time=entry_time, position=WKTSpatialElement(entry_pos),
             depth=entry['depth'], eventsource=event_source,
@@ -128,13 +127,7 @@ class AnEqCatalogueShould(unittest.TestCase):
         self.assertEqual(1, len(self.event.within_polygon(snd_polygon).all()))
 
     def test_allows_selection_of_events_given_distance_from_point(self):
-        distance = 250000 # distance is expressed in meters using srid 4326
-        point = 'POINT(88.20 33.10)'
-        a = [id.source_key for id in self.event.within_distance_from_point
-            (point,distance).all()]
-        print a
-        self.assertEqual(10, len(self.event.within_distance_from_point(point,
-            distance).all()))
+        pass
 
     def tearDown(self):
         self.session.commit()
