@@ -18,7 +18,7 @@ import eqcatalogue.models as db
 from sqlalchemy import and_
 
 
-class Event(object):
+class EventManager(object):
     """
     Event object allows to query an earthquake catalogue.
     :param session: sqlalchemy session object.

@@ -22,7 +22,7 @@ from tests.test_utils import DATA_DIR, get_data_path
 
 from eqcatalogue.reader import CsvEqCatalogueReader, Converter
 from eqcatalogue import models
-from eqcatalogue.events import Event
+from eqcatalogue.events import EventManager
 
 
 def load_fixtures(session):
@@ -82,7 +82,7 @@ class AnEqCatalogueShould(unittest.TestCase):
         cat_db = models.CatalogueDatabase(memory=False, drop=True)
         self.session = cat_db.session
         load_fixtures(self.session)
-        self.event = Event(self.session)
+        self.event = EventManager(self.session)
 
     def test_allows_selection_of_all_events(self):
         self.assertEqual(30, self.event.all().count())
