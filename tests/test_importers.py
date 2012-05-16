@@ -29,26 +29,27 @@ DATAFILE = in_data_dir('isc_query_1.html')
 
 class ShouldImportFromISFBulletinV1(unittest.TestCase):
 
+    def setUp(self):
+        self.f = file(DATAFILE)
+        self.cat = catalogue.CatalogueDatabase(memory=True, drop=True)
+
+    def tearDown(self):
+        self.f.close()
+
     def test_detect_junk_lines(self):
-        # Assess
-        f = file(DATAFILE)
-        cat = catalogue.CatalogueDatabase(memory=True, drop=True)
+        # Common Assess part in setUp method
 
         # Act
-        importer = isf.V1(f, cat)
+        importer = isf.V1(self.f, self.cat)
 
         # Assert
         self.assertRaises(isf.UnexpectedLine, importer.load, (False))
 
-        f.close()
-
     def test_parse_html_file(self):
-        # Assess
-        f = file(DATAFILE)
-        cat = catalogue.CatalogueDatabase(memory=True, drop=True)
+        # Common Assess part in setUp method
 
         # Act
-        summary = isf.V1.import_events(f, cat)
+        summary = isf.V1.import_events(self.f, self.cat)
 
         # Assert
         self.assertEqual(summary, {
@@ -59,16 +60,14 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
                     'measure_created':  5091,
                     })
 
-        sources = cat.session.query(catalogue.EventSource)
-        agencies = cat.session.query(catalogue.Agency)
-        events = cat.session.query(catalogue.Event)
-        origins = cat.session.query(catalogue.Origin)
-        measures = cat.session.query(catalogue.MagnitudeMeasure)
+        sources = self.cat.session.query(catalogue.EventSource)
+        agencies = self.cat.session.query(catalogue.Agency)
+        events = self.cat.session.query(catalogue.Event)
+        origins = self.cat.session.query(catalogue.Origin)
+        measures = self.cat.session.query(catalogue.MagnitudeMeasure)
 
         self.assertEqual(sources.count(),  1)
         self.assertEqual(agencies.count(),  75)
         self.assertEqual(events.count(),  1254)
         self.assertEqual(origins.count(),  2770)
         self.assertEqual(measures.count(),  5091)
-
-        f.close()
