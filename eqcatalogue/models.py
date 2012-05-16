@@ -1,18 +1,17 @@
 # Copyright (c) 2010-2012, GEM Foundation.
 #
-# EqCatalogueTool is free software: you can redistribute it and/or modify it
+# eqcatalogueTool is free software: you can redistribute it and/or modify it
 # under the terms of the GNU Affero General Public License as published
 # by the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# EqCatalogueTool is distributed in the hope that it will be useful,
+# eqcatalogueTool is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with EqCatalogueTool. If not, see <http://www.gnu.org/licenses/>.
-
+# along with eqcatalogueTool. If not, see <http://www.gnu.org/licenses/>.
 
 """
 GeoAlchemy model definition
@@ -31,7 +30,16 @@ import geoalchemy
 SCALES = ('mL', 'mb', 'Mb',
           'Ms', 'md', 'MD',
           'MS', 'mb1', 'mb1mx',
-          'ms1', 'ms1mx', 'MW', 'mB', 'ML')
+          'ms1', 'ms1mx', 'ML',
+          'Ms1', 'mbtmp', 'Ms7',
+          'mB', 'Md', 'Ml', 'M',
+          'MG', 'ml', 'mpv',
+          'mbLg', 'MW', 'Mw',
+          'MLv', 'mbh', 'MN',
+          'ME',
+          'Muk'  # unknown magnitude (JMA)
+    )
+
 METADATA_TYPES = ('phases', 'stations',
                   'azimuth_gap', 'azimuth_error',
                   'min_distance', 'max_distance',
@@ -80,18 +88,18 @@ class Agency(object):
     the identifier used by the event source for the object
 
     :py:attribute:: name
-    agency long name, short_name (e.g. ISC, IDC, DMN) should be saved
+    agency long name, short name (e.g. ISC, IDC, DMN) should be saved
     into source_key
 
     :py:attribute:: eventsource
     the source object we have imported the agency from. It is unique
-    together with `short_name`
+    together with `source_key`
 """
     def __repr__(self):
         if self.name:
-            return "Agency %s (%s)" % (self.name, self.short_name)
+            return "Agency %s (%s)" % (self.name, self.name)
         else:
-            return "Agency %s" % self.short_name
+            return "Agency %s" % self.source_key
 
     def __init__(self, source_key, eventsource, name=None):
         self.source_key = source_key
@@ -111,6 +119,9 @@ class Event(object):
 
     :py:attribute:: source_key
     the identifier used by the event source for the object
+
+    :py:attribute:: name
+    an event name
 
     :py:attribute:: eventsource
     the source object we have imported the agency from. unique
@@ -152,19 +163,20 @@ class MagnitudeMeasure(object):
     :py:attribute:: value
     the magnitude expressed in the unit suitable for the scale used
 
-    :py:attribute:: error
-    the magnitude error
-    (FIXME: please tell me if it is relative or absolute)
-
+    :py:attribute:: standard_error
+    the standard magnitude error
     """
 
-    def __init__(self, agency, event, origin, scale, value):
+    def __init__(self, agency, event, origin, scale, value,
+                 standard_error=None):
         assert(scale in SCALES)
         self.agency = agency
         self.event = event
         self.origin = origin
         self.scale = scale
         self.value = value
+        if standard_error:
+            self.standard_error = standard_error
 
     def __repr__(self):
         return "measure of %s at %s by %s: %s %s" % (
@@ -218,12 +230,23 @@ class Origin(object):
     the source object we have imported the origin from. unique
     together with `source_key`
 """
-    def __init__(self, time, position, depth, eventsource, source_key):
+    def __repr__(self):
+        return "%s@%s at %s" % (self.position, self.time, self.depth)
+
+    def __init__(self, position, time, eventsource, source_key,
+                 **kwargs):
         self.time = time
         self.position = position
-        self.depth = depth
         self.eventsource = eventsource
         self.source_key = source_key
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+    @staticmethod
+    def position_from_latlng(latitude, longitude):
+        position = geoalchemy.WKTSpatialElement(
+            'POINT(%s %s)' % (latitude, longitude))
+        return position
 
 
 class MeasureMetadata(object):
@@ -277,7 +300,17 @@ class CatalogueDatabase(object):
 
     def _setup(self, memory=False, filename=None, drop=False):
         """Setup a sqlalchemy connection to spatialite with the proper
-        metadata."""
+        metadata.
+
+        :param memory: if True the catalogue will use an in-memory
+        database, otherwise a file-based database is used
+
+        :param filename: the filename of the database used. Unused if
+        `memory` is True
+
+        :param drop: if True, drop the catalogue and rebuild the
+        schema
+        """
 
         if memory:
             self._engine = sqlalchemy.create_engine('sqlite://', module=sqlite)
@@ -352,6 +385,8 @@ class CatalogueDatabase(object):
                               sqlalchemy.DateTime, default=datetime.now()),
             sqlalchemy.Column('source_key',
                               sqlalchemy.String(), nullable=False),
+            sqlalchemy.Column('name',
+                              sqlalchemy.String(), nullable=True),
             sqlalchemy.Column('eventsource_id', sqlalchemy.Integer,
                               sqlalchemy.ForeignKey(
                     'catalogue_eventsource.id')))
@@ -382,7 +417,7 @@ class CatalogueDatabase(object):
                               sqlalchemy.ForeignKey('catalogue_origin.id')),
             sqlalchemy.Column('scale', sqlalchemy.Enum(*SCALES)),
             sqlalchemy.Column('value', sqlalchemy.Float()),
-            sqlalchemy.Column('absolute_error',
+            sqlalchemy.Column('standard_error',
                               sqlalchemy.Float(), nullable=True))
 
         orm.Mapper(MagnitudeMeasure, magnitudemeasure, properties={
@@ -464,6 +499,24 @@ class CatalogueDatabase(object):
         self._create_schema_magnitudemeasure()
         self._create_schema_origin()
         self._create_schema_measuremetadata()
+
+    def get_or_create(self, class_object, query_args, creation_args=None):
+        """Handy method to create an object of type `class_object`
+        given the query conditions in `query_args`. If an object
+        already exists it returns it, otherwise it creates the object
+        with params given by `creation_args`"""
+        query = self.session.query(class_object)
+        queryset = query.filter_by(**query_args)
+        if queryset.count():
+            return queryset[0], False
+        else:
+            if not creation_args:
+                creation_args = query_args
+            else:
+                creation_args.update(query_args)
+            obj = class_object(**creation_args)
+            self.session.add(obj)
+            return obj, True
 
 
 def _initialize_spatialite_db(connection):

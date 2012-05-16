@@ -21,8 +21,8 @@ import geoalchemy
 class ShouldCreateAlchemyTestCase(unittest.TestCase):
 
     def setUp(self):
-        cat = catalogue.CatalogueDatabase(memory=False, drop=True)
-        self.session = cat.session
+        self.catalogue = catalogue.CatalogueDatabase(memory=False, drop=True)
+        self.session = self.catalogue.session
 
     def test_eventsource(self):
         event_source = catalogue.EventSource(name="test1")
@@ -77,6 +77,14 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
 
         self.assertEqual(self.session.query(catalogue.MagnitudeMeasure).count(), 1)
 
+    def test_get_or_add(self):
+        event_source1, created = self.catalogue.get_or_create(
+            catalogue.EventSource, {'name': "test_5"})
+        self.assertTrue(created)
+        event_source2, created = self.catalogue.get_or_create(
+            catalogue.EventSource, {'name' : "test_5"})
+        self.assertFalse(created)
+        self.assertEqual(event_source1, event_source2)
 
     def tearDown(self):
         self.session.commit()
