@@ -79,10 +79,10 @@ def load_fixtures(session):
 class AnEqCatalogueShould(unittest.TestCase):
 
     def setUp(self):
-        cat_db = models.CatalogueDatabase(memory=False, drop=True)
-        self.session = cat_db.session
+        self.cat_db = models.CatalogueDatabase(memory=False, drop=True)
+        self.event = EventManager()
+        self.session = self.cat_db.session
         load_fixtures(self.session)
-        self.event = EventManager(self.session)
 
     def test_allows_selection_of_all_events(self):
         self.assertEqual(30, self.event.all().count())

@@ -25,7 +25,6 @@ from pysqlite2 import dbapi2 as sqlite
 import sqlalchemy
 from sqlalchemy import orm
 from sqlalchemy.events import event as sqlevent
-from geoalchemy.utils import to_wkt
 
 import geoalchemy
 
@@ -256,16 +255,25 @@ class MeasureMetadata(object):
 
 class CatalogueDatabase(object):
     """
-    This is the main class used to access the database
+    This is the main class used to access the database.
     """
 
     DEFAULT_FILENAME = "eqcatalogue.db"
+
+    _instance = None
 
     def __init__(self, filename=None, memory=False, drop=False):
         self._engine = None
         self.session = None
         self._metadata = None
         self._setup(filename=filename, memory=memory, drop=drop)
+
+    def __new__(cls, *args, **kwargs):
+        """Singleton pattern"""
+        if not cls._instance:
+            cls._instance = super(CatalogueDatabase, cls).__new__(
+                cls, *args, **kwargs)
+        return cls._instance
 
     def _setup(self, memory=False, filename=None, drop=False):
         """Setup a sqlalchemy connection to spatialite with the proper

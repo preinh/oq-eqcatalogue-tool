@@ -24,8 +24,9 @@ class EventManager(object):
     :param session: sqlalchemy session object.
     """
 
-    def __init__(self, session):
-        self.session = session
+    def __init__(self):
+        self._cat = db.CatalogueDatabase()
+        self._session = self._cat.session
 
     def all(self):
         """
@@ -33,7 +34,7 @@ class EventManager(object):
         all events inside the earthquake catalogue.
         """
 
-        return self.session.query(db.Event).join(db.MagnitudeMeasure).join(
+        return self._session.query(db.Event).join(db.MagnitudeMeasure).join(
             db.Origin)
 
     def before(self, time):
@@ -43,7 +44,7 @@ class EventManager(object):
         :param time: datetime object.
         """
 
-        return self.session.query(db.Event).join(db.MagnitudeMeasure).join(
+        return self._session.query(db.Event).join(db.MagnitudeMeasure).join(
             db.Origin).filter(db.Origin.time < time)
 
     def after(self, time):
@@ -53,7 +54,7 @@ class EventManager(object):
         :param time: datetime object.
         """
 
-        return self.session.query(db.Event).join(db.MagnitudeMeasure).join(
+        return self._session.query(db.Event).join(db.MagnitudeMeasure).join(
             db.Origin).filter(db.Origin.time > time)
 
     def between(self, time_lb, time_ub):
@@ -64,7 +65,7 @@ class EventManager(object):
         :param time_ub: time range upper bound.
         """
 
-        return self.session.query(db.Event).join(db.MagnitudeMeasure).join(
+        return self._session.query(db.Event).join(db.MagnitudeMeasure).join(
             db.Origin).filter(and_(db.Origin.time >= time_lb,
             db.Origin.time <= time_ub))
 
@@ -75,7 +76,7 @@ class EventManager(object):
         :param agency: agency name
         """
 
-        return self.session.query(db.Event).join(db.MagnitudeMeasure).join(
+        return self._session.query(db.Event).join(db.MagnitudeMeasure).join(
             db.Agency).filter(db.Agency.source_key == agency)
 
     def with_magnitudes(self, magnitudes):
@@ -86,7 +87,7 @@ class EventManager(object):
         :param magnitudes: a list containing two types of magnitudes.
         """
 
-        return self.session.query(db.Event).filter(
+        return self._session.query(db.Event).filter(
             db.Event.measures.any(
                 db.MagnitudeMeasure.scale == magnitudes[0])).filter(
                 db.Event.measures.any(db.MagnitudeMeasure.scale ==
@@ -100,7 +101,7 @@ class EventManager(object):
         :param polygon: a polygon specified in wkt format.
         """
 
-        return self.session.query(db.Event).join(db.MagnitudeMeasure).join(
+        return self._session.query(db.Event).join(db.MagnitudeMeasure).join(
                 db.Origin).filter(db.Origin.position.within(polygon))
 
     def within_distance_from_point(self, point, distance):
@@ -112,7 +113,7 @@ class EventManager(object):
         :param distance: distance specified in meters (see srid 4326).
         """
 
-        return self.session.query(db.Event).join(db.MagnitudeMeasure).join(
+        return self._session.query(db.Event).join(db.MagnitudeMeasure).join(
                 db.Origin).filter(
                 "PtDistWithin(catalogue_origin.position, GeomFromText('%s', "
                 "4326), %s)" % (point, distance))
