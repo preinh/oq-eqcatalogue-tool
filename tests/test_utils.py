@@ -24,3 +24,7 @@ def get_data_path(data_dir, filename):
     """Return the data path of the file used in test."""
 
     return os.path.join(data_dir, filename)
+
+
+def in_data_dir(filename):
+    return get_data_path(DATA_DIR, filename)

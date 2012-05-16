@@ -16,11 +16,11 @@
 import re
 import urllib
 import datetime
-import logging
 
 from eqcatalogue import models as catalogue
 
 CATALOG_URL = 'http://www.isc.ac.uk/cgi-bin/web-db-v4'
+
 ANALYSIS_TYPES = {'a': 'automatic',
                   'm': 'manual',
                   'g': 'guess'}
@@ -31,6 +31,7 @@ LOCATION_METHODS = {
     'g': 'ground truth',
     'o': 'other'
     }
+
 EVENT_TYPES = {
     'uk': 'unknown',
     'de': 'damaging earthquake ( Not standard IMS )',
@@ -54,6 +55,9 @@ EVENT_TYPES = {
 
 
 class UnexpectedLine(BaseException):
+    """
+    Exception raised when an unexpected line input is found
+    """
     def __init__(self, state, line_type):
         super(UnexpectedLine, self).__init__()
         self.state = state
@@ -66,7 +70,16 @@ class UnexpectedLine(BaseException):
             self.state, self.line_type, self.line, len(self.line))
 
 
+# Imp. Notes. Parsing is done by using a FSM. Each line has a
+# line_type which acts as an "event" and it is an instance of a
+# particular State
+
 class BaseState(object):
+    """
+    The base state object. A state stores the catalogue db instance
+    and calculate the next state based on the current event
+    """
+
     def __init__(self):
         self._catalogue = None
 
@@ -76,7 +89,7 @@ class BaseState(object):
     def is_start(self):
         return False
 
-    def transitionRule(self, line_type):
+    def transition_rule(self, line_type):
         next_state = self._get_next_state(line_type)
         if not next_state:
             raise UnexpectedLine(self, line_type)
@@ -84,10 +97,19 @@ class BaseState(object):
             return next_state
 
     def process_line(self, _):
+        """
+        When a state is initialized, this function is called. It
+        actually parses the line content and eventually creates the
+        proper model object. It returns a dictionary with the partial
+        summary of this import phase
+        """
         return {}
 
 
 class StartState(BaseState):
+    """
+    Start State. The FSM is initialized with this state
+    """
     def __init__(self):
         super(StartState, self).__init__()
         self.eventsource = None
@@ -111,6 +133,10 @@ class StartState(BaseState):
 
 
 class EventState(BaseState):
+    """
+    When data about a seismic event arrives, the fsm jumps to an Event
+    State
+    """
     def __init__(self, eventsource):
         super(EventState, self).__init__()
         self._eventsource = eventsource
@@ -122,6 +148,8 @@ class EventState(BaseState):
 
     @classmethod
     def match(cls, line):
+        """Return True if line match a proper regexp, that triggers an
+        event that makes the fsm jump to an EventState"""
         event_regexp = re.compile(
             '^Event (?P<source_event_id>\w{0,9}) (?P<name>.{0,65})$')
         return event_regexp.match(line)
@@ -305,6 +333,9 @@ class OriginBlockState(BaseState):
 
 
 class MeasureBlockState(BaseState):
+    """
+    When a Measure Block is found the fsm jumps to this state
+    """
     def __init__(self, event, metadata):
         super(MeasureBlockState, self).__init__()
         self.event = event
@@ -364,9 +395,15 @@ class MeasureBlockState(BaseState):
 
 
 class MeasureUKScaleBlockState(MeasureBlockState):
+    """
+    When a Measure Block with an unknown scale is found the fsm jumps
+    to this state
+    """
+
     @classmethod
     def match(cls, line):
-        pat = '^(?P<val>-*[0-9]+\.[0-9]+)\s+(?P<error>[0-9]+\.[0-9]+)*\s+(?P<stations>[0-9]+)*\s+(?P<agency>\w+)\s+(?P<origin>\w+)$'
+        pat = ('^(?P<val>-*[0-9]+\.[0-9]+)\s+(?P<error>[0-9]+\.[0-9]+)*\s+'
+               '(?P<stations>[0-9]+)*\s+(?P<agency>\w+)\s+(?P<origin>\w+)$')
         return re.compile(pat).match(line)
 
     def process_line(self, line):
@@ -383,9 +420,20 @@ class MeasureUKScaleBlockState(MeasureBlockState):
 
 
 class V1(object):
-    log = logging.getLogger(__name__)
+    """
+    The main class implementing the FSM.
+    """
 
     def __init__(self, stream, cat):
+        """
+        Initialize the FSM.
+
+        :py:param:: stream
+        A stream object storing the seismic event data
+
+        :py:param:: cat
+        The catalogue database used to import the data
+        """
         self._stream = stream
         self._catalogue = cat
         self._summary = {}
@@ -393,6 +441,11 @@ class V1(object):
         self._transition(StartState())
 
     def load(self, allow_junk=True):
+        """
+        Read and parse from the input stream the data and insert them
+        into the catalogue db. If allow_junk is True, it allows
+        unexpected line inputs at the beginning of the file
+        """
         for line in self._stream:
             line = line.strip()
 
@@ -407,7 +460,7 @@ class V1(object):
                 break
 
             try:
-                next_state = self._state.transitionRule(line_type)
+                next_state = self._state.transition_rule(line_type)
                 self._transition(next_state)
                 state_output = next_state.process_line(line)
                 self._update_summary(state_output)
