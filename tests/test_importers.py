@@ -13,16 +13,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with eqcatalogueTool. If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import unittest
 from eqcatalogue.importers import isf_bulletin as isf
 from eqcatalogue import models as catalogue
+from tests.test_utils import in_data_dir
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
-
-
-def in_data_dir(filename):
-    return os.path.join(DATA_DIR, filename)
 
 # the following data has been downloaded by issuing the
 # following command
