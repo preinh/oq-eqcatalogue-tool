@@ -169,6 +169,7 @@ class MagnitudeMeasure(object):
 
     def __init__(self, agency, event, origin, scale, value,
                  standard_error=None):
+        assert(scale in SCALES)
         self.agency = agency
         self.event = event
         self.origin = origin
@@ -268,25 +269,34 @@ class MeasureMetadata(object):
     def __repr__(self):
         return "%s = %s" % (self.name, self.value)
 
-    def __init__(self, measure, name, value):
-        assert(name in METADATA_TYPES)
-        self.name = name
+    def __init__(self, metadata_type, value, magnitudemeasure):
+        assert(metadata_type in METADATA_TYPES)
+        self.name = metadata_type
         self.value = value
-        self.magnitudemeasure = measure
+        self.magnitudemeasure = magnitudemeasure
 
 
 class CatalogueDatabase(object):
     """
-    This is the main class used to access the database
+    This is the main class used to access the database.
     """
 
     DEFAULT_FILENAME = "eqcatalogue.db"
+
+    _instance = None
 
     def __init__(self, filename=None, memory=False, drop=False):
         self._engine = None
         self.session = None
         self._metadata = None
         self._setup(filename=filename, memory=memory, drop=drop)
+
+    def __new__(cls, *args, **kwargs):
+        """Singleton pattern"""
+        if not cls._instance:
+            cls._instance = super(CatalogueDatabase, cls).__new__(
+                cls, *args, **kwargs)
+        return cls._instance
 
     def _setup(self, memory=False, filename=None, drop=False):
         """Setup a sqlalchemy connection to spatialite with the proper
@@ -310,7 +320,8 @@ class CatalogueDatabase(object):
                 'sqlite:///%s' % filename,
                 module=sqlite,
                 poolclass=sqlalchemy.pool.QueuePool,
-                pool_size=1)
+                pool_size=1,
+                )
         sqlevent.listen(self._engine,
                         "first_connect",
                         _connect)
@@ -437,7 +448,7 @@ class CatalogueDatabase(object):
             sqlalchemy.Column('time_error', sqlalchemy.Float(), nullable=True),
             sqlalchemy.Column('time_rms', sqlalchemy.Float(), nullable=True),
             geoalchemy.GeometryExtensionColumn('position',
-                                               geoalchemy.Point(2),
+                                               geoalchemy.Point(2, srid=4326),
                                                nullable=False),
             sqlalchemy.Column('semi_minor_90error',
                               sqlalchemy.Float(),
@@ -474,7 +485,7 @@ class CatalogueDatabase(object):
         orm.Mapper(MeasureMetadata, measuremetadata, properties={
                 'magnitudemeasure': orm.relationship(
                     MagnitudeMeasure,
-                    backref=orm.backref('metadatas'))})
+                    backref=orm.backref('metadata'))})
         geoalchemy.GeometryDDL(measuremetadata)
 
     def _create_schema(self):
@@ -516,7 +527,7 @@ def _initialize_spatialite_db(connection):
     try:
         connection.execute("INSERT INTO spatial_ref_sys"
                            "(srid, auth_name, auth_srid,"
-                           " ref_sys_name, proj4text)"
+                           " ref_sys_name,proj4text)"
                            "VALUES (4326, 'epsg', 4326, 'WGS 84',"
                            " '+proj=longlat "
                            "+ellps=WGS84 +datum=WGS84 +no_defs')")
