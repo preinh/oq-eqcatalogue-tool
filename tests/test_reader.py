@@ -17,7 +17,7 @@ import unittest
 from StringIO import StringIO
 
 from eqcatalogue.reader import CsvEqCatalogueReader, Converter
-from eqcatalogue.catalogue import STR_TRANSF, INT_TRANSF, FLOAT_TRANSF
+from eqcatalogue.reader_utils import STR_TRANSF, INT_TRANSF, FLOAT_TRANSF
 
 
 class EqCatalogueReaderTestCase(unittest.TestCase):
