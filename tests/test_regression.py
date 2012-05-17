@@ -18,11 +18,12 @@ import numpy as np
 from tests.test_utils import in_data_dir
 from numpy.ma.testutils import assert_almost_equal
 
-from eqcatalogue import regression
+from eqcatalogue.regression import (EmpiricalMagnitudeScalingRelationship,
+                                    LinearModel, PolynomialModel)
 from eqcatalogue import managers
 from eqcatalogue.importers import isf_bulletin
 from eqcatalogue import models as catalogue
-from eqcatalogue.events import EventManager
+from eqcatalogue import selection
 
 
 class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
@@ -32,51 +33,52 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
         isf_bulletin.V1.import_events(
             file(in_data_dir('isc-query-small.html')),
                                       cat)
-        events = EventManager().with_agencies(
+        self.events = managers.EventManager().with_agencies(
             'ISC', 'IDC', 'NEIC').with_magnitudes(
                 'mb', 'MS', 'MW').all()
-        self.emsr = regression.EmpiricalMagnitudeScalingRelationship(
-            'mb', 'MW')
-        self.emsr.grouped_events = [
-            {'event': events[0],
-             'measures': events[0].measures},
-            {'event': events[1],
-             'measures': events[1].measures},
-            {'event': events[2],
-             'measures': events[2].measures}
-            ]
+        self.native_scale = 'mb'
+        self.target_scale = 'MW'
+        self.grouped_measures = [{'measures': self.events[0].measures},
+            {'measures': self.events[1].measures},
+            {'measures': self.events[2].measures}]
 
     def test_simple_ranking(self):
         # Assess
-        ranking = (('ISC', 'Mw'), ('IDC', 'mb'))
+        ranking = {'Mw': ['ISC', 'IDC'],
+                   'mb': ['IDC']}
 
         # Act
-        self.emsr.select_measures(ranking)
+        emsr = EmpiricalMagnitudeScalingRelationship.make_from_measures(
+            self.native_scale, self.target_scale,
+            self.grouped_measures, selection.AgencyRanking, ranking)
 
         # Assert
-        self.assertEqual(len(self.emsr.native_measures), 3)
-        self.assertEqual(len(self.emsr.target_measures), 3)
-        for measure in self.emsr.native_measures:
+        self.assertEqual(len(emsr.native_measures), 3)
+        self.assertEqual(len(emsr.target_measures), 3)
+        for measure in emsr.native_measures:
             self.assertEqual(measure.scale, 'mb')
             self.assertEqual(measure.agency.name, 'IDC')
-        for measure in self.emsr.target_measures:
+        for measure in emsr.target_measures:
             self.assertEqual(measure.scale, 'Mw')
             self.assertEqual(measure.agency.name, 'ISC')
 
     def test_pattern_ranking(self):
         # Assess
-        ranking = (('ISC', '%'), ('IDC', 'mb'))
+        ranking = {'.+': ['ISC'],
+            'mb': ['IDC']}
 
         # Act
-        self.emsr.select_measures(ranking)
+        emsr = EmpiricalMagnitudeScalingRelationship.make_from_measures(
+            self.native_scale, self.target_scale,
+            self.grouped_measures, selection.AgencyRanking, ranking)
 
         # Assert
-        self.assertEqual(len(self.emsr.native_measures), 3)
-        self.assertEqual(len(self.emsr.target_measures), 3)
-        for measure in self.emsr.native_measures:
+        self.assertEqual(len(emsr.native_measures), 3)
+        self.assertEqual(len(emsr.target_measures), 3)
+        for measure in emsr.native_measures:
             self.assertEqual(measure.scale, 'mb')
             self.assertEqual(measure.agency.name, 'ISC')
-        for measure in self.emsr.target_measures:
+        for measure in emsr.target_measures:
             self.assertEqual(measure.scale, 'Mw')
             self.assertEqual(measure.agency.name, 'ISC')
 
@@ -93,12 +95,12 @@ class ShouldPerformRegression(unittest.TestCase):
         native_measures.sigma = np.random.uniform(0.02, 0.2, 1000)
         target_measures.measures = A + B * native_measures.measures
         target_measures.sigma = np.random.uniform(0.025, 0.2, 1000)
-        emsr = regression.EmpiricalMagnitudeScalingRelationship(
+        emsr = EmpiricalMagnitudeScalingRelationship(
             native_measures,
             target_measures)
 
         # Act
-        output = emsr.apply_regression_model(regression.LinearModel)
+        output = emsr.apply_regression_model(LinearModel)
 
         # Assert
         assert_almost_equal(np.array([A, B]), output.beta)
@@ -116,12 +118,12 @@ class ShouldPerformRegression(unittest.TestCase):
         target_measures.measures = C + B * native_measures.measures +\
           A * (native_measures.measures ** 2.)
         target_measures.sigma = np.random.uniform(0.025, 0.2, 1000)
-        emsr = regression.EmpiricalMagnitudeScalingRelationship(
+        emsr = EmpiricalMagnitudeScalingRelationship(
             native_measures,
             target_measures)
 
         # Act
-        output = emsr.apply_regression_model(regression.PolynomialModel,
+        output = emsr.apply_regression_model(PolynomialModel,
                                              order=2)
 
         # Assert

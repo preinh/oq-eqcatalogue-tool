@@ -22,7 +22,7 @@ from tests.test_utils import DATA_DIR, get_data_path
 
 from eqcatalogue.reader import CsvEqCatalogueReader, Converter
 from eqcatalogue import models
-from eqcatalogue.events import EventManager
+from eqcatalogue.managers import EventManager
 
 
 def load_fixtures(session):
