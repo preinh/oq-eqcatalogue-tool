@@ -347,6 +347,10 @@ class CatalogueDatabase(object):
             self._metadata.drop_all()
         self._metadata.create_all(self._engine)
 
+    def recreate(self):
+        self._metadata.drop_all()
+        self._metadata.create_all(self._engine)
+
     def _create_schema_eventsource(self):
         """Create Event Source Schema"""
         metadata = self._metadata
