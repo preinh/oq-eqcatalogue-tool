@@ -116,3 +116,15 @@ class EventManager(object):
                 db.Origin).filter(
                 "PtDistWithin(catalogue_origin.position, GeomFromText('%s', "
                 "4326), %s)" % (point, distance))
+
+    @classmethod
+    def group_measures(cls, query_obj):
+        """
+        Group all measures by event
+        :param query_obj: sqlalchemy query object.
+        """
+
+        groups = []
+        for ev in query_obj.all():
+            groups.append(dict(event=ev, measures=ev.measures))
+        return groups
