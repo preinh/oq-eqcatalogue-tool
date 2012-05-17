@@ -290,7 +290,9 @@ class Singleton(type):
 
 class CatalogueDatabase(object):
     """
-    This is the main class used to access the database.
+    This is the main class used to access the database. It is a
+    singleton object, so you should instantiate only once in your
+    application
     """
 
     __metaclass__ = Singleton

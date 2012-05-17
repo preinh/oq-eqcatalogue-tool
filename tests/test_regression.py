@@ -30,6 +30,7 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
 
     def setUp(self):
         cat = catalogue.CatalogueDatabase(memory=True)
+        cat.recreate()
         isf_bulletin.V1.import_events(
             file(in_data_dir('isc-query-small.html')),
                                       cat)

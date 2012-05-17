@@ -20,7 +20,7 @@ from geoalchemy import WKTSpatialElement
 
 from tests.test_utils import DATA_DIR, get_data_path
 
-from eqcatalogue.reader import CsvEqCatalogueReader, Converter
+from eqcatalogue.importers.csv1 import CsvEqCatalogueReader, Converter
 from eqcatalogue import models
 from eqcatalogue.managers import EventManager
 
