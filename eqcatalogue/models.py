@@ -276,11 +276,23 @@ class MeasureMetadata(object):
         self.magnitudemeasure = magnitudemeasure
 
 
+class Singleton(type):
+    def __init__(cls, name, bases, d):
+        super(Singleton, cls).__init__(name, bases, d)
+        cls.instance = None
+
+    def __call__(cls, *args, **kw):
+        if cls.instance is None:
+            cls.instance = super(Singleton, cls).__call__(*args, **kw)
+        return cls.instance
+
+
 class CatalogueDatabase(object):
     """
     This is the main class used to access the database.
     """
 
+    __metaclass__ = Singleton
     DEFAULT_FILENAME = "eqcatalogue.db"
 
     _instance = None
@@ -293,6 +305,7 @@ class CatalogueDatabase(object):
 
     def __new__(cls, *args, **kwargs):
         """Singleton pattern"""
+
         if not cls._instance:
             cls._instance = super(CatalogueDatabase, cls).__new__(
                 cls, *args, **kwargs)

@@ -29,11 +29,14 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
 
     def setUp(self):
         cat = catalogue.CatalogueDatabase(memory=True)
-        isf_bulletin.V1.import_events(file(in_data_dir('isc-query-small')),
+        isf_bulletin.V1.import_events(
+            file(in_data_dir('isc-query-small.html')),
                                       cat)
-        events = EventManager().all()
+        events = EventManager().with_agencies(
+            'ISC', 'IDC', 'NEIC').with_magnitudes(
+                'mb', 'MS', 'MW').all()
         self.emsr = regression.EmpiricalMagnitudeScalingRelationship(
-            'mb', 'Mw')
+            'mb', 'MW')
         self.emsr.grouped_events = [
             {'event': events[0],
              'measures': events[0].measures},
@@ -46,15 +49,36 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
     def test_simple_ranking(self):
         # Assess
         ranking = (('ISC', 'Mw'), ('IDC', 'mb'))
+
         # Act
         self.emsr.select_measures(ranking)
+
         # Assert
         self.assertEqual(len(self.emsr.native_measures), 3)
         self.assertEqual(len(self.emsr.target_measures), 3)
         for measure in self.emsr.native_measures:
             self.assertEqual(measure.scale, 'mb')
+            self.assertEqual(measure.agency.name, 'IDC')
         for measure in self.emsr.target_measures:
             self.assertEqual(measure.scale, 'Mw')
+            self.assertEqual(measure.agency.name, 'ISC')
+
+    def test_pattern_ranking(self):
+        # Assess
+        ranking = (('ISC', '%'), ('IDC', 'mb'))
+
+        # Act
+        self.emsr.select_measures(ranking)
+
+        # Assert
+        self.assertEqual(len(self.emsr.native_measures), 3)
+        self.assertEqual(len(self.emsr.target_measures), 3)
+        for measure in self.emsr.native_measures:
+            self.assertEqual(measure.scale, 'mb')
+            self.assertEqual(measure.agency.name, 'ISC')
+        for measure in self.emsr.target_measures:
+            self.assertEqual(measure.scale, 'Mw')
+            self.assertEqual(measure.agency.name, 'ISC')
 
 
 class ShouldPerformRegression(unittest.TestCase):
