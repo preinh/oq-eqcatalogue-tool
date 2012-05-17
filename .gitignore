@@ -7,4 +7,5 @@ nosetest*
 .#*
 *.db-journal
 .ropeproject
+docs/build
 
