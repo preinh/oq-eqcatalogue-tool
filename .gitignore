@@ -9,3 +9,5 @@ nosetest*
 .ropeproject
 *_flymake.py
 tests/data/actual*
+docs/build
+

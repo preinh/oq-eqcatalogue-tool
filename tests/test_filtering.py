@@ -76,7 +76,7 @@ def load_fixtures(session):
         session.add(measure_meta)
 
 
-class AnEqCatalogueShould(unittest.TestCase):
+class AnEventManagerShould(unittest.TestCase):
 
     def setUp(self):
         self.cat_db = models.CatalogueDatabase(memory=False, drop=True)
@@ -144,6 +144,17 @@ class AnEqCatalogueShould(unittest.TestCase):
         distance = 2400000
         self.assertEqual(5, len(self.event.within_distance_from_point(point,
             distance).all()))
+
+    def test_allows_grouping_of_measures(self):
+        all_events = self.event.all()
+        groups = EventManager.group_measures(all_events)
+
+        self.assertEqual(5, len(groups))
+        self.assertEqual(6, len(groups[0]['measures']))
+        self.assertEqual(13, len(groups[1]['measures']))
+        self.assertEqual(1, len(groups[2]['measures']))
+        self.assertEqual(6, len(groups[3]['measures']))
+        self.assertEqual(4, len(groups[4]['measures']))
 
     def tearDown(self):
         self.session.commit()
