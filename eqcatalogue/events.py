@@ -34,8 +34,7 @@ class EventManager(object):
         all events inside the earthquake catalogue.
         """
 
-        return self._session.query(db.Event).join(db.MagnitudeMeasure).join(
-            db.Origin)
+        return self._session.query(db.Event)
 
     def before(self, time):
         """
