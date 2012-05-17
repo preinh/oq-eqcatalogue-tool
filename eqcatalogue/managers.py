@@ -7,15 +7,34 @@ import eqcatalogue.models as db
 
 class MeasureManager(object):
     """
-    Manage a list of measures
+    Manage a list of quantitative measures
+    :py:attribute:: measures
+    A list of float
+    :py:attribute:: sigma
+    Standard error of measures. Can be fixed (a single float) or a
+    list of float
+    :py:attribute:: name
+    the magnitude scale
     """
     def __init__(self, name):
         self.measures = []
         self.sigma = []
         self.name = name
+        # holds a list of magnitude measure objects
+        self.magnitude_measures = []
+
+    def append(self, measure):
+        self.magnitude_measures.append(measure)
+        self.measures.append(measure.value)
 
     def __repr__(self):
         return self.name
+
+    def __iter__(self):
+        return self.measures.__iter__()
+
+    def __len__(self):
+        return len(self.measures)
 
 
 class EventManager(object):
@@ -37,13 +56,17 @@ class EventManager(object):
 
     @classmethod
     def clone_with_queryset(self, em, queryset):
+        """Create another EventManager with the same catalogue and
+        initializing queryset with the passed one"""
         new_em = EventManager(em.cat, queryset)
         return new_em
 
     def all(self):
+        """Layer compat with SQLAlchemy Query object"""
         return self.queryset.all()
 
     def count(self):
+        """Layer compat with SQLAlchemy Query object"""
         return self.queryset.count()
 
     def before(self, time):

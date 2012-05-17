@@ -33,9 +33,10 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
         isf_bulletin.V1.import_events(
             file(in_data_dir('isc-query-small.html')),
                                       cat)
-        self.events = managers.EventManager().with_agencies(
-            'ISC', 'IDC', 'NEIC').with_magnitudes(
-                'mb', 'MS', 'MW').all()
+        self.event_manager = managers.EventManager().with_agencies(
+            'ISC', 'IDC', 'GCMT').with_magnitudes(
+                'mb', 'MS', 'MW')
+        self.events = self.event_manager.all()
         self.native_scale = 'mb'
         self.target_scale = 'MW'
         self.grouped_measures = [{'measures': self.events[0].measures},
@@ -44,43 +45,45 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
 
     def test_simple_ranking(self):
         # Assess
-        ranking = {'Mw': ['ISC', 'IDC'],
-                   'mb': ['IDC']}
+        ranking = {'MW': ['GCMT', 'MOS', 'IDC'],
+                   'mb': ['IDC', 'ISC']}
 
         # Act
         emsr = EmpiricalMagnitudeScalingRelationship.make_from_measures(
             self.native_scale, self.target_scale,
-            self.grouped_measures, selection.AgencyRanking, ranking)
+            self.grouped_measures, selection.AgencyRanking, ranking=ranking)
 
         # Assert
         self.assertEqual(len(emsr.native_measures), 3)
         self.assertEqual(len(emsr.target_measures), 3)
-        for measure in emsr.native_measures:
-            self.assertEqual(measure.scale, 'mb')
-            self.assertEqual(measure.agency.name, 'IDC')
-        for measure in emsr.target_measures:
-            self.assertEqual(measure.scale, 'Mw')
-            self.assertEqual(measure.agency.name, 'ISC')
+        for measure in emsr.native_measures.magnitude_measures:
+            self.assertEqual(measure.scale, self.native_scale)
+            self.assertEqual(measure.agency.source_key, 'IDC')
+        for measure in emsr.target_measures.magnitude_measures:
+            self.assertEqual(measure.scale, self.target_scale)
+            self.assertEqual(measure.agency.source_key, 'GCMT',
+                             "%s is not from GCMT" % measure)
 
     def test_pattern_ranking(self):
         # Assess
-        ranking = {'.+': ['ISC'],
-            'mb': ['IDC']}
+        ranking = {'mb': ['IDC'],
+                   'M.': ['GCMT', 'ISC', 'ISCJB']}
 
         # Act
-        emsr = EmpiricalMagnitudeScalingRelationship.make_from_measures(
+        emsr = EmpiricalMagnitudeScalingRelationship.make_from_events(
             self.native_scale, self.target_scale,
-            self.grouped_measures, selection.AgencyRanking, ranking)
+            self.event_manager, selection.AgencyRanking, ranking=ranking)
 
         # Assert
-        self.assertEqual(len(emsr.native_measures), 3)
-        self.assertEqual(len(emsr.target_measures), 3)
-        for measure in emsr.native_measures:
-            self.assertEqual(measure.scale, 'mb')
-            self.assertEqual(measure.agency.name, 'ISC')
-        for measure in emsr.target_measures:
-            self.assertEqual(measure.scale, 'Mw')
-            self.assertEqual(measure.agency.name, 'ISC')
+        self.assertEqual(len(emsr.native_measures), 6)
+        self.assertEqual(len(emsr.target_measures), 6)
+        for measure in emsr.native_measures.magnitude_measures:
+            self.assertEqual(measure.scale, self.native_scale)
+            self.assertEqual(measure.agency.source_key, 'IDC')
+        for measure in emsr.target_measures.magnitude_measures:
+            self.assertEqual(measure.scale, self.target_scale)
+            self.assertEqual(measure.agency.source_key, 'GCMT',
+                             "%s is not from GCMT" % measure)
 
 
 class ShouldPerformRegression(unittest.TestCase):

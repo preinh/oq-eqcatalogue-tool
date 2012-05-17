@@ -72,7 +72,7 @@ we import data from
         self.name = name
 
     def __repr__(self):
-        return "Event Source: %s" % self.name
+        return "EventSource %s" % self.name
 
 
 class Agency(object):
@@ -97,7 +97,7 @@ class Agency(object):
 """
     def __repr__(self):
         if self.name:
-            return "Agency %s (%s)" % (self.name, self.name)
+            return "Agency %s (%s)" % (self.source_key, self.name)
         else:
             return "Agency %s" % self.source_key
 
@@ -180,7 +180,7 @@ class MagnitudeMeasure(object):
 
     def __repr__(self):
         return "measure of %s at %s by %s: %s %s" % (
-            self.event, self.origin, self.agency, self.scale, self.value)
+            self.event, self.origin, self.agency, self.value, self.scale)
 
 
 class Origin(object):
@@ -231,9 +231,7 @@ class Origin(object):
     together with `source_key`
 """
     def __repr__(self):
-        return "id:%s eventsource:%s sourcekey:%s" % (self.id,
-                                                      self.eventsource,
-                                                       self.source_key)
+        return "Origin %s %s" % (self.id, self.source_key)
 
     def __init__(self, position, time, eventsource, source_key,
                  **kwargs):

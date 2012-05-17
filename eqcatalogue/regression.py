@@ -221,9 +221,27 @@ class EmpiricalMagnitudeScalingRelationship(object):
     DEFAULT_MODEL_TYPE = LinearModel
 
     @classmethod
+    def make_from_events(cls, native_scale, target_scale,
+                         events, selection_strategy_class,
+                         **selection_strategy_args):
+        """
+        Build a EmpiricalMagnitudeScalingRelationship by a selecting
+        measures from an event manager object according to
+        a specific strategy.
+        :py:param:: events
+        An Event manager object.
+        See EmpiricalMagnitudeScalingRelationship.make_from_measures
+        for a description of other params
+        """
+        return cls.make_from_measures(native_scale, target_scale,
+                                      events.group_measures(),
+                                      selection_strategy_class,
+                                      **selection_strategy_args)
+
+    @classmethod
     def make_from_measures(cls, native_scale, target_scale,
                            grouped_measures, selection_strategy_class,
-                           selection_strategy_args):
+                           **selection_strategy_args):
         """
         Build a EmpiricalMagnitudeScalingRelationship by a selecting
         measures from a grouped event measure dictionary according to
