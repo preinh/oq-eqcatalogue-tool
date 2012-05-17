@@ -20,6 +20,7 @@ Implement Regression models for Empirical Magnitude Scaling Relationship
 import math
 from scipy import odr
 import numpy as np
+from eqcatalogue import selection
 
 REGRESSOR_DEFAULT_MAX_ITERATIONS = 1000
 PL_DEFAULT_INITIAL_VALUE_ORDER = 2
@@ -222,8 +223,8 @@ class EmpiricalMagnitudeScalingRelationship(object):
 
     @classmethod
     def make_from_events(cls, native_scale, target_scale,
-                         events, selection_strategy_class,
-                         **selection_strategy_args):
+                         events, selection_strategy,
+                         missing_uncertainty_strategy=None):
         """
         Build a EmpiricalMagnitudeScalingRelationship by a selecting
         measures from an event manager object according to
@@ -235,13 +236,13 @@ class EmpiricalMagnitudeScalingRelationship(object):
         """
         return cls.make_from_measures(native_scale, target_scale,
                                       events.group_measures(),
-                                      selection_strategy_class,
-                                      **selection_strategy_args)
+                                      selection_strategy,
+                                      missing_uncertainty_strategy)
 
     @classmethod
     def make_from_measures(cls, native_scale, target_scale,
-                           grouped_measures, selection_strategy_class,
-                           **selection_strategy_args):
+                           grouped_measures, selection_strategy,
+                           missing_uncertainty_strategy=None):
         """
         Build a EmpiricalMagnitudeScalingRelationship by a selecting
         measures from a grouped event measure dictionary according to
@@ -254,18 +255,18 @@ class EmpiricalMagnitudeScalingRelationship(object):
         A list of dictionary objects. Each dictionary stores the association
         between an event (the value at key 'event') and a list of
         measures (the value at key 'measures').
-        :py:param:: selection_strategy_class
-        A MeasureSelectionStrategy class used to select the proper measures
-        :py:param:: selection_strategy_args
-        Params passed to the selection_strategy_class
+        :py:param:: selection_strategy
+        A MeasureSelectionStrategy object used to select the proper measures
+        :py:param:: missing_uncertainty_strategy
+        A MissingUncertaintyStrategy object used to handle measures
+        without standard error info
         """
         new_emsr = cls()
-        selection_strategy = selection_strategy_class(
-            **selection_strategy_args)
         native_measures, target_measures = selection_strategy.select(
             grouped_measures,
             native_scale,
-            target_scale)
+            target_scale,
+            missing_uncertainty_strategy or selection.MUSDiscard())
         new_emsr.native_measures = native_measures
         new_emsr.target_measures = target_measures
         return new_emsr

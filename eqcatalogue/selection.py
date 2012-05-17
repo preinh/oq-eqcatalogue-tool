@@ -14,12 +14,64 @@
 # along with eqcataloguetool. If not, see <http://www.gnu.org/licenses/>.
 
 """
-Implement Measure Selection Strategies
+Implement Measure Selection Strategies and Missing Uncertainty Handling
 """
 
 import re
 
 from eqcatalogue.managers import MeasureManager
+
+
+class MUSDiscard(object):
+    """
+    Missing uncertainty strategy class:
+    Discard Measure if it has not a standard error
+    """
+    def should_be_discarded(self, measure):
+        ret = not measure.standard_error
+        return ret
+
+
+class MUSSetEventMaximum(MUSDiscard):
+    """
+    Missing uncertainty strategy class:
+
+    Discard Measure if no measure of the same event has not a standard
+    error, otherwise takes the maximum error (in the same event) as
+    default
+    """
+    def _get_event_errors(self, measure):
+        errors = [m.standard_error for m in measure.event.measures
+                  if m.standard_error]
+        return errors
+
+    def should_be_discarded(self, measure):
+        errors = self._get_event_errors(measure)
+        ret = super(MUSSetEventMaximum, self).should_be_discarded(
+           measure) and len(errors) == 0
+        return ret
+
+    def get_default(self, measure):
+        errors = self._get_event_errors(measure)
+        return max(errors)
+
+
+class MUSSetDefault(object):
+    """
+    Missing uncertainty strategy class:
+
+    Never discard the measure. Instead provide a default standard
+    error if missing
+    """
+
+    def __init__(self, default):
+        self.default = default
+
+    def get_default(self, _):
+        return self.default
+
+    def should_be_discarded(self):
+        return False
 
 
 class AgencyRanking(object):
@@ -47,7 +99,8 @@ class AgencyRanking(object):
         return -1
 
     def select(self, grouped_measures,
-               native_scale, target_scale):
+               native_scale, target_scale,
+               mus):
         """
         Build a native_measure and a target_measure manager. Each
         manager is built by selecting a measure from a
@@ -60,6 +113,9 @@ class AgencyRanking(object):
         as value
         :py:param:: native_scale, target_scale
         The native and target scale used
+        :py:param:: mus
+        A missing uncertainty strategy object used to handle the case
+        when no standard error of a measure is provided
         """
         native_measures = MeasureManager(native_scale)
         target_measures = MeasureManager(target_scale)
@@ -69,12 +125,16 @@ class AgencyRanking(object):
             m['sorted_target_measures'] = []
             measures = m['measures']
             for measure in measures:
+                if mus.should_be_discarded(measure):
+                    continue
                 if measure.scale == native_scale:
                     m['sorted_native_measures'].append(
                         (self.calculate_rank(measure), measure))
                 elif measure.scale == target_scale:
                     m['sorted_target_measures'].append(
                         (self.calculate_rank(measure), measure))
+                if not measure.standard_error:
+                    measure.standard_error = mus.get_default(measure)
             m['sorted_native_measures'].sort(reverse=True)
             m['sorted_target_measures'].sort(reverse=True)
 

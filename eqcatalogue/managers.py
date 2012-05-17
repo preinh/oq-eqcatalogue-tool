@@ -24,8 +24,10 @@ class MeasureManager(object):
         self.magnitude_measures = []
 
     def append(self, measure):
+        assert(measure and measure.value and measure.standard_error)
         self.magnitude_measures.append(measure)
         self.measures.append(measure.value)
+        self.sigma.append(measure.standard_error)
 
     def __repr__(self):
         return self.name

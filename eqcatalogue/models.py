@@ -179,8 +179,9 @@ class MagnitudeMeasure(object):
             self.standard_error = standard_error
 
     def __repr__(self):
-        return "measure of %s at %s by %s: %s %s" % (
-            self.event, self.origin, self.agency, self.value, self.scale)
+        return "measure of %s at %s by %s: %s %s (sigma=%s)" % (
+            self.event, self.origin, self.agency, self.value, self.scale,
+            self.standard_error)
 
 
 class Origin(object):
