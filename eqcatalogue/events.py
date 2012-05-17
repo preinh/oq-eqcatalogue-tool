@@ -15,7 +15,6 @@
 
 
 import eqcatalogue.models as db
-from sqlalchemy import and_
 
 
 class EventManager(object):
@@ -24,96 +23,106 @@ class EventManager(object):
     :param session: sqlalchemy session object.
     """
 
-    def __init__(self):
-        self._cat = db.CatalogueDatabase()
-        self._session = self._cat.session
+    def __init__(self, cat=None, queryset=None):
+        self.cat = cat or db.CatalogueDatabase()
+        self._session = self.cat.session
+        self.queryset = queryset or self._session.query(db.Event).join(
+            db.MagnitudeMeasure).join(db.Origin).join(db.Agency)
+
+    @classmethod
+    def clone_with_queryset(self, em, queryset):
+        new_em = EventManager(em.cat, queryset)
+        return new_em
 
     def all(self):
-        """
-        Returns a query object which allows to get
-        all events inside the earthquake catalogue.
-        """
+        return self.queryset.all()
 
-        return self._session.query(db.Event).join(db.MagnitudeMeasure).join(
-            db.Origin)
+    def count(self):
+        return self.queryset.count()
 
     def before(self, time):
         """
-        Returns a query object which allows to get
+        return EventManager.clone(self) which allows to get
         all events before a specified time, inside the earthquake catalogue.
         :param time: datetime object.
         """
+        queryset = self.queryset.filter(db.Origin.time < time)
 
-        return self._session.query(db.Event).join(db.MagnitudeMeasure).join(
-            db.Origin).filter(db.Origin.time < time)
+        return EventManager.clone_with_queryset(self, queryset)
 
     def after(self, time):
         """
-        Returns a query object which allows to get
+        return EventManager.clone(self) which allows to get
         all events after a specified time, inside the earthquake catalogue.
         :param time: datetime object.
         """
+        queryset = self.queryset.filter(db.Origin.time > time)
 
-        return self._session.query(db.Event).join(db.MagnitudeMeasure).join(
-            db.Origin).filter(db.Origin.time > time)
+        return EventManager.clone_with_queryset(self, queryset)
 
     def between(self, time_lb, time_ub):
         """
-        Returns a query object which allows to get
+        return EventManager.clone(self) which allows to get
         all events in a time range, inside the earthquake catalogue.
         :param time_lb: time range lower bound.
         :param time_ub: time range upper bound.
         """
-
-        return self._session.query(db.Event).join(db.MagnitudeMeasure).join(
-            db.Origin).filter(and_(db.Origin.time >= time_lb,
-            db.Origin.time <= time_ub))
+        return self.after(time_lb).before(time_ub)
 
     def with_agency(self, agency):
         """
-        Returns a query object which allows to get
+        return EventManager.clone(self) which allows to get
         all events with a specified agency, inside the earthquake catalogue.
         :param agency: agency name
         """
+        queryset = self.queryset.filter(db.Agency.source_key == agency)
+        return EventManager.clone_with_queryset(self, queryset)
 
-        return self._session.query(db.Event).join(db.MagnitudeMeasure).join(
-            db.Agency).filter(db.Agency.source_key == agency)
-
-    def with_magnitudes(self, magnitudes):
+    def with_agencies(self, *agency_name_list):
         """
-        Returns a query object which allows to get
+        return EventManager.clone_with_queryset(self) which allows to get
+        all events with a specified agency, inside the earthquake catalogue.
+        :param *agency_name_list: a list of agency names
+        """
+        queryset = self.queryset.filter(
+            db.Agency.source_key.in_(agency_name_list))
+        return EventManager.clone_with_queryset(self, queryset)
+
+    def with_magnitudes(self, *magnitudes):
+        """
+        return EventManager.clone_with_queryset(self) which allows to get
         all events which have the specified magnitudes,
         inside the earthquake catalogue.
-        :param magnitudes: a list containing two types of magnitudes.
+        :param *magnitudes: a list containing  of magnitudes.
         """
+        queryset = self.queryset
 
-        return self._session.query(db.Event).filter(
+        for magnitude in magnitudes:
+            queryset = queryset.filter(
             db.Event.measures.any(
-                db.MagnitudeMeasure.scale == magnitudes[0])).filter(
-                db.Event.measures.any(db.MagnitudeMeasure.scale ==
-                                      magnitudes[1]))
+                db.MagnitudeMeasure.scale == magnitude))
+        return EventManager.clone_with_queryset(self, queryset)
 
     def within_polygon(self, polygon):
         """
-        Returns a query object which allows to get
+        return EventManager.clone_with_queryset(self) which allows to get
         all events within a specified polygon,
         inside the earthquake catalogue.
         :param polygon: a polygon specified in wkt format.
         """
-
-        return self._session.query(db.Event).join(db.MagnitudeMeasure).join(
-                db.Origin).filter(db.Origin.position.within(polygon))
+        queryset = self.queryset.filter(
+            db.Origin.position.within(polygon))
+        return EventManager.clone_with_queryset(self, queryset)
 
     def within_distance_from_point(self, point, distance):
         """
-        Returns a query object which allows to get
+        return EventManager.clone_with_queryset(self) which allows to get
         all events within a specified distance from a point,
         inside the earthquake catalogue.
         :param point: a point specified in wkt format.
         :param distance: distance specified in meters (see srid 4326).
         """
-
-        return self._session.query(db.Event).join(db.MagnitudeMeasure).join(
-                db.Origin).filter(
+        queryset = self.queryset.filter(
                 "PtDistWithin(catalogue_origin.position, GeomFromText('%s', "
                 "4326), %s)" % (point, distance))
+        return EventManager.clone_with_queryset(self, queryset)

@@ -85,7 +85,7 @@ class AnEqCatalogueShould(unittest.TestCase):
         load_fixtures(self.session)
 
     def test_allows_selection_of_all_events(self):
-        self.assertEqual(30, self.event.all().count())
+        self.assertEqual(5, len(self.event.all()))
 
     def test_allows_selection_events_on_time_criteria(self):
         time = datetime.now()
@@ -100,11 +100,9 @@ class AnEqCatalogueShould(unittest.TestCase):
         self.assertEqual(6, between_time.count())
 
     def test_allows_selection_of_events_given_two_mag(self):
-        magnitudes = ['MS', 'mb']
-        self.assertEqual(3, self.event.with_magnitudes(magnitudes).count())
+        self.assertEqual(3, len(self.event.with_magnitudes('MS', 'mb').all()))
 
-        magnitudes = ['MS', 'Inexistent magnitude scale']
-        self.assertEqual(0, self.event.with_magnitudes(magnitudes).count())
+        self.assertEqual(0, self.event.with_magnitudes('MS', 'wtf').count())
 
     def test_allows_selection_of_events_on_agency_basis(self):
         agency = 'LDG'
@@ -115,6 +113,9 @@ class AnEqCatalogueShould(unittest.TestCase):
 
         agency = 'Blabla'
         self.assertEqual(0, len(self.event.with_agency(agency).all()))
+
+        agencies = ['LDG', 'NEIC']
+        self.assertEqual(3, len(self.event.with_agencies(*agencies).all()))
 
     def test_allows_selection_of_events_given_polygon(self):
         fst_polygon = 'POLYGON((85 35, 92 35, 92 25, 85 25, 85 35))'

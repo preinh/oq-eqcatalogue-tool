@@ -15,9 +15,46 @@
 
 import unittest
 import numpy as np
+from tests.test_utils import in_data_dir
 from numpy.ma.testutils import assert_almost_equal
+
 from eqcatalogue import regression
 from eqcatalogue import managers
+from eqcatalogue.importers import isf_bulletin
+from eqcatalogue import models as catalogue
+from eqcatalogue.events import EventManager
+
+
+class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
+
+    def setUp(self):
+        cat = catalogue.CatalogueDatabase(memory=True)
+        isf_bulletin.V1.import_events(file(in_data_dir('isc-query-small')),
+                                      cat)
+        events = EventManager().all()
+        self.emsr = regression.EmpiricalMagnitudeScalingRelationship(
+            'mb', 'Mw')
+        self.emsr.grouped_events = [
+            {'event': events[0],
+             'measures': events[0].measures},
+            {'event': events[1],
+             'measures': events[1].measures},
+            {'event': events[2],
+             'measures': events[2].measures}
+            ]
+
+    def test_simple_ranking(self):
+        # Assess
+        ranking = (('ISC', 'Mw'), ('IDC', 'mb'))
+        # Act
+        self.emsr.select_measures(ranking)
+        # Assert
+        self.assertEqual(len(self.emsr.native_measures), 3)
+        self.assertEqual(len(self.emsr.target_measures), 3)
+        for measure in self.emsr.native_measures:
+            self.assertEqual(measure.scale, 'mb')
+        for measure in self.emsr.target_measures:
+            self.assertEqual(measure.scale, 'Mw')
 
 
 class ShouldPerformRegression(unittest.TestCase):
