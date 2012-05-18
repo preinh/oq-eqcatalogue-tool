@@ -17,6 +17,8 @@
 Implement Measure Selection Strategies and Missing Uncertainty Handling
 """
 
+import abc
+from random import choice
 import re
 
 from eqcatalogue.managers import MeasureManager
@@ -74,7 +76,47 @@ class MUSSetDefault(object):
         return False
 
 
-class AgencyRanking(object):
+class Ranking(object):
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def select(self, grouped_measures, native_scale, target_scale, mus):
+        return
+
+
+class RandomSelection(Ranking):
+
+    def select(self, grouped_measures, native_scale, target_scale, mus):
+        native_measures = MeasureManager(native_scale)
+        target_measures = MeasureManager(target_scale)
+
+        for measures in grouped_measures.values():
+            native_selection = []
+            target_selection = []
+            for measure in measures:
+                if mus.should_be_discarded(measure):
+                    continue
+                if not measure.standard_error:
+                    measure.standard_error = mus.get_default(measure)
+                if measure.scale == native_scale:
+                    native_selection.append(measure)
+                if measure.scale == target_scale:
+                    target_selection.append(measure)
+            if native_selection and target_selection:
+                native_measures.append(choice(native_selection))
+                target_measures.append(choice(target_selection))
+
+        return native_measures, target_measures
+
+
+class MostPreciseSelection(Ranking):
+
+    def select(self, grouped_measures, native_scale, target_scale, mus):
+        pass
+
+
+class AgencyRanking(Ranking):
     """
     Measure Selection based on AgencyRanking
     """
@@ -85,7 +127,7 @@ class AgencyRanking(object):
         """
         Initialize an AgencyRanking object
         :py:param:: ranking
-        a bdictionary where the keys are regexp that can match a
+        a dictionary where the keys are regexp that can match a
         magnitude scale and the value is a list of agency in the order
         of preference
         """

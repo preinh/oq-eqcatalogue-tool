@@ -56,7 +56,7 @@ class ShouldGroupMeasures(unittest.TestCase):
 class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
 
     def setUp(self):
-        _load_catalog()
+        self.cat = _load_catalog()
         self.event_manager = managers.EventManager().with_agencies(
             'ISC', 'IDC', 'GCMT').with_magnitudes(
                 'mb', 'MS', 'MW')
@@ -111,6 +111,18 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
             self.assertEqual(measure.scale, self.target_scale)
             self.assertEqual(measure.agency.source_key, 'GCMT',
                              "%s is not from GCMT" % measure)
+
+    def test_random_ranking(self):
+        emsr = EmpiricalMagnitudeScalingRelationship.make_from_events(
+            self.native_scale, self.target_scale,
+            self.event_manager, selection.RandomSelection(),
+            selection.MUSSetEventMaximum())
+
+        self.assertEqual(len(emsr.native_measures), 6)
+        self.assertEqual(len(emsr.target_measures), 6)
+
+    def tearDown(self):
+        self.cat.session.commit()
 
 
 class ShouldPerformRegression(unittest.TestCase):
