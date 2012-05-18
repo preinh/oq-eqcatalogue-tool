@@ -18,16 +18,19 @@ import unittest
 from eqcatalogue import models as catalogue
 import geoalchemy
 
+
 class ShouldCreateAlchemyTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.catalogue = catalogue.CatalogueDatabase(memory=False, drop=True)
+        self.catalogue = catalogue.CatalogueDatabase(memory=True)
+        self.catalogue.recreate()
         self.session = self.catalogue.session
 
     def test_eventsource(self):
         event_source = catalogue.EventSource(name="test1")
         self.session.add(event_source)
-        self.assertEqual(self.session.query(catalogue.EventSource).filter_by(name='test1').count(), 1)
+        self.assertEqual(self.session.query(
+            catalogue.EventSource).filter_by(name='test1').count(), 1)
 
     def test_agency(self):
         eventsource = catalogue.EventSource(name="test2")

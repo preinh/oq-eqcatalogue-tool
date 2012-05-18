@@ -20,6 +20,7 @@ Implement Regression models for Empirical Magnitude Scaling Relationship
 import math
 from scipy import odr
 import numpy as np
+from eqcatalogue import selection
 
 REGRESSOR_DEFAULT_MAX_ITERATIONS = 1000
 PL_DEFAULT_INITIAL_VALUE_ORDER = 2
@@ -208,14 +209,75 @@ class EmpiricalMagnitudeScalingRelationship(object):
     :py:attribute:: regression_models
     A dictionary where the keys are regression models objects and the
     values are the output of the regression
+
+    :py:param:: regression_models
+    An array of RegressionModel instance object storing the
+    regression analysis data
+
+    :py:param:: grouped_measures
+    A list of dictionary objects. Each dictionary stores the association
+    between an event (the value at key 'event') and a list of
+    measures (the value at key 'measures').
     """
     DEFAULT_MODEL_TYPE = LinearModel
 
-    def __init__(self, native_measures, target_measures):
+    @classmethod
+    def make_from_events(cls, native_scale, target_scale,
+                         events, selection_strategy,
+                         missing_uncertainty_strategy=None):
+        """
+        Build a EmpiricalMagnitudeScalingRelationship by a selecting
+        measures from an event manager object according to
+        a specific strategy.
+        :py:param:: events
+        An Event manager object.
+        See EmpiricalMagnitudeScalingRelationship.make_from_measures
+        for a description of other params
+        """
+        return cls.make_from_measures(native_scale, target_scale,
+                                      events.group_measures(),
+                                      selection_strategy,
+                                      missing_uncertainty_strategy)
+
+    @classmethod
+    def make_from_measures(cls, native_scale, target_scale,
+                           grouped_measures, selection_strategy,
+                           missing_uncertainty_strategy=None):
+        """
+        Build a EmpiricalMagnitudeScalingRelationship by a selecting
+        measures from a grouped event measure dictionary according to
+        a specific strategy.
+        :py:param:: native_scale
+        The native scale of the EmpiricalMagnitudeScalingRelationship
+        :py:param:: target_scale
+        The target scale of the EmpiricalMagnitudeScalingRelationship
+        :py:param:: grouped_measures
+        A list of dictionary objects. Each dictionary stores the association
+        between an event (the value at key 'event') and a list of
+        measures (the value at key 'measures').
+        :py:param:: selection_strategy
+        A MeasureSelectionStrategy object used to select the proper measures
+        :py:param:: missing_uncertainty_strategy
+        A MissingUncertaintyStrategy object used to handle measures
+        without standard error info
+        """
+        new_emsr = cls()
+        native_measures, target_measures = selection_strategy.select(
+            grouped_measures,
+            native_scale,
+            target_scale,
+            missing_uncertainty_strategy or selection.MUSDiscard())
+        new_emsr.native_measures = native_measures
+        new_emsr.target_measures = target_measures
+        return new_emsr
+
+    def __init__(self, native_measures=None, target_measures=None):
         """Initialize an Empirical Magnitude Scaling Relationship instance
+
         :py:param:: native_measures
         A MeasureManager object holding information about the native measure
         values and their standard deviation error
+
         :py:param:: target_measures
         A MeasureManager object holding information about the target measure
         values and their standard deviation error
@@ -223,6 +285,7 @@ class EmpiricalMagnitudeScalingRelationship(object):
         self.native_measures = native_measures
         self.target_measures = target_measures
         self.regression_models = []
+        self.grouped_measures = None
 
     def apply_regression_model(self, model_type=DEFAULT_MODEL_TYPE,
                                **regression_params):

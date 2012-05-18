@@ -72,7 +72,7 @@ we import data from
         self.name = name
 
     def __repr__(self):
-        return "Event Source: %s" % self.name
+        return "EventSource %s" % self.name
 
 
 class Agency(object):
@@ -97,7 +97,7 @@ class Agency(object):
 """
     def __repr__(self):
         if self.name:
-            return "Agency %s (%s)" % (self.name, self.name)
+            return "Agency %s (%s)" % (self.source_key, self.name)
         else:
             return "Agency %s" % self.source_key
 
@@ -179,8 +179,9 @@ class MagnitudeMeasure(object):
             self.standard_error = standard_error
 
     def __repr__(self):
-        return "measure of %s at %s by %s: %s %s" % (
-            self.event, self.origin, self.agency, self.scale, self.value)
+        return "measure of %s at %s by %s: %s %s (sigma=%s)" % (
+            self.event, self.origin, self.agency, self.value, self.scale,
+            self.standard_error)
 
 
 class Origin(object):
@@ -231,9 +232,7 @@ class Origin(object):
     together with `source_key`
 """
     def __repr__(self):
-        return "id:%s eventsource:%s sourcekey:%s" % (self.id,
-                                                      self.eventsource,
-                                                       self.source_key)
+        return "Origin %s %s" % (self.id, self.source_key)
 
     def __init__(self, position, time, eventsource, source_key,
                  **kwargs):
@@ -278,11 +277,25 @@ class MeasureMetadata(object):
         self.magnitudemeasure = magnitudemeasure
 
 
+class Singleton(type):
+    def __init__(cls, name, bases, d):
+        super(Singleton, cls).__init__(name, bases, d)
+        cls.instance = None
+
+    def __call__(cls, *args, **kw):
+        if cls.instance is None:
+            cls.instance = super(Singleton, cls).__call__(*args, **kw)
+        return cls.instance
+
+
 class CatalogueDatabase(object):
     """
-    This is the main class used to access the database.
+    This is the main class used to access the database. It is a
+    singleton object, so you should instantiate only once in your
+    application
     """
 
+    __metaclass__ = Singleton
     DEFAULT_FILENAME = "eqcatalogue.db"
 
     _instance = None
@@ -295,6 +308,7 @@ class CatalogueDatabase(object):
 
     def __new__(cls, *args, **kwargs):
         """Singleton pattern"""
+
         if not cls._instance:
             cls._instance = super(CatalogueDatabase, cls).__new__(
                 cls, *args, **kwargs)
@@ -332,6 +346,10 @@ class CatalogueDatabase(object):
         self._create_schema()
         if drop:
             self._metadata.drop_all()
+        self._metadata.create_all(self._engine)
+
+    def recreate(self):
+        self._metadata.drop_all()
         self._metadata.create_all(self._engine)
 
     def _create_schema_eventsource(self):

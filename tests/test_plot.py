@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from matplotlib.testing.compare import compare_images
-from tests.test_importers import in_data_dir
+from tests.test_utils import in_data_dir
 
 from eqcatalogue import regression
 from eqcatalogue import managers

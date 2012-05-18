@@ -20,9 +20,9 @@ from geoalchemy import WKTSpatialElement
 
 from tests.test_utils import DATA_DIR, get_data_path
 
-from eqcatalogue.reader import CsvEqCatalogueReader, Converter
+from eqcatalogue.importers.csv1 import CsvEqCatalogueReader, Converter
 from eqcatalogue import models
-from eqcatalogue.events import EventManager
+from eqcatalogue.managers import EventManager
 
 
 def load_fixtures(session):
@@ -79,13 +79,14 @@ def load_fixtures(session):
 class AnEventManagerShould(unittest.TestCase):
 
     def setUp(self):
-        self.cat_db = models.CatalogueDatabase(memory=False, drop=True)
+        self.cat_db = models.CatalogueDatabase(memory=True, drop=True)
+        self.cat_db.recreate()
         self.event = EventManager()
         self.session = self.cat_db.session
         load_fixtures(self.session)
 
     def test_allows_selection_of_all_events(self):
-        self.assertEqual(5, len(self.event.all().all()))
+        self.assertEqual(5, len(self.event.all()))
 
     def test_allows_selection_events_on_time_criteria(self):
         time = datetime.now()
@@ -100,11 +101,9 @@ class AnEventManagerShould(unittest.TestCase):
         self.assertEqual(6, between_time.count())
 
     def test_allows_selection_of_events_given_two_mag(self):
-        magnitudes = ['MS', 'mb']
-        self.assertEqual(3, self.event.with_magnitudes(magnitudes).count())
+        self.assertEqual(3, len(self.event.with_magnitudes('MS', 'mb').all()))
 
-        magnitudes = ['MS', 'Inexistent magnitude scale']
-        self.assertEqual(0, self.event.with_magnitudes(magnitudes).count())
+        self.assertEqual(0, self.event.with_magnitudes('MS', 'wtf').count())
 
     def test_allows_selection_of_events_on_agency_basis(self):
         agency = 'LDG'
@@ -115,6 +114,9 @@ class AnEventManagerShould(unittest.TestCase):
 
         agency = 'Blabla'
         self.assertEqual(0, len(self.event.with_agency(agency).all()))
+
+        agencies = ['LDG', 'NEIC']
+        self.assertEqual(3, len(self.event.with_agencies(*agencies).all()))
 
     def test_allows_selection_of_events_given_polygon(self):
         fst_polygon = 'POLYGON((85 35, 92 35, 92 25, 85 25, 85 35))'
@@ -145,8 +147,8 @@ class AnEventManagerShould(unittest.TestCase):
             distance).all()))
 
     def test_allows_grouping_of_measures(self):
-        all_events = self.event.all()
-        groups = EventManager.group_measures(all_events)
+        all_events = self.event
+        groups = all_events.group_measures()
 
         self.assertEqual(5, len(groups))
         self.assertEqual(6, len(groups[0]['measures']))
