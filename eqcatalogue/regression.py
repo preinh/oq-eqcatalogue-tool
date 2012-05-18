@@ -215,9 +215,9 @@ class EmpiricalMagnitudeScalingRelationship(object):
     regression analysis data
 
     :py:param:: grouped_measures
-    A list of dictionary objects. Each dictionary stores the association
-    between an event (the value at key 'event') and a list of
-    measures (the value at key 'measures').
+    A dictionary that stores the association
+    between an event (the key) and a list of
+    measures (the value).
     """
     DEFAULT_MODEL_TYPE = LinearModel
 
@@ -252,9 +252,9 @@ class EmpiricalMagnitudeScalingRelationship(object):
         :py:param:: target_scale
         The target scale of the EmpiricalMagnitudeScalingRelationship
         :py:param:: grouped_measures
-        A list of dictionary objects. Each dictionary stores the association
-        between an event (the value at key 'event') and a list of
-        measures (the value at key 'measures').
+        A dictionary that stores the association
+        between an event (the key) and a list of
+        measures (the value).
         :py:param:: selection_strategy
         A MeasureSelectionStrategy object used to select the proper measures
         :py:param:: missing_uncertainty_strategy
