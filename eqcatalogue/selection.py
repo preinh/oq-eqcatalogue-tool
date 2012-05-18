@@ -78,6 +78,9 @@ class AgencyRanking(object):
     """
     Measure Selection based on AgencyRanking
     """
+
+    RANK_IF_NOT_FOUND = -1
+
     def __init__(self, ranking):
         """
         Initialize an AgencyRanking object
@@ -89,6 +92,9 @@ class AgencyRanking(object):
         self._ranking = ranking
 
     def calculate_rank(self, measure):
+        """
+        Calculate the rank of a measure.
+        """
         for scale_pattern, agency_list_name in self._ranking.items():
             max_val = len(agency_list_name)
             scale_regexp = re.compile(scale_pattern)
@@ -96,7 +102,7 @@ class AgencyRanking(object):
                 if measure.agency.source_key in agency_list_name:
                     return max_val - agency_list_name.index(
                         measure.agency.source_key)
-        return -1
+        return self.__class__.RANK_IF_NOT_FOUND
 
     def select(self, grouped_measures,
                native_scale, target_scale,
