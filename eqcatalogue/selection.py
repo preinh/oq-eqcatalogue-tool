@@ -79,15 +79,40 @@ class MUSSetDefault(object):
 
 
 class MeasureSelection(object):
+    """
+    Base class for all measure selection methods.
+
+    A MeasureSelection defines a way to select a measure
+    for an earthquake event. Subclasses of MeasureSelection
+    must implement the select method.
+    """
 
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
     def select(self, grouped_measures, native_scale, target_scale, mus):
-        return
+        """
+        Build a native_measure and a target_measure manager. Each
+        manager is built by selecting a measure from a
+        grouped_measures item. The selection is driven by the agency
+        ranking.
+
+        :py:param:: grouped_measures
+         A dictionary where the keys identifies the events and
+        the value are the list of measures associated with it
+        :py:param:: native_scale, target_scale
+        The native and target scale used
+        :py:param:: mus
+        A missing uncertainty strategy object used to handle the case
+        when no standard error of a measure is provided
+        """
 
 
 class RandomStrategy(MeasureSelection):
+    """
+    RandomStrategy apply the measure selection by
+    choosing one random measure among the available ones.
+    """
 
     @classmethod
     def select(cls, grouped_measures, native_scale, target_scale, mus):
@@ -114,17 +139,33 @@ class RandomStrategy(MeasureSelection):
 
 
 class PrecisionStrategy(MeasureSelection):
+    """
+    PrecisionStrategy apply the selection by
+    choosing the best measure for precision
+    among the available ones.
+    """
 
     @classmethod
-    def _compute_sigma(cls, native_measure, target_measure):
-        return sqrt(pow(native_measure, 2) + pow(target_measure, 2))
+    def _precision_score(cls, native_measure, target_measure):
+        """
+        Calculate sigma value.
+        :returns precision_score: measure score evaluation.
+        """
+
+        precision_score = sqrt(pow(native_measure, 2) + pow(target_measure, 2))
+        return  precision_score
 
     @classmethod
-    def _find_minimum_sigma(cls, native_selection, target_selection):
+    def _best_measures(cls, native_selection, target_selection):
+        """
+        Find the most precise measures by calculating
+        the measures' precision score.
+        """
+
         native_c_index = 0
         target_c_index = 1
         couples = list(product(native_selection, target_selection))
-        sigma_couples = [PrecisionStrategy._compute_sigma(n.value, t.value)
+        sigma_couples = [PrecisionStrategy._precision_score(n.value, t.value)
                             for n, t in couples]
         min_val = min(sigma_couples)
         index_min_val = sigma_couples.index(min_val)
@@ -149,7 +190,7 @@ class PrecisionStrategy(MeasureSelection):
                 if measure.scale == target_scale:
                     target_selection.append(measure)
             if native_selection and target_selection:
-                couple = PrecisionStrategy._find_minimum_sigma(
+                couple = PrecisionStrategy._best_measures(
                     native_selection, target_selection)
                 native_measures.append(couple[0])
                 target_measures.append(couple[1])
