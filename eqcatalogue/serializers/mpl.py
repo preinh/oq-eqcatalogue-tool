@@ -17,6 +17,7 @@
 MatplotLib serializer for Empirical Magnitude Scaling Relationship objects
 """
 
+import matplotlib
 from matplotlib import pyplot as plt
 import numpy as np
 
@@ -40,6 +41,9 @@ def plot(emsr, filename=None, errorbar_params=None,
     :py:param:: figure_params
     a dict object with params passed to matplotlib #savefig function
     """
+    if not filename:
+        matplotlib.use("Agg")
+        plt.ioff()
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -74,7 +78,6 @@ def plot(emsr, filename=None, errorbar_params=None,
     leg = plt.legend(loc=2, shadow=True, ncol=1)
     ltext = leg.get_texts()
     plt.setp(ltext, fontsize='small')
-    plt.ioff()
     actual_figure_params = {}
     if figure_params:
         actual_figure_params.update(figure_params)
