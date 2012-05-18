@@ -150,12 +150,12 @@ class AnEventManagerShould(unittest.TestCase):
         all_events = self.event
         groups = all_events.group_measures()
 
-        self.assertEqual(5, len(groups))
-        self.assertEqual(6, len(groups[0]['measures']))
-        self.assertEqual(13, len(groups[1]['measures']))
-        self.assertEqual(1, len(groups[2]['measures']))
-        self.assertEqual(6, len(groups[3]['measures']))
-        self.assertEqual(4, len(groups[4]['measures']))
+        self.assertEqual(5, len(groups.keys()))
+        self.assertEqual(1, len(groups['1008568']))
+        self.assertEqual(4, len(groups['1008570']))
+        self.assertEqual(13, len(groups['1008567']))
+        self.assertEqual(6, len(groups['1008569']))
+        self.assertEqual(6, len(groups['1008566']))
 
     def tearDown(self):
         self.session.commit()

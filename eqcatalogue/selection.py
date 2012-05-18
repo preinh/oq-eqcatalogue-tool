@@ -114,9 +114,8 @@ class AgencyRanking(object):
         ranking.
 
         :py:param:: grouped_measures
-         A list of dictionary objects.
-        Each dictionary at the key 'measures' has a list of measures
-        as value
+         A dictionary where the keys identifies the events and
+        the value are the list of measures associated with it
         :py:param:: native_scale, target_scale
         The native and target scale used
         :py:param:: mus
@@ -126,26 +125,25 @@ class AgencyRanking(object):
         native_measures = MeasureManager(native_scale)
         target_measures = MeasureManager(target_scale)
 
-        for m in grouped_measures:
-            m['sorted_native_measures'] = []
-            m['sorted_target_measures'] = []
-            measures = m['measures']
+        for measures in grouped_measures.values():
+            sorted_native_measures = []
+            sorted_target_measures = []
             for measure in measures:
                 if mus.should_be_discarded(measure):
                     continue
                 if measure.scale == native_scale:
-                    m['sorted_native_measures'].append(
+                    sorted_native_measures.append(
                         (self.calculate_rank(measure), measure))
                 elif measure.scale == target_scale:
-                    m['sorted_target_measures'].append(
+                    sorted_target_measures.append(
                         (self.calculate_rank(measure), measure))
                 if not measure.standard_error:
                     measure.standard_error = mus.get_default(measure)
-            m['sorted_native_measures'].sort(reverse=True)
-            m['sorted_target_measures'].sort(reverse=True)
+            sorted_native_measures.sort(reverse=True)
+            sorted_target_measures.sort(reverse=True)
 
-            if m['sorted_native_measures'] and m['sorted_target_measures']:
-                native_measures.append(m['sorted_native_measures'][0][1])
-                target_measures.append(m['sorted_target_measures'][0][1])
+            if sorted_native_measures and sorted_target_measures:
+                native_measures.append(sorted_native_measures[0][1])
+                target_measures.append(sorted_target_measures[0][1])
 
         return native_measures, target_measures

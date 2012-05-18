@@ -3,6 +3,8 @@ Model Managers definition
 """
 
 import eqcatalogue.models as db
+import numpy as np
+from scipy.cluster import hierarchy
 
 
 class MeasureManager(object):
@@ -53,8 +55,11 @@ class EventManager(object):
         self.queryset = self._session.query(db.Event).join(
             db.MagnitudeMeasure).join(db.Origin).join(db.Agency)
         if queryset:
-            self.queryset = self.queryset.filter(
-                db.Event.id.in_([e.id for e in queryset.all()]))
+            if queryset.count():
+                self.queryset = self.queryset.filter(
+                    db.Event.id.in_([e.id for e in queryset.all()]))
+            else:
+                self.queryset = self.queryset.filter(db.Event.id == -1)
 
     @classmethod
     def clone_with_queryset(self, em, queryset):
@@ -158,13 +163,72 @@ class EventManager(object):
                 "4326), %s)" % (point, distance))
         return EventManager.clone_with_queryset(self, queryset)
 
-    def group_measures(self):
+    def group_measures(self, grouping_strategy=None):
         """
-        Group all measures by event
-        :param query_obj: sqlalchemy query object.
+        Group all measures by event :param grouping_strategy: a
+        function that returns a dictionary where the key identifies an
+        event, and the value stores a list of measures
         """
+        if not grouping_strategy:
+            grouping_strategy = GroupMeasuresByEventSourceKey()
+        return grouping_strategy.group_measures(self)
 
-        groups = []
-        for ev in self.queryset.all():
-            groups.append(dict(event=ev, measures=ev.measures))
+
+class GroupMeasuresByEventSourceKey(object):
+    """
+    Group measures by event source key, that is for each source key of
+    an event a group of measure is associated
+    """
+    def group_measures(self, event_manager):
+        groups = {}
+        for ev in event_manager.queryset.all():
+            groups[str(ev.source_key)] = ev.measures
         return groups
+
+
+class GroupMeasuresByHierarchicalClustering(object):
+    """
+    Group measures by time clustering using a hierarchical clustering
+    algorithm
+    """
+    def __init__(self, key_fn=None, args=None):
+        """
+        Initialize an instance.
+        :py:param:: key_fn
+        the function used to get the measure feature we perform the
+        clustering on. If not given, a function that extract the
+        time of the measure is provided as default
+        :py:param:: args
+        the args passed to scipy.cluster.hierarchy.fclusterdata
+        """
+        self._clustering_args = {'t': 200,
+            'criterion': 'distance'
+            }
+        if args:
+            self._clustering_args.update(args)
+        self._key_fn = key_fn or GroupMeasuresByHierarchicalClustering.get_time
+
+    @classmethod
+    def get_time(cls, measure):
+        return float(measure.origin.time.strftime('%s'))
+
+    def group_measures(self, event_manager):
+        cat = db.CatalogueDatabase()
+        event_ids = [e.id for e in event_manager.queryset.all()]
+
+        # get the measures related with the event manager
+        measures = cat.session.query(db.MagnitudeMeasure).filter(
+            db.MagnitudeMeasure.event_id.in_(event_ids)).all()
+
+        data = np.array([self._key_fn(m) for m in measures])
+        npdata = np.reshape(np.array(data), [len(data), 1])
+
+        # cluster them
+        clusters = hierarchy.fclusterdata(npdata, **self._clustering_args)
+
+        grouped = {}
+        for i, cluster in enumerate(clusters):
+            current = grouped.get(cluster, [])
+            current.append(measures[i])
+            grouped[cluster] = current
+        return grouped

@@ -26,23 +26,47 @@ from eqcatalogue import models as catalogue
 from eqcatalogue import selection
 
 
+def _load_catalog():
+    cat = catalogue.CatalogueDatabase(memory=True)
+    cat.recreate()
+    isf_bulletin.V1.import_events(
+        file(in_data_dir('isc-query-small.html')),
+        cat)
+    return cat
+
+
+class ShouldGroupMeasures(unittest.TestCase):
+    def setUp(self):
+        _load_catalog()
+        self.event_manager = managers.EventManager()
+
+    def test_group_by_time_clustering(self):
+        # Assess
+        g1 = managers.GroupMeasuresByHierarchicalClustering()
+        g2 = managers.GroupMeasuresByEventSourceKey()
+        r2 = g2.group_measures(self.event_manager)
+
+        # Act
+        r1 = g1.group_measures(self.event_manager)
+
+        # Assert
+        self.assertEqual(len(r2.values()), len(r1.values()))
+
+
 class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
 
     def setUp(self):
-        cat = catalogue.CatalogueDatabase(memory=True)
-        cat.recreate()
-        isf_bulletin.V1.import_events(
-            file(in_data_dir('isc-query-small.html')),
-                                      cat)
+        _load_catalog()
         self.event_manager = managers.EventManager().with_agencies(
             'ISC', 'IDC', 'GCMT').with_magnitudes(
                 'mb', 'MS', 'MW')
         self.events = self.event_manager.all()
         self.native_scale = 'mb'
         self.target_scale = 'MW'
-        self.grouped_measures = [{'measures': self.events[0].measures},
-            {'measures': self.events[1].measures},
-            {'measures': self.events[2].measures}]
+        self.grouped_measures = {
+            '1': self.events[0].measures,
+            '2': self.events[1].measures,
+            '3': self.events[2].measures}
 
     def test_simple_ranking(self):
         # Assess
