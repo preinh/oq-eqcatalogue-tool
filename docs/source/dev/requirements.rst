@@ -13,6 +13,7 @@ ECT requires these libraries in order to be used:
 * Scipy_ >= 0.10.x 
 * Numpy_ >= 1.6.x
 * Matplotlib_ >= 1.1.x
+* PIL_ >= 1.0.x
 
 Instructions for setting up GeoAlchemy with Spatialite are provided here_.
 
@@ -23,10 +24,10 @@ ECT is actively developed on GitHub, where the code is
 `available <https://github.com/gem/oq-eqcatalogue-tool>`_.
 You can clone the repository doing::
 
-    git clone git@github.com:gem/oq-hazard-modeller.git
+    git clone git@github.com:gem/oq-eqcatalogue-tool.git
 
 Or download the
-`zip <https://github.com/gem/oq-hazard-modeller/zipball/master>`_.
+`zip <https://github.com/gem/oq-eqcatalogue-tool/zipball/master>`_.
 
 
 .. Links
@@ -37,4 +38,5 @@ Or download the
 .. _Scipy: http://www.scipy.org/
 .. _Numpy: http://numpy.org/
 .. _Matplotlib: http://matplotlib.sourceforge.net/
+.. _PIL: http://www.pythonware.com/products/pil/
 .. _here: http://www.geoalchemy.org/usagenotes.html#notes-for-spatialite
