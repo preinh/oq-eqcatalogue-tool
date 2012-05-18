@@ -103,28 +103,36 @@ class RegressionModel(object):
                                   **actual_regressor_params)
         self.akaike = None
         self.akaike_corrected = None
+        self._output = None
         self._ndata = np.shape(native_measures.measures)[0]
 
-    def criterion_tests(self, output):
+    def long_str(self):
+        if self.akaike_corrected:
+            return "%s. AICc: %s" % (self, self.akaike_corrected)
+
+    def func(self, x):
+        return self._model_function(self._output.beta, x)
+
+    def criterion_tests(self):
         ''' Calculate AIC and AICc'''
-        nfree = float(len(output.beta))
+        nfree = float(len(self._output.beta))
         self.akaike = float(self._ndata) * \
-            math.log(output.res_var) + 2. * nfree
+            math.log(self._output.res_var) + 2. * nfree
         self.akaike_corrected = self.akaike + \
             (2. * nfree * (nfree + 1.)) / (float(self._ndata) - nfree - 1.)
 
     def run(self):
         """Perform regression analyisis"""
-        output = self._regressor.run()
+        self._output = self._regressor.run()
 
-        if not 'Sum of squares convergence' in output.stopreason\
-            and not 'Parameter convergence' in output.stopreason:
+        if not 'Sum of squares convergence' in self._output.stopreason\
+            and not 'Parameter convergence' in self._output.stopreason:
             # ODR Failed
-            raise RegressionFailedException(output.stopreason)
+            raise RegressionFailedException(self._output.stopreason)
 
-        self.criterion_tests(output)
+        self.criterion_tests()
 
-        return output
+        return self._output
 
 
 class PolynomialModel(RegressionModel):
@@ -152,6 +160,9 @@ class PolynomialModel(RegressionModel):
         # model function
                                               initial_value_order or order,
                                               model_params, regressor_params)
+
+    def __str__(self):
+        return "Polynomial Model of order %d" % self._order
 
     def _setup_initial_values(self, native_measures, target_measures,
                               initial_value_order):
@@ -186,6 +197,9 @@ class LinearModel(PolynomialModel):
                                           initial_value_order,
                                           model_params, regressor_params)
 
+    def __str__(self):
+        return "Linear Model"
+
 
 class EmpiricalMagnitudeScalingRelationship(object):
     """
@@ -206,9 +220,9 @@ class EmpiricalMagnitudeScalingRelationship(object):
         A MeasureManager object holding information about the target measure
         values and their standard deviation error
         """
-        self._native_measures = native_measures
-        self._target_measures = target_measures
-        self.regression_models = {}
+        self.native_measures = native_measures
+        self.target_measures = target_measures
+        self.regression_models = []
 
     def apply_regression_model(self, model_type=DEFAULT_MODEL_TYPE,
                                **regression_params):
@@ -224,9 +238,9 @@ class EmpiricalMagnitudeScalingRelationship(object):
         if not hasattr(model_type, 'is_regression_model'):
             raise TypeError("Invalid Model type selected (%s). \
         It should be a subclass of RegressionModel" % model_type)
-        regression_model = model_type(self._native_measures,
-                                      self._target_measures,
+        regression_model = model_type(self.native_measures,
+                                      self.target_measures,
                                       **regression_params)
         output = regression_model.run()
-        self.regression_models[regression_model] = output
+        self.regression_models.append(regression_model)
         return output

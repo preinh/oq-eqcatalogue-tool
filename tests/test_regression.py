@@ -26,8 +26,8 @@ class ShouldPerformRegression(unittest.TestCase):
         # Assess
         A = 0.85
         B = 1.03
-        native_measures = managers.MeasureManager()
-        target_measures = managers.MeasureManager()
+        native_measures = managers.MeasureManager('mb')
+        target_measures = managers.MeasureManager('Mw')
         native_measures.measures = np.random.uniform(3., 8.5, 1000)
         native_measures.sigma = np.random.uniform(0.02, 0.2, 1000)
         target_measures.measures = A + B * native_measures.measures
@@ -48,8 +48,8 @@ class ShouldPerformRegression(unittest.TestCase):
         A = 0.046
         B = 0.556
         C = 0.673
-        native_measures = managers.MeasureManager()
-        target_measures = managers.MeasureManager()
+        native_measures = managers.MeasureManager('mb')
+        target_measures = managers.MeasureManager('Mw')
         native_measures.measures = np.random.uniform(3., 8.5, 1000)
         native_measures.sigma = np.random.uniform(0.02, 0.2, 1000)
         target_measures.measures = C + B * native_measures.measures +\
