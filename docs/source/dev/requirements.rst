@@ -23,10 +23,10 @@ ECT is actively developed on GitHub, where the code is
 `available <https://github.com/gem/oq-eqcatalogue-tool>`_.
 You can clone the repository doing::
 
-    git clone git@github.com:gem/oq-hazard-modeller.git
+    git clone git@github.com:gem/oq-eqcatalogue-tool.git
 
 Or download the
-`zip <https://github.com/gem/oq-hazard-modeller/zipball/master>`_.
+`zip <https://github.com/gem/oq-eqcatalogue-tool/zipball/master>`_.
 
 
 .. Links
