@@ -76,7 +76,7 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
         # Act
         emsr = EmpiricalMagnitudeScalingRelationship.make_from_measures(
             self.native_scale, self.target_scale,
-            self.grouped_measures, selection.AgencyRanking(ranking),
+            self.grouped_measures, selection.AgencyRankingStrategy(ranking),
             selection.MUSSetEventMaximum())
 
         # Assert
@@ -98,7 +98,7 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
         # Act
         emsr = EmpiricalMagnitudeScalingRelationship.make_from_events(
             self.native_scale, self.target_scale,
-            self.event_manager, selection.AgencyRanking(ranking),
+            self.event_manager, selection.AgencyRankingStrategy(ranking),
             selection.MUSSetEventMaximum())
 
         # Assert
@@ -115,7 +115,16 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
     def test_random_ranking(self):
         emsr = EmpiricalMagnitudeScalingRelationship.make_from_events(
             self.native_scale, self.target_scale,
-            self.event_manager, selection.RandomSelection(),
+            self.event_manager, selection.RandomStrategy(),
+            selection.MUSSetEventMaximum())
+
+        self.assertEqual(len(emsr.native_measures), 6)
+        self.assertEqual(len(emsr.target_measures), 6)
+
+    def test_minimum_sigma_selection(self):
+        emsr = EmpiricalMagnitudeScalingRelationship.make_from_events(
+            self.native_scale, self.target_scale,
+            self.event_manager, selection.PrecisionStrategy(),
             selection.MUSSetEventMaximum())
 
         self.assertEqual(len(emsr.native_measures), 6)

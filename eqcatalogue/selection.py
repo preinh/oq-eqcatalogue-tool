@@ -19,6 +19,8 @@ Implement Measure Selection Strategies and Missing Uncertainty Handling
 
 import abc
 from random import choice
+from math import sqrt, pow
+from itertools import product
 import re
 
 from eqcatalogue.managers import MeasureManager
@@ -76,7 +78,7 @@ class MUSSetDefault(object):
         return False
 
 
-class Ranking(object):
+class MeasureSelection(object):
 
     __metaclass__ = abc.ABCMeta
 
@@ -85,9 +87,10 @@ class Ranking(object):
         return
 
 
-class RandomSelection(Ranking):
+class RandomStrategy(MeasureSelection):
 
-    def select(self, grouped_measures, native_scale, target_scale, mus):
+    @classmethod
+    def select(cls, grouped_measures, native_scale, target_scale, mus):
         native_measures = MeasureManager(native_scale)
         target_measures = MeasureManager(target_scale)
 
@@ -110,13 +113,50 @@ class RandomSelection(Ranking):
         return native_measures, target_measures
 
 
-class MostPreciseSelection(Ranking):
+class PrecisionStrategy(MeasureSelection):
 
-    def select(self, grouped_measures, native_scale, target_scale, mus):
-        pass
+    @classmethod
+    def _compute_sigma(cls, native_measure, target_measure):
+        return sqrt(pow(native_measure, 2) + pow(target_measure, 2))
+
+    @classmethod
+    def _find_minimum_sigma(cls, native_selection, target_selection):
+        native_c_index = 0
+        target_c_index = 1
+        couples = list(product(native_selection, target_selection))
+        sigma_couples = [PrecisionStrategy._compute_sigma(n.value, t.value)
+                            for n, t in couples]
+        min_val = min(sigma_couples)
+        index_min_val = sigma_couples.index(min_val)
+        return (couples[index_min_val][native_c_index],
+               couples[index_min_val][target_c_index])
+
+    @classmethod
+    def select(cls, grouped_measures, native_scale, target_scale, mus):
+        native_measures = MeasureManager(native_scale)
+        target_measures = MeasureManager(target_scale)
+
+        for measures in grouped_measures.values():
+            native_selection = []
+            target_selection = []
+            for measure in measures:
+                if mus.should_be_discarded(measure):
+                    continue
+                if not measure.standard_error:
+                    measure.standard_error = mus.get_default(measure)
+                if measure.scale == native_scale:
+                    native_selection.append(measure)
+                if measure.scale == target_scale:
+                    target_selection.append(measure)
+            if native_selection and target_selection:
+                couple = PrecisionStrategy._find_minimum_sigma(
+                    native_selection, target_selection)
+                native_measures.append(couple[0])
+                target_measures.append(couple[1])
+        return native_measures, target_measures
 
 
-class AgencyRanking(Ranking):
+class AgencyRankingStrategy(MeasureSelection):
     """
     Measure Selection based on AgencyRanking
     """
