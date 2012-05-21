@@ -56,7 +56,7 @@ class ShouldGroupMeasures(unittest.TestCase):
 class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
 
     def setUp(self):
-        _load_catalog()
+        self.cat = _load_catalog()
         self.event_manager = managers.EventManager().with_agencies(
             'ISC', 'IDC', 'GCMT').with_magnitudes(
                 'mb', 'MS', 'MW')
@@ -76,7 +76,7 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
         # Act
         emsr = EmpiricalMagnitudeScalingRelationship.make_from_measures(
             self.native_scale, self.target_scale,
-            self.grouped_measures, selection.AgencyRanking(ranking),
+            self.grouped_measures, selection.AgencyRankingStrategy(ranking),
             selection.MUSSetEventMaximum())
 
         # Assert
@@ -98,7 +98,7 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
         # Act
         emsr = EmpiricalMagnitudeScalingRelationship.make_from_events(
             self.native_scale, self.target_scale,
-            self.event_manager, selection.AgencyRanking(ranking),
+            self.event_manager, selection.AgencyRankingStrategy(ranking),
             selection.MUSSetEventMaximum())
 
         # Assert
@@ -111,6 +111,27 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
             self.assertEqual(measure.scale, self.target_scale)
             self.assertEqual(measure.agency.source_key, 'GCMT',
                              "%s is not from GCMT" % measure)
+
+    def test_random_ranking(self):
+        emsr = EmpiricalMagnitudeScalingRelationship.make_from_events(
+            self.native_scale, self.target_scale,
+            self.event_manager, selection.RandomStrategy(),
+            selection.MUSSetEventMaximum())
+
+        self.assertEqual(len(emsr.native_measures), 6)
+        self.assertEqual(len(emsr.target_measures), 6)
+
+    def test_minimum_sigma_selection(self):
+        emsr = EmpiricalMagnitudeScalingRelationship.make_from_events(
+            self.native_scale, self.target_scale,
+            self.event_manager, selection.PrecisionStrategy(),
+            selection.MUSSetEventMaximum())
+
+        self.assertEqual(len(emsr.native_measures), 6)
+        self.assertEqual(len(emsr.target_measures), 6)
+
+    def tearDown(self):
+        self.cat.session.commit()
 
 
 class ShouldPerformRegression(unittest.TestCase):

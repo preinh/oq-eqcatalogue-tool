@@ -17,6 +17,10 @@
 Implement Measure Selection Strategies and Missing Uncertainty Handling
 """
 
+import abc
+from random import choice
+from math import sqrt, pow
+from itertools import product
 import re
 
 from eqcatalogue.managers import MeasureManager
@@ -74,7 +78,126 @@ class MUSSetDefault(object):
         return False
 
 
-class AgencyRanking(object):
+class MeasureSelection(object):
+    """
+    Base class for all measure selection methods.
+
+    A MeasureSelection defines a way to select a measure
+    for an earthquake event. Subclasses of MeasureSelection
+    must implement the select method.
+    """
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def select(self, grouped_measures, native_scale, target_scale, mus):
+        """
+        Build a native_measure and a target_measure manager. Each
+        manager is built by selecting a measure from a
+        grouped_measures item. The selection is driven by the agency
+        ranking.
+
+        :py:param:: grouped_measures
+         A dictionary where the keys identifies the events and
+        the value are the list of measures associated with it
+        :py:param:: native_scale, target_scale
+        The native and target scale used
+        :py:param:: mus
+        A missing uncertainty strategy object used to handle the case
+        when no standard error of a measure is provided
+        """
+
+
+class RandomStrategy(MeasureSelection):
+    """
+    RandomStrategy apply the measure selection by
+    choosing one random measure among the available ones.
+    """
+
+    @classmethod
+    def select(cls, grouped_measures, native_scale, target_scale, mus):
+        native_measures = MeasureManager(native_scale)
+        target_measures = MeasureManager(target_scale)
+
+        for measures in grouped_measures.values():
+            native_selection = []
+            target_selection = []
+            for measure in measures:
+                if mus.should_be_discarded(measure):
+                    continue
+                if not measure.standard_error:
+                    measure.standard_error = mus.get_default(measure)
+                if measure.scale == native_scale:
+                    native_selection.append(measure)
+                if measure.scale == target_scale:
+                    target_selection.append(measure)
+            if native_selection and target_selection:
+                native_measures.append(choice(native_selection))
+                target_measures.append(choice(target_selection))
+
+        return native_measures, target_measures
+
+
+class PrecisionStrategy(MeasureSelection):
+    """
+    PrecisionStrategy apply the selection by
+    choosing the best measure for precision
+    among the available ones.
+    """
+
+    @classmethod
+    def _precision_score(cls, native_measure, target_measure):
+        """
+        Calculate sigma value.
+        :returns precision_score: measure score evaluation.
+        """
+
+        precision_score = sqrt(pow(native_measure, 2) + pow(target_measure, 2))
+        return  precision_score
+
+    @classmethod
+    def _best_measures(cls, native_selection, target_selection):
+        """
+        Find the most precise measures by calculating
+        the measures' precision score.
+        """
+
+        native_c_index = 0
+        target_c_index = 1
+        couples = list(product(native_selection, target_selection))
+        sigma_couples = [PrecisionStrategy._precision_score(n.value, t.value)
+                            for n, t in couples]
+        min_val = min(sigma_couples)
+        index_min_val = sigma_couples.index(min_val)
+        return (couples[index_min_val][native_c_index],
+               couples[index_min_val][target_c_index])
+
+    @classmethod
+    def select(cls, grouped_measures, native_scale, target_scale, mus):
+        native_measures = MeasureManager(native_scale)
+        target_measures = MeasureManager(target_scale)
+
+        for measures in grouped_measures.values():
+            native_selection = []
+            target_selection = []
+            for measure in measures:
+                if mus.should_be_discarded(measure):
+                    continue
+                if not measure.standard_error:
+                    measure.standard_error = mus.get_default(measure)
+                if measure.scale == native_scale:
+                    native_selection.append(measure)
+                if measure.scale == target_scale:
+                    target_selection.append(measure)
+            if native_selection and target_selection:
+                couple = PrecisionStrategy._best_measures(
+                    native_selection, target_selection)
+                native_measures.append(couple[0])
+                target_measures.append(couple[1])
+        return native_measures, target_measures
+
+
+class AgencyRankingStrategy(MeasureSelection):
     """
     Measure Selection based on AgencyRanking
     """
@@ -85,7 +208,7 @@ class AgencyRanking(object):
         """
         Initialize an AgencyRanking object
         :py:param:: ranking
-        a bdictionary where the keys are regexp that can match a
+        a dictionary where the keys are regexp that can match a
         magnitude scale and the value is a list of agency in the order
         of preference
         """
