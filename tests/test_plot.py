@@ -1,5 +1,7 @@
 import unittest
 import numpy as np
+import matplotlib
+matplotlib.use("Agg")
 from matplotlib.testing.compare import compare_images
 from tests.test_utils import in_data_dir
 
