@@ -41,7 +41,6 @@ def plot(emsr, filename=None, errorbar_params=None,
     a dict object with params passed to matplotlib #savefig function
     """
     if filename:
-        plt.switch_backend("Agg")
         plt.ioff()
     fig = plt.figure()
     ax = fig.add_subplot(111)

@@ -4,6 +4,11 @@ Model Managers definition
 
 import eqcatalogue.models as db
 import numpy as np
+
+# we import matplotlib just to change the backend as scipy import
+# matplotlib making impossible to use this code on an headless machine
+import matplotlib
+matplotlib.use('Agg')
 from scipy.cluster import hierarchy
 
 
