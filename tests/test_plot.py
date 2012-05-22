@@ -1,14 +1,12 @@
 import unittest
 import numpy as np
-import matplotlib
-matplotlib.use("Agg")
-from matplotlib.testing.compare import compare_images
 from tests.test_utils import in_data_dir
+
+from matplotlib.testing.compare import compare_images
 
 from eqcatalogue import regression
 from eqcatalogue import managers
 from eqcatalogue.serializers.mpl import plot
-
 
 ACTUAL1 = in_data_dir('actual1.png')
 EXPECTED1 = in_data_dir('expected1.png')
