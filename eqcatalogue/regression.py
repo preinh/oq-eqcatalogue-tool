@@ -254,14 +254,18 @@ class EmpiricalMagnitudeScalingRelationship(object):
         a specific strategy.
         :py:param:: native_scale
         The native scale of the EmpiricalMagnitudeScalingRelationship
+
         :py:param:: target_scale
         The target scale of the EmpiricalMagnitudeScalingRelationship
+
         :py:param:: grouped_measures
         A dictionary that stores the association
         between an event (the key) and a list of
         measures (the value).
+
         :py:param:: selection_strategy
         A MeasureSelectionStrategy object used to select the proper measures
+
         :py:param:: missing_uncertainty_strategy
         A MissingUncertaintyStrategy object used to handle measures
         without standard error info

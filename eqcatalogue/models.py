@@ -14,7 +14,7 @@
 # along with eqcatalogueTool. If not, see <http://www.gnu.org/licenses/>.
 
 """
-GeoAlchemy model definition
+This module contains the class definitions of the basic domain models.
 """
 
 from datetime import datetime
@@ -245,6 +245,7 @@ class Origin(object):
 
     @staticmethod
     def position_from_latlng(latitude, longitude):
+        # FIXME: this method should be in a separate model
         position = geoalchemy.WKTSpatialElement(
             'POINT(%s %s)' % (latitude, longitude))
         return position
@@ -278,6 +279,7 @@ class MeasureMetadata(object):
 
 
 class Singleton(type):
+    """Metaclass to implement the singleton pattern"""
     def __init__(cls, name, bases, d):
         super(Singleton, cls).__init__(name, bases, d)
         cls.instance = None
@@ -306,13 +308,6 @@ class CatalogueDatabase(object):
         self._metadata = None
         self._setup(filename=filename, memory=memory, drop=drop)
 
-    def __new__(cls, *args, **kwargs):
-        """Singleton pattern"""
-
-        if not cls._instance:
-            cls._instance = super(CatalogueDatabase, cls).__new__(
-                cls, *args, **kwargs)
-        return cls._instance
 
     def _setup(self, memory=False, filename=None, drop=False):
         """Setup a sqlalchemy connection to spatialite with the proper
