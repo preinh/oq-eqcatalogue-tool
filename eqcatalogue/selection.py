@@ -26,7 +26,23 @@ import re
 from eqcatalogue.managers import MeasureManager
 
 
-class MUSDiscard(object):
+class MissingUncertaintyStrategy(object):
+    """Missing uncertainty strategy base class. Used to determine if a
+    measure should be discarded or accepted when it does not have any
+    uncertainty data associated, that is its standard error (sigma).
+    When it is accepted it also provide a default value for its sigma"""
+
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def should_be_discarded(self, measure):
+        pass
+
+    def get_default(self, measure):
+        pass
+
+
+class MUSDiscard(MissingUncertaintyStrategy):
     """
     Missing uncertainty strategy class:
     Discard Measure if it has not a standard error
@@ -35,8 +51,12 @@ class MUSDiscard(object):
         ret = not measure.standard_error
         return ret
 
+    def get_default(self, measure):
+        return RuntimeError(
+            "You can not get the default sigma for a discarded measure")
 
-class MUSSetEventMaximum(MUSDiscard):
+
+class MUSSetEventMaximum(MissingUncertaintyStrategy):
     """
     Missing uncertainty strategy class:
 
@@ -51,8 +71,7 @@ class MUSSetEventMaximum(MUSDiscard):
 
     def should_be_discarded(self, measure):
         errors = self._get_event_errors(measure)
-        ret = super(MUSSetEventMaximum, self).should_be_discarded(
-           measure) and len(errors) == 0
+        ret = not measure.standard_error and len(errors) == 0
         return ret
 
     def get_default(self, measure):
@@ -60,7 +79,7 @@ class MUSSetEventMaximum(MUSDiscard):
         return max(errors)
 
 
-class MUSSetDefault(object):
+class MUSSetDefault(MissingUncertaintyStrategy):
     """
     Missing uncertainty strategy class:
 
@@ -69,12 +88,13 @@ class MUSSetDefault(object):
     """
 
     def __init__(self, default):
+        super(MUSSetDefault, self).__init__(default)
         self.default = default
 
     def get_default(self, _):
         return self.default
 
-    def should_be_discarded(self):
+    def should_be_discarded(self, _):
         return False
 
 
@@ -212,6 +232,7 @@ class AgencyRankingStrategy(MeasureSelection):
         magnitude scale and the value is a list of agency in the order
         of preference
         """
+        super(AgencyRankingStrategy, self).__init__()
         self._ranking = ranking
 
     def calculate_rank(self, measure):
