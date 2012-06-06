@@ -237,8 +237,8 @@ class OriginBlockState(BaseState):
                 time_error = None
         time_rms = None if not line[30:35].strip() else float(line[30:35])
 
-        position = catalogue.Origin.position_from_latlng(float(line[36:44]),
-                                                         float(line[45:54]))
+        position = self._catalogue.position_from_latlng(float(line[36:44]),
+                                                        float(line[45:54]))
         fixed_position = line[54] == 'f'
         errors = (line[55:60].strip(), line[61:66].strip())
         if fixed_position or not errors[0]:
