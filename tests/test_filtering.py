@@ -107,13 +107,13 @@ class AnEventFilterShould(unittest.TestCase):
 
     def test_allows_selection_of_events_on_agency_basis(self):
         agency = 'LDG'
-        self.assertEqual(1, len(self.event.with_agency(agency).all()))
+        self.assertEqual(1, len(self.event.with_agencies(agency).all()))
 
         agency = 'NEIC'
-        self.assertEqual(3, len(self.event.with_agency(agency).all()))
+        self.assertEqual(3, len(self.event.with_agencies(agency).all()))
 
         agency = 'Blabla'
-        self.assertEqual(0, len(self.event.with_agency(agency).all()))
+        self.assertEqual(0, len(self.event.with_agencies(agency).all()))
 
         agencies = ['LDG', 'NEIC']
         self.assertEqual(3, len(self.event.with_agencies(*agencies).all()))

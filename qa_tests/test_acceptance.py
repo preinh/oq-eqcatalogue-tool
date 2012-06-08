@@ -35,7 +35,7 @@ class CatalogueTool(unittest.TestCase):
 
     def test_second_config(self):
         # Apply event selection
-        events = EventManager().with_agency("ISC").before(datetime.now())
+        events = EventManager().with_agencies("ISC").before(datetime.now())
 
         # Computing Magnitude Scaling Relationship
         ranking = {"ML": ["ISC", "IDC"], "mb": ["ISC", "FUNV"]}
