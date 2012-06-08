@@ -1,5 +1,6 @@
 *.pyc
-*.db
+*.idea
+*_config.png
 nosetest*
 .coverage
 *~

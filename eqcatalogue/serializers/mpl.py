@@ -21,6 +21,10 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 
+# Upper 95% Limit = x + (sigma * 1.96)
+QUANTILE_NDISTRIB_975 = 1.96
+
+
 def plot(emsr, filename=None, errorbar_params=None,
          line_params=None, figure_params=None):
     """
@@ -61,8 +65,8 @@ def plot(emsr, filename=None, errorbar_params=None,
                 **actual_line_params)
 
     y = emsr.target_measures.measures
-    yerr = emsr.native_measures.sigma * 1.96
-    xerr = emsr.native_measures.sigma * 1.96
+    yerr = np.multiply(emsr.native_measures.sigma, QUANTILE_NDISTRIB_975)
+    xerr = np.multiply(emsr.native_measures.sigma, QUANTILE_NDISTRIB_975)
 
     actual_errorbar_params = {'fmt': 'b.', 'ecolor': 'r'}
     if errorbar_params:

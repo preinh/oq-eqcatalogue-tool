@@ -21,18 +21,11 @@ import math
 from scipy import odr
 import numpy as np
 from eqcatalogue import selection
+from eqcatalogue import exceptions
+
 
 REGRESSOR_DEFAULT_MAX_ITERATIONS = 1000
 PL_DEFAULT_INITIAL_VALUE_ORDER = 2
-
-
-class RegressionFailedException(BaseException):
-    def __init__(self, reason):
-        super(RegressionFailedException, self).__init__(self)
-        self.reason = reason
-
-    def __repr__(self):
-        return "Regression failed: %s" % self.reason
 
 
 class RegressionModel(object):
@@ -43,10 +36,13 @@ class RegressionModel(object):
     The initial values used by the regression algorithm.
 
     :py:attribute:: akaike
-    The akaike information about the performed regression
+    The akaike information about the performed regression. The akaike
+    number gives you a measure of the goodness of fit of the
+    regression model
 
     :py:attribute:: akaike_corrected
     The normalized akaike information about the performed regression
+    suitable for finite sample sizes
     """
 
     is_regression_model = True
@@ -105,22 +101,31 @@ class RegressionModel(object):
         self.akaike = None
         self.akaike_corrected = None
         self._output = None
-        self._ndata = np.shape(native_measures.measures)[0]
+        self.sample_size = float(np.shape(native_measures.measures)[0])
 
     def long_str(self):
-        if self.akaike_corrected:
-            return "%s. AICc: %s" % (self, self.akaike_corrected)
+        return "%s. AICc: %s" % (self, self.akaike_corrected)
 
     def func(self, x):
         return self._model_function(self._output.beta, x)
 
+    def parameter_number(self):
+        """Returns the number of parameters of the regression model"""
+        return float(len(self._output.beta))
+
+    def residual(self):
+        return self._output.res_var
+
     def criterion_tests(self):
         ''' Calculate AIC and AICc'''
-        nfree = float(len(self._output.beta))
-        self.akaike = float(self._ndata) * \
-            math.log(self._output.res_var) + 2. * nfree
+
+        # number of parameters of the model
+        nfree = self.parameter_number()
+
+        self.akaike = float(self.sample_size) * \
+            math.log(self.residual()) + 2. * nfree
         self.akaike_corrected = self.akaike + \
-            (2. * nfree * (nfree + 1.)) / (float(self._ndata) - nfree - 1.)
+            (2. * nfree * (nfree + 1.)) / (self.sample_size - nfree - 1.)
 
     def run(self):
         """Perform regression analyisis"""
@@ -129,7 +134,8 @@ class RegressionModel(object):
         if not 'Sum of squares convergence' in self._output.stopreason\
             and not 'Parameter convergence' in self._output.stopreason:
             # ODR Failed
-            raise RegressionFailedException(self._output.stopreason)
+            raise exceptions.RegressionFailedException(
+                "Regression failed: %s" % self._output.stopreason)
 
         self.criterion_tests()
 
@@ -249,14 +255,18 @@ class EmpiricalMagnitudeScalingRelationship(object):
         a specific strategy.
         :py:param:: native_scale
         The native scale of the EmpiricalMagnitudeScalingRelationship
+
         :py:param:: target_scale
         The target scale of the EmpiricalMagnitudeScalingRelationship
+
         :py:param:: grouped_measures
         A dictionary that stores the association
         between an event (the key) and a list of
         measures (the value).
+
         :py:param:: selection_strategy
         A MeasureSelectionStrategy object used to select the proper measures
+
         :py:param:: missing_uncertainty_strategy
         A MissingUncertaintyStrategy object used to handle measures
         without standard error info
@@ -301,6 +311,12 @@ class EmpiricalMagnitudeScalingRelationship(object):
         if not hasattr(model_type, 'is_regression_model'):
             raise TypeError("Invalid Model type selected (%s). \
         It should be a subclass of RegressionModel" % model_type)
+
+        if len(self.native_measures) < 3:
+            raise exceptions.NotEnoughSamples(
+                "Not enough measures to perform regression."
+                "Please relax your query or selection criteria")
+
         regression_model = model_type(self.native_measures,
                                       self.target_measures,
                                       **regression_params)
