@@ -140,8 +140,8 @@ class ShouldPerformRegression(unittest.TestCase):
         # Assess
         A = 0.85
         B = 1.03
-        native_measures = managers.MeasureManager('mb')
-        target_measures = managers.MeasureManager('Mw')
+        native_measures = selection.MeasureManager('mb')
+        target_measures = selection.MeasureManager('Mw')
         native_measures.measures = np.random.uniform(3., 8.5, 1000)
         native_measures.sigma = np.random.uniform(0.02, 0.2, 1000)
         target_measures.measures = A + B * native_measures.measures
@@ -162,8 +162,8 @@ class ShouldPerformRegression(unittest.TestCase):
         A = 0.046
         B = 0.556
         C = 0.673
-        native_measures = managers.MeasureManager('mb')
-        target_measures = managers.MeasureManager('Mw')
+        native_measures = selection.MeasureManager('mb')
+        target_measures = selection.MeasureManager('Mw')
         native_measures.measures = np.random.uniform(3., 8.5, 1000)
         native_measures.sigma = np.random.uniform(0.02, 0.2, 1000)
         target_measures.measures = C + B * native_measures.measures +\
@@ -182,8 +182,8 @@ class ShouldPerformRegression(unittest.TestCase):
         self.assertTrue(output.res_var < 1e-20)
 
     def test_fail_regression_not_enough_measures(self):
-        native_measures = managers.MeasureManager('mb')
-        target_measures = managers.MeasureManager('Mw')
+        native_measures = selection.MeasureManager('mb')
+        target_measures = selection.MeasureManager('Mw')
         native_measures.measures = [np.random.poisson(
             size=np.random.randint(0, 2))]
         native_measures.sigma = [np.random.poisson(
@@ -204,8 +204,8 @@ class ShouldPerformRegression(unittest.TestCase):
         # Assess
         A = 0.85
         B = 1.03
-        native_measures = managers.MeasureManager('mb')
-        target_measures = managers.MeasureManager('Mw')
+        native_measures = selection.MeasureManager('mb')
+        target_measures = selection.MeasureManager('Mw')
         native_measures.measures = np.random.uniform(3., 8.5, 1000)
         native_measures.sigma = np.random.uniform(0.02, 0.2, 1000)
         target_measures.measures = A + B * native_measures.measures

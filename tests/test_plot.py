@@ -5,7 +5,7 @@ from tests.test_utils import in_data_dir
 from matplotlib.testing.compare import compare_images
 
 from eqcatalogue import regression
-from eqcatalogue import managers
+from eqcatalogue import selection
 from eqcatalogue.serializers.mpl import plot
 
 ACTUAL1 = in_data_dir('actual1.png')
@@ -20,8 +20,8 @@ class ShoudPlotEMSR(unittest.TestCase):
         p2_2 = 0.673
         points = 40
 
-        native_measures = managers.MeasureManager('Mtest')
-        target_measures = managers.MeasureManager('Mtest2')
+        native_measures = selection.MeasureManager('Mtest')
+        target_measures = selection.MeasureManager('Mtest2')
         native_measures.measures = np.random.uniform(3., 8.5, points)
         native_measures.sigma = np.random.uniform(0.02, 0.2, points)
         target_measures.measures = p2_0 + p2_1 * native_measures.measures +\

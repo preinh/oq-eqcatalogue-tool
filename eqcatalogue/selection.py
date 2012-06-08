@@ -23,7 +23,39 @@ from math import sqrt, pow
 from itertools import product
 import re
 
-from eqcatalogue.managers import MeasureManager
+
+class MeasureManager(object):
+    """
+    Manage a list of quantitative measures
+    :py:attribute:: measures
+    A list of float
+    :py:attribute:: sigma
+    Standard error of measures. Can be fixed (a single float) or a
+    list of float
+    :py:attribute:: name
+    the magnitude scale
+    """
+    def __init__(self, name):
+        self.measures = []
+        self.sigma = []
+        self.name = name
+        # holds a list of magnitude measure objects
+        self.magnitude_measures = []
+
+    def append(self, measure):
+        assert(measure and measure.value and measure.standard_error)
+        self.magnitude_measures.append(measure)
+        self.measures.append(measure.value)
+        self.sigma.append(measure.standard_error)
+
+    def __repr__(self):
+        return self.name
+
+    def __iter__(self):
+        return self.measures.__iter__()
+
+    def __len__(self):
+        return len(self.measures)
 
 
 class MissingUncertaintyStrategy(object):
