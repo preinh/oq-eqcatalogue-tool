@@ -11,4 +11,4 @@ nosetest*
 *_flymake.py
 tests/data/actual*
 docs/build
-
+test_drop.db
