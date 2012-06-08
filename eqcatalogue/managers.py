@@ -104,15 +104,6 @@ class EventManager(object):
         """
         return self.after(time_lb).before(time_ub)
 
-    def with_agency(self, agency):
-        """
-        return EventManager.clone(self) which allows to get
-        all events with a specified agency, inside the earthquake catalogue.
-        :param agency: agency name
-        """
-        queryset = self.queryset.filter(db.Agency.source_key == agency)
-        return EventManager.clone_with_queryset(self, queryset)
-
     def with_agencies(self, *agency_name_list):
         """
         return EventManager.clone_with_queryset(self) which allows to get
