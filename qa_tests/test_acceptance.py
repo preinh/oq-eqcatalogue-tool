@@ -54,7 +54,7 @@ class CatalogueTool(unittest.TestCase):
         mpl.plot(emsr, in_data_dir(graph_filename))
 
         expected_beta = np.array([-2.36836, 1.49706])
-        expected_res_var = 1.85255
+        expected_res_var = 1.97931
 
         # Assert
         np.allclose(expected_beta, output.beta)
