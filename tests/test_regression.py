@@ -20,7 +20,7 @@ from numpy.ma.testutils import assert_almost_equal
 
 from eqcatalogue.regression import (EmpiricalMagnitudeScalingRelationship,
                                     LinearModel, PolynomialModel)
-from eqcatalogue import managers, exceptions
+from eqcatalogue import filters, exceptions
 from eqcatalogue.importers import isf_bulletin
 from eqcatalogue import models as catalogue
 from eqcatalogue import selection
@@ -38,12 +38,12 @@ def _load_catalog():
 class ShouldGroupMeasures(unittest.TestCase):
     def setUp(self):
         _load_catalog()
-        self.event_manager = managers.EventManager()
+        self.event_manager = filters.EventFilter()
 
     def test_group_by_time_clustering(self):
         # Assess
-        g1 = managers.GroupMeasuresByHierarchicalClustering()
-        g2 = managers.GroupMeasuresByEventSourceKey()
+        g1 = filters.GroupMeasuresByHierarchicalClustering()
+        g2 = filters.GroupMeasuresByEventSourceKey()
         r2 = g2.group_measures(self.event_manager)
 
         # Act
@@ -57,7 +57,7 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
 
     def setUp(self):
         self.cat = _load_catalog()
-        self.event_manager = managers.EventManager().with_agencies(
+        self.event_manager = filters.EventFilter().with_agencies(
             'ISC', 'IDC', 'GCMT').with_magnitudes(
                 'mb', 'MS', 'MW')
         self.events = self.event_manager.all()

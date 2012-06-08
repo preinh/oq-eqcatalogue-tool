@@ -22,7 +22,7 @@ from tests.test_utils import DATA_DIR, get_data_path
 
 from eqcatalogue.importers.csv1 import CsvEqCatalogueReader, Converter
 from eqcatalogue import models
-from eqcatalogue.managers import EventManager
+from eqcatalogue.filters import EventFilter
 
 
 def load_fixtures(session):
@@ -76,12 +76,12 @@ def load_fixtures(session):
         session.add(measure_meta)
 
 
-class AnEventManagerShould(unittest.TestCase):
+class AnEventFilterShould(unittest.TestCase):
 
     def setUp(self):
         self.cat_db = models.CatalogueDatabase(memory=True, drop=True)
         self.cat_db.recreate()
-        self.event = EventManager()
+        self.event = EventFilter()
         self.session = self.cat_db.session
         load_fixtures(self.session)
 
