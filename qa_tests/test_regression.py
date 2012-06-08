@@ -2,7 +2,6 @@ import unittest
 import numpy as np
 import os
 from datetime import datetime
-from numpy.ma.testutils import assert_almost_equal
 
 from tests.test_utils import in_data_dir
 
@@ -14,6 +13,7 @@ from eqcatalogue.serializers import mpl
 
 
 DB = models.CatalogueDatabase(filename=in_data_dir('pluto.db'))
+
 
 class CatalogueTool(unittest.TestCase):
 

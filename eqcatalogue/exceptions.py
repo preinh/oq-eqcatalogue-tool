@@ -19,16 +19,15 @@ Exception module for the eqcatalogue tool
 
 
 class RegressionFailedException(BaseException):
-    def __init__(self, reason):
-        super(RegressionFailedException, self).__init__(self)
-        self.reason = reason
-
-    def __repr__(self):
-        return "Regression failed: %s" % self.reason
+    """
+    Raised when the regressor fails at calculating the result
+    """
+    pass
 
 
 class NotEnoughSamples(BaseException):
-    def __repr__(self):
-        return """
-        Not enough measures to perform regression.
-        Please relax your query or selection criteria"""
+    """
+    Not enough measures to perform regression.
+    Please relax your query or selection criteria
+    """
+    pass

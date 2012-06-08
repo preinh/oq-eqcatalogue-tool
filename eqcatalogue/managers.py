@@ -186,7 +186,7 @@ class GroupMeasuresByEventSourceKey(object):
     """
     def group_measures(self, event_manager):
         groups = {}
-        for ev in event_manager.queryset.all():
+        for ev in event_manager.all():
             groups[str(ev.source_key)] = ev.measures
         return groups
 

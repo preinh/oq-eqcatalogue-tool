@@ -28,6 +28,10 @@ from eqcatalogue.models import (EventSource, Event, MagnitudeMeasure, Agency,
                                 SCALES, Origin, MeasureMetadata, METADATA_TYPES
     )
 
+DLL_LIBRARY = "libspatialite.dll"
+DYLIB_LIBRARY = "libspatialite.dylib"
+SO_LIBRARY = "libspatialite.so"
+
 
 class Engine(object):
     DEFAULT_FILENAME = "eqcatalogue.db"
@@ -102,8 +106,8 @@ class Engine(object):
             sqlalchemy.Column('eventsource_id',
                               sqlalchemy.Integer,
                               sqlalchemy.ForeignKey(
-                    'catalogue_eventsource.id')),
-            sqlalchemy.Column('name', sqlalchemy.String(255), unique=True))
+                    'catalogue_eventsource.id'),
+                    nullable=False))
         orm.Mapper(Agency, agency, properties={
                 'eventsource': orm.relationship(
                     EventSource,
@@ -127,7 +131,8 @@ class Engine(object):
                               sqlalchemy.String(), nullable=True),
             sqlalchemy.Column('eventsource_id', sqlalchemy.Integer,
                               sqlalchemy.ForeignKey(
-                    'catalogue_eventsource.id')))
+                    'catalogue_eventsource.id'),
+                    nullable=False))
         orm.Mapper(Event, event, properties={
                 'eventsource': orm.relationship(EventSource,
                                                 backref=orm.backref('events'))
@@ -146,17 +151,21 @@ class Engine(object):
                               sqlalchemy.DateTime, default=datetime.now()),
             sqlalchemy.Column('event_id',
                               sqlalchemy.Integer,
-                              sqlalchemy.ForeignKey('catalogue_event.id')),
+                              sqlalchemy.ForeignKey('catalogue_event.id'),
+                              nullable=False),
             sqlalchemy.Column('agency_id',
                               sqlalchemy.Integer,
-                              sqlalchemy.ForeignKey('catalogue_agency.id')),
+                              sqlalchemy.ForeignKey('catalogue_agency.id'),
+                              nullable=False),
             sqlalchemy.Column('origin_id',
                               sqlalchemy.Integer,
-                              sqlalchemy.ForeignKey('catalogue_origin.id')),
+                              sqlalchemy.ForeignKey('catalogue_origin.id'),
+                              nullable=False),
             sqlalchemy.Column('scale', sqlalchemy.Enum(*SCALES)),
             sqlalchemy.Column('value', sqlalchemy.Float()),
             sqlalchemy.Column('standard_error',
-                              sqlalchemy.Float(), nullable=True))
+                              sqlalchemy.Float(),
+                              nullable=True))
 
         orm.Mapper(MagnitudeMeasure, magnitudemeasure, properties={
                 'event': orm.relationship(Event,
@@ -181,7 +190,8 @@ class Engine(object):
             sqlalchemy.Column('eventsource_id',
                               sqlalchemy.Integer,
                               sqlalchemy.ForeignKey(
-                    'catalogue_eventsource.id')),
+                    'catalogue_eventsource.id'),
+                    nullable=False),
             sqlalchemy.Column('time', sqlalchemy.DateTime, nullable=False),
             sqlalchemy.Column('time_error', sqlalchemy.Float(), nullable=True),
             sqlalchemy.Column('time_rms', sqlalchemy.Float(), nullable=True),
@@ -215,7 +225,8 @@ class Engine(object):
                               default=datetime.now()),
             sqlalchemy.Column('magnitudemeasure_id', sqlalchemy.Integer,
                               sqlalchemy.ForeignKey(
-                    'catalogue_magnitudemeasure.id')),
+                    'catalogue_magnitudemeasure.id'),
+                    nullable=False),
             sqlalchemy.Column('name',
                               sqlalchemy.Enum(*METADATA_TYPES),
                               nullable=False),
@@ -274,20 +285,22 @@ def _load_extension(session):
     :param:: session:
     A sqlalchemy session."""
 
-    try:
-        session.execute("select load_extension('libspatialite.so')")
-    except sqlite.OperationalError:
+    loaded = False
+    for library in [SO_LIBRARY, DLL_LIBRARY, DYLIB_LIBRARY]:
         try:
-            session.execute("select load_extension('libspatialite.dylib')")
+            session.execute("select load_extension('%s')" % library)
+            loaded = True
         except sqlite.OperationalError:
-            try:
-                session.execute(
-                    "select load_extension('libspatialite.dll')")
-            except:
-                raise RuntimeError("""
-Could not load libspatial extension.
-Check your spatialite and pysqlite2 installation"""
-                                   )
+            pass
+
+    if not loaded:
+        raise RuntimeError("""
+    Could not load libspatial extension.
+    Check your spatialite and pysqlite2 installation"""
+            )
+
+    # spatialite needs this initialization on the first usage. This
+    # should be probably go into a package installation script
     try:
         session.execute('select * from spatial_ref_sys')
     except sqlite.OperationalError:

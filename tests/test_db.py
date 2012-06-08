@@ -17,6 +17,7 @@ from datetime import datetime
 import unittest
 from eqcatalogue import models as catalogue
 import geoalchemy
+from tests.test_utils import in_data_dir
 
 
 class ShouldCreateAlchemyTestCase(unittest.TestCase):
@@ -25,6 +26,14 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
         self.catalogue = catalogue.CatalogueDatabase(memory=True)
         self.catalogue.recreate()
         self.session = self.catalogue.session
+
+    def test_drop(self):
+        catalogue.CatalogueDatabase.reset_singleton()
+        self.catalogue = catalogue.CatalogueDatabase(
+            drop=True,
+            filename=in_data_dir("test_drop.db"))
+        catalogue.CatalogueDatabase.reset_singleton()
+        self.catalogue = catalogue.CatalogueDatabase(memory=True, drop=True)
 
     def test_eventsource(self):
         event_source = catalogue.EventSource(name="test1")
@@ -38,7 +47,10 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
 
         agency = catalogue.Agency(source_key="test", eventsource=eventsource)
         self.session.add(agency)
-        self.assertEqual(self.session.query(catalogue.Agency).filter_by(source_key='test').count(), 1)
+        self.assertEqual(
+            self.session.query(catalogue.Agency).filter_by(
+                source_key='test').count(),
+            1)
 
     def test_event(self):
         eventsource = catalogue.EventSource(name="test3")
@@ -46,18 +58,23 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
 
         event = catalogue.Event(source_key="test", eventsource=eventsource)
         self.session.add(event)
-        self.assertEqual(self.session.query(catalogue.Event).filter_by(source_key='test').count(), 1)
+        self.assertEqual(
+            self.session.query(catalogue.Event).filter_by(
+                source_key='test').count(), 1)
 
     def test_origin(self):
         eventsource = catalogue.EventSource(name="test4")
         self.session.add(eventsource)
 
         origin = catalogue.Origin(source_key="test", eventsource=eventsource,
-                                 position=geoalchemy.WKTSpatialElement('POINT(-81.40 38.08)'),
-                                 time = datetime.now(),
+                                 position=geoalchemy.WKTSpatialElement(
+                                     'POINT(-81.40 38.08)'),
+                                 time=datetime.now(),
                                  depth=3)
         self.session.add(origin)
-        self.assertEqual(self.session.query(catalogue.Origin).filter(catalogue.Origin.depth > 2).count(), 1)
+        self.assertEqual(
+            self.session.query(catalogue.Origin).filter(
+                catalogue.Origin.depth > 2).count(), 1)
 
     def test_magnitudemeasure(self):
         eventsource = catalogue.EventSource(name="test4")
@@ -69,23 +86,26 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
         agency = catalogue.Agency(source_key="test", eventsource=eventsource)
         self.session.add(agency)
 
-        origin = catalogue.Origin(source_key="test", eventsource=eventsource,
-                                 position=geoalchemy.WKTSpatialElement('POINT(-81.40 38.08)'),
-                                 time = datetime.now(),
-                                 depth=1)
+        origin = catalogue.Origin(
+            source_key="test", eventsource=eventsource,
+            position=geoalchemy.WKTSpatialElement('POINT(-81.40 38.08)'),
+            time=datetime.now(),
+            depth=1)
         self.session.add(origin)
 
-        measure = catalogue.MagnitudeMeasure(event=event, agency=agency, origin=origin, scale='mL', value=5.0)
+        measure = catalogue.MagnitudeMeasure(
+            event=event, agency=agency, origin=origin, scale='mL', value=5.0)
         self.session.add(measure)
 
-        self.assertEqual(self.session.query(catalogue.MagnitudeMeasure).count(), 1)
+        self.assertEqual(
+            self.session.query(catalogue.MagnitudeMeasure).count(), 1)
 
     def test_get_or_add(self):
         event_source1, created = self.catalogue.get_or_create(
             catalogue.EventSource, {'name': "test_5"})
         self.assertTrue(created)
         event_source2, created = self.catalogue.get_or_create(
-            catalogue.EventSource, {'name' : "test_5"})
+            catalogue.EventSource, {'name': "test_5"})
         self.assertFalse(created)
         self.assertEqual(event_source1, event_source2)
 

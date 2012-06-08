@@ -56,9 +56,9 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
         self.assertEqual(summary, {
                     'eventsource_created': 1,
                     'agency_created': 17,
-                    'event_created': 17,
-                    'origin_created': 127,
-                    'measure_created':  333,
+                    'event_created': 18,
+                    'origin_created': 128,
+                    'measure_created':  334,
                     })
 
         sources = self.cat.session.query(catalogue.EventSource)
@@ -69,9 +69,9 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
 
         self.assertEqual(sources.count(),  1)
         self.assertEqual(agencies.count(),  17)
-        self.assertEqual(events.count(),  17)
-        self.assertEqual(origins.count(),  127)
-        self.assertEqual(measures.count(),  333)
+        self.assertEqual(events.count(),  18)
+        self.assertEqual(origins.count(),  128)
+        self.assertEqual(measures.count(),  334)
 
 
 class EqCatalogueReaderTestCase(unittest.TestCase):

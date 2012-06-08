@@ -74,25 +74,16 @@ class Agency(object):
     :py:attribute:: source_key
     the identifier used by the event source for the object
 
-    :py:attribute:: name
-    agency long name, short name (e.g. ISC, IDC, DMN) should be saved
-    into source_key
-
     :py:attribute:: eventsource
     the source object we have imported the agency from. It is unique
     together with `source_key`
 """
     def __repr__(self):
-        if self.name:
-            return "Agency %s (%s)" % (self.source_key, self.name)
-        else:
-            return "Agency %s" % self.source_key
+        return "Agency %s" % self.source_key
 
-    def __init__(self, source_key, eventsource, name=None):
+    def __init__(self, source_key, eventsource):
         self.source_key = source_key
         self.eventsource = eventsource
-        if name:
-            self.name = name
 
 
 class Event(object):
@@ -285,6 +276,10 @@ class CatalogueDatabase(object):
 
     def recreate(self):
         self._engine.recreate()
+
+    @classmethod
+    def reset_singleton(cls):
+        cls.instance = None
 
     @classmethod
     def get_engine(cls, module_name):

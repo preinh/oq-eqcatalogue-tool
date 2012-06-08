@@ -14,7 +14,6 @@
 # along with eqcataloguetool. If not, see <http://www.gnu.org/licenses/>.
 
 import re
-import urllib
 import datetime
 
 from eqcatalogue import models as catalogue
@@ -58,21 +57,12 @@ class UnexpectedLine(BaseException):
     """
     Exception raised when an unexpected line input is found
     """
-    def __init__(self, state, line_type):
-        super(UnexpectedLine, self).__init__()
-        self.state = state
-        self.line_type = line_type
-        self.line = None
-
-    def __str__(self):
-        return "Invalid Line Type Exception in state %s \
-                    found line_type %s: %s of length %d" % (
-            self.state, self.line_type, self.line, len(self.line))
-
+    pass
 
 # Imp. Notes. Parsing is done by using a FSM. Each line has a
 # line_type which acts as an "event" and it is an instance of a
 # particular State
+
 
 class BaseState(object):
     """
@@ -92,7 +82,9 @@ class BaseState(object):
     def transition_rule(self, line_type):
         next_state = self._get_next_state(line_type)
         if not next_state:
-            raise UnexpectedLine(self, line_type)
+            raise UnexpectedLine(
+                "Invalid Line Type Exception in state %s \
+                found line_type %s" % (self, line_type))
         else:
             return next_state
 
@@ -375,9 +367,10 @@ class MeasureBlockState(BaseState):
 
     def _save_measure(self, agency_name, origin_source_key,
                       scale, value, standard_error):
-        agency = self._catalogue.session.query(catalogue.Agency).filter_by(
-                eventsource=self.event.eventsource,
-                source_key=agency_name).first()
+        agency, _ = self._catalogue.get_or_create(
+            catalogue.Agency,
+            {'source_key': agency_name,
+             'eventsource': self.event.eventsource})
         origin = self._catalogue.session.query(catalogue.Origin).filter_by(
               eventsource=self.event.eventsource,
               source_key=origin_source_key).first()
@@ -469,7 +462,6 @@ class V1(object):
                 if current.is_start() and line_type == 'junk' and allow_junk:
                     continue
                 else:
-                    e.line = line
                     raise e
         self._catalogue.session.commit()
         return self._summary
@@ -519,22 +511,3 @@ class V1(object):
     def import_events(cls, stream, cat):
         importer = cls(stream, cat)
         return importer.load()
-
-
-def query_isc_catalogue(cat, **kwargs):
-    query_params = {
-        'out_format': 'ISF',
-        'max_dist_units': 'deg',
-        'request': "COMPREHENSIVE",
-        'searchshape': "GLOBAL",
-        'start_time': '00:00:00',
-        'end_time': '00:00:00',
-        'req_mag_type': 'Any',
-        'req_mag_agcy': 'Any',
-        'include_magnitudes': 'on',
-        'include_headers': 'on'
-        }
-    query_params.update(kwargs)
-    return V1.import_events(urllib.urlopen(CATALOG_URL,
-                                    urllib.urlencode(query_params)),
-                     cat)

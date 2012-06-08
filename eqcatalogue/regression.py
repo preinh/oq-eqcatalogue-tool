@@ -134,7 +134,8 @@ class RegressionModel(object):
         if not 'Sum of squares convergence' in self._output.stopreason\
             and not 'Parameter convergence' in self._output.stopreason:
             # ODR Failed
-            raise exceptions.RegressionFailedException(self._output.stopreason)
+            raise exceptions.RegressionFailedException(
+                "Regression failed: %s" % self._output.stopreason)
 
         self.criterion_tests()
 
@@ -312,7 +313,9 @@ class EmpiricalMagnitudeScalingRelationship(object):
         It should be a subclass of RegressionModel" % model_type)
 
         if len(self.native_measures) < 3:
-            raise exceptions.NotEnoughSamples()
+            raise exceptions.NotEnoughSamples(
+                "Not enough measures to perform regression."
+                "Please relax your query or selection criteria")
 
         regression_model = model_type(self.native_measures,
                                       self.target_measures,

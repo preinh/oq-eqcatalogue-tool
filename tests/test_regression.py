@@ -20,7 +20,7 @@ from numpy.ma.testutils import assert_almost_equal
 
 from eqcatalogue.regression import (EmpiricalMagnitudeScalingRelationship,
                                     LinearModel, PolynomialModel)
-from eqcatalogue import managers
+from eqcatalogue import managers, exceptions
 from eqcatalogue.importers import isf_bulletin
 from eqcatalogue import models as catalogue
 from eqcatalogue import selection
@@ -179,4 +179,45 @@ class ShouldPerformRegression(unittest.TestCase):
 
         # Assert
         assert_almost_equal(np.array([C, B, A]), output.beta)
+        self.assertTrue(output.res_var < 1e-20)
+
+    def test_fail_regression_not_enough_measures(self):
+        native_measures = managers.MeasureManager('mb')
+        target_measures = managers.MeasureManager('Mw')
+        native_measures.measures = [np.random.poisson(
+            size=np.random.randint(0, 2))]
+        native_measures.sigma = [np.random.poisson(
+            size=np.random.randint(0, 2))]
+        target_measures.measures = [np.random.poisson(
+            size=np.random.randint(0, 2))]
+        target_measures.sigma = [np.random.poisson(
+            size=np.random.randint(0, 2))]
+        emsr = EmpiricalMagnitudeScalingRelationship(
+            native_measures,
+            target_measures)
+
+        self.assertRaises(exceptions.NotEnoughSamples,
+                          emsr.apply_regression_model,
+                          LinearModel)
+
+    def test_regression_with_initial_values(self):
+        # Assess
+        A = 0.85
+        B = 1.03
+        native_measures = managers.MeasureManager('mb')
+        target_measures = managers.MeasureManager('Mw')
+        native_measures.measures = np.random.uniform(3., 8.5, 1000)
+        native_measures.sigma = np.random.uniform(0.02, 0.2, 1000)
+        target_measures.measures = A + B * native_measures.measures
+        target_measures.sigma = np.random.uniform(0.025, 0.2, 1000)
+        emsr = EmpiricalMagnitudeScalingRelationship(
+            native_measures,
+            target_measures)
+
+        # Act
+        output = emsr.apply_regression_model(LinearModel,
+                                             initial_values=[0, 0])
+
+        # Assert
+        assert_almost_equal(np.array([A, B]), output.beta)
         self.assertTrue(output.res_var < 1e-20)
