@@ -57,14 +57,8 @@ class EventManager(object):
     def __init__(self, cat=None, queryset=None):
         self.cat = cat or db.CatalogueDatabase()
         self._session = self.cat.session
-        self.queryset = self._session.query(db.Event).join(
+        self.queryset = queryset or self._session.query(db.Event).join(
             db.MagnitudeMeasure).join(db.Origin).join(db.Agency)
-        if queryset:
-            if queryset.count():
-                self.queryset = self.queryset.filter(
-                    db.Event.id.in_([e.id for e in queryset.all()]))
-            else:
-                self.queryset = self.queryset.filter(db.Event.id == -1)
 
     @classmethod
     def clone_with_queryset(self, em, queryset):
