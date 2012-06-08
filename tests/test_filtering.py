@@ -18,7 +18,7 @@ import unittest
 from datetime import datetime
 from geoalchemy import WKTSpatialElement
 
-from tests.test_utils import DATA_DIR, get_data_path
+from tests.test_utils import in_data_dir
 
 from eqcatalogue.importers.csv1 import CsvEqCatalogueReader, Converter
 from eqcatalogue import models
@@ -27,7 +27,7 @@ from eqcatalogue.managers import EventManager
 
 def load_fixtures(session):
     # Allows to insert test entries in the earthquake db.
-    csv_filename = get_data_path(DATA_DIR, 'query_catalogue.csv')
+    csv_filename = in_data_dir('query_catalogue.csv')
     with open(csv_filename) as eq_source:
         reader = CsvEqCatalogueReader(eq_source)
         entries = [entry for entry in reader.read(Converter())]

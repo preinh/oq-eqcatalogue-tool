@@ -57,11 +57,11 @@ class EventManager(object):
     def __init__(self, cat=None, queryset=None):
         self.cat = cat or db.CatalogueDatabase()
         self._session = self.cat.session
-        self.queryset = queryset or self._session.query(db.Event).join(
+        self._queryset = queryset or self._session.query(db.Event).join(
             db.MagnitudeMeasure).join(db.Origin).join(db.Agency)
 
     @classmethod
-    def clone_with_queryset(self, em, queryset):
+    def _clone_with_queryset(self, em, queryset):
         """Create another EventManager with the same catalogue and
         initializing queryset with the passed one"""
         new_em = EventManager(em.cat, queryset)
@@ -69,11 +69,11 @@ class EventManager(object):
 
     def all(self):
         """Layer compat with SQLAlchemy Query object"""
-        return self.queryset.all()
+        return self._queryset.all()
 
     def count(self):
         """Layer compat with SQLAlchemy Query object"""
-        return self.queryset.count()
+        return self._queryset.count()
 
     def before(self, time):
         """
@@ -81,9 +81,9 @@ class EventManager(object):
         all events before a specified time, inside the earthquake catalogue.
         :param time: datetime object.
         """
-        queryset = self.queryset.filter(db.Origin.time < time)
+        queryset = self._queryset.filter(db.Origin.time < time)
 
-        return EventManager.clone_with_queryset(self, queryset)
+        return EventManager._clone_with_queryset(self, queryset)
 
     def after(self, time):
         """
@@ -91,9 +91,9 @@ class EventManager(object):
         all events after a specified time, inside the earthquake catalogue.
         :param time: datetime object.
         """
-        queryset = self.queryset.filter(db.Origin.time > time)
+        queryset = self._queryset.filter(db.Origin.time > time)
 
-        return EventManager.clone_with_queryset(self, queryset)
+        return EventManager._clone_with_queryset(self, queryset)
 
     def between(self, time_lb, time_ub):
         """
@@ -110,9 +110,9 @@ class EventManager(object):
         all events with a specified agency, inside the earthquake catalogue.
         :param *agency_name_list: a list of agency names
         """
-        queryset = self.queryset.filter(
+        queryset = self._queryset.filter(
             db.Agency.source_key.in_(agency_name_list))
-        return EventManager.clone_with_queryset(self, queryset)
+        return EventManager._clone_with_queryset(self, queryset)
 
     def with_magnitudes(self, *magnitudes):
         """
@@ -121,13 +121,13 @@ class EventManager(object):
         inside the earthquake catalogue.
         :param *magnitudes: a list containing  of magnitudes.
         """
-        queryset = self.queryset
+        queryset = self._queryset
 
         for magnitude in magnitudes:
             queryset = queryset.filter(
             db.Event.measures.any(
                 db.MagnitudeMeasure.scale == magnitude))
-        return EventManager.clone_with_queryset(self, queryset)
+        return EventManager._clone_with_queryset(self, queryset)
 
     def within_polygon(self, polygon):
         """
@@ -136,9 +136,9 @@ class EventManager(object):
         inside the earthquake catalogue.
         :param polygon: a polygon specified in wkt format.
         """
-        queryset = self.queryset.filter(
+        queryset = self._queryset.filter(
             db.Origin.position.within(polygon))
-        return EventManager.clone_with_queryset(self, queryset)
+        return EventManager._clone_with_queryset(self, queryset)
 
     def within_distance_from_point(self, point, distance):
         """
@@ -148,10 +148,10 @@ class EventManager(object):
         :param point: a point specified in wkt format.
         :param distance: distance specified in meters (see srid 4326).
         """
-        queryset = self.queryset.filter(
+        queryset = self._queryset.filter(
                 "PtDistWithin(catalogue_origin.position, GeomFromText('%s', "
                 "4326), %s)" % (point, distance))
-        return EventManager.clone_with_queryset(self, queryset)
+        return EventManager._clone_with_queryset(self, queryset)
 
     def group_measures(self, grouping_strategy=None):
         """
@@ -204,7 +204,7 @@ class GroupMeasuresByHierarchicalClustering(object):
 
     def group_measures(self, event_manager):
         cat = db.CatalogueDatabase()
-        event_ids = [e.id for e in event_manager.queryset.all()]
+        event_ids = [e.id for e in event_manager.all()]
 
         # get the measures related with the event manager
         measures = cat.session.query(db.MagnitudeMeasure).filter(

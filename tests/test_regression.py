@@ -16,7 +16,7 @@
 import unittest
 import numpy as np
 from tests.test_utils import in_data_dir
-from numpy.ma.testutils import assert_almost_equal
+from numpy import allclose
 
 from eqcatalogue.regression import (EmpiricalMagnitudeScalingRelationship,
                                     LinearModel, PolynomialModel)
@@ -154,7 +154,7 @@ class ShouldPerformRegression(unittest.TestCase):
         output = emsr.apply_regression_model(LinearModel)
 
         # Assert
-        assert_almost_equal(np.array([A, B]), output.beta)
+        self.assertTrue(allclose(np.array([A, B]), output.beta))
         self.assertTrue(output.res_var < 1e-20)
 
     def test_polynomial_regression(self):
@@ -178,7 +178,7 @@ class ShouldPerformRegression(unittest.TestCase):
                                              order=2)
 
         # Assert
-        assert_almost_equal(np.array([C, B, A]), output.beta)
+        self.assertTrue(allclose(np.array([C, B, A]), output.beta))
         self.assertTrue(output.res_var < 1e-20)
 
     def test_fail_regression_not_enough_measures(self):
@@ -219,5 +219,5 @@ class ShouldPerformRegression(unittest.TestCase):
                                              initial_values=[0, 0])
 
         # Assert
-        assert_almost_equal(np.array([A, B]), output.beta)
+        self.assertTrue(allclose(np.array([A, B]), output.beta))
         self.assertTrue(output.res_var < 1e-20)
