@@ -31,3 +31,10 @@ class NotEnoughSamples(BaseException):
     Please relax your query or selection criteria
     """
     pass
+
+
+class InvalidFilter(BaseException):
+    """
+    Invalid Filter Argument
+    """
+    pass

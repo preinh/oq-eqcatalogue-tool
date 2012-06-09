@@ -33,12 +33,11 @@ class MeasureFilter(object):
         self.queryset = queryset or self._session.query(
             db.MagnitudeMeasure).join(db.Origin).join(db.Agency)
 
-    @classmethod
-    def clone_with_queryset(self, em, queryset):
+    def _clone_with_queryset(self, queryset):
         """Create another MeasureFilter with the same catalogue and
         initializing queryset with the passed one"""
-        new_em = MeasureFilter(em.cat, queryset)
-        return new_em
+        new_m = MeasureFilter(self.cat, queryset)
+        return new_m
 
     def all(self):
         """Layer compat with SQLAlchemy Query object"""
@@ -48,6 +47,9 @@ class MeasureFilter(object):
         """Layer compat with SQLAlchemy Query object"""
         return self.queryset.count()
 
+    def combine(self, measure_filter):
+        return self._clone_with_queryset(measure_filter.queryset)
+
     def events(self):
         """Return all the distinct events associated with all the
         measures"""
@@ -56,51 +58,52 @@ class MeasureFilter(object):
 
     def before(self, time):
         """
-        return MeasureFilter.clone(self) which allows to get
+        return MeasureFilter._clone(self) which allows to get
         all measures before a specified time, inside the earthquake catalogue.
         :param time: datetime object.
         """
         queryset = self.queryset.filter(db.Origin.time < time)
 
-        return MeasureFilter.clone_with_queryset(self, queryset)
+        return self._clone_with_queryset(queryset)
 
     def after(self, time):
         """
-        return MeasureFilter.clone(self) which allows to get
+        return MeasureFilter._clone(self) which allows to get
         all measures after a specified time, inside the earthquake catalogue.
         :param time: datetime object.
         """
         queryset = self.queryset.filter(db.Origin.time > time)
 
-        return MeasureFilter.clone_with_queryset(self, queryset)
+        return self._clone_with_queryset(queryset)
 
     def between(self, time_lb, time_ub):
         """
-        return MeasureFilter.clone(self) which allows to get
+        return MeasureFilter._clone(self) which allows to get
         all measures in a time range, inside the earthquake catalogue.
         :param time_lb: time range lower bound.
         :param time_ub: time range upper bound.
         """
         return self.after(time_lb).before(time_ub)
 
-    def with_agency(self, agency):
+    def filter(self, *filter_args, **filter_kwargs):
         """
-        return MeasureFilter.clone(self) which allows to get
-        all measures with a specified agency, inside the earthquake catalogue.
-        :param agency: agency name
+        Generic SQLAlchemy filter wrapper. Returns a _clone of the
+        current measures filtered by filter_args and filter_kwargs.
+        They can be any filter that you can pass to a SQLAlchemy Query
+        object
         """
-        queryset = self.queryset.filter(db.Agency.source_key == agency)
-        return MeasureFilter.clone_with_queryset(self, queryset)
+        queryset = self.queryset.filter(*filter_args, **filter_kwargs)
+        return self._clone_with_queryset(queryset)
 
     def with_agencies(self, *agency_name_list):
         """
-        return MeasureFilter.clone_with_queryset(self) which allows to get
+        return MeasureFilter._clone_with_queryset(self) which allows to get
         all measures with a specified agency, inside the earthquake catalogue.
         :param *agency_name_list: a list of agency names
         """
         queryset = self.queryset.filter(
             db.Agency.source_key.in_(agency_name_list))
-        return MeasureFilter.clone_with_queryset(self, queryset)
+        return self._clone_with_queryset(queryset)
 
     def with_magnitude_scales(self, *scales):
         """
@@ -111,22 +114,22 @@ class MeasureFilter(object):
         """
         queryset = self.queryset.filter(
                 db.MagnitudeMeasure.scale.in_(scales))
-        return MeasureFilter.clone_with_queryset(self, queryset)
+        return self._clone_with_queryset(queryset)
 
     def within_polygon(self, polygon):
         """
-        return MeasureFilter.clone_with_queryset(self) which allows to get
+        return MeasureFilter._clone_with_queryset(self) which allows to get
         all measures within a specified polygon,
         inside the earthquake catalogue.
         :param polygon: a polygon specified in wkt format.
         """
         queryset = self.queryset.filter(
             db.Origin.position.within(polygon))
-        return MeasureFilter.clone_with_queryset(self, queryset)
+        return self._clone_with_queryset(queryset)
 
     def within_distance_from_point(self, point, distance):
         """
-        return MeasureFilter.clone_with_queryset(self) which allows to get
+        return MeasureFilter._clone_with_queryset(self) which allows to get
         all measures within a specified distance from a point,
         inside the earthquake catalogue.
         :param point: a point specified in wkt format.
@@ -135,7 +138,7 @@ class MeasureFilter(object):
         queryset = self.queryset.filter(
                 "PtDistWithin(catalogue_origin.position, GeomFromText('%s', "
                 "4326), %s)" % (point, distance))
-        return MeasureFilter.clone_with_queryset(self, queryset)
+        return self._clone_with_queryset(queryset)
 
     def group_measures(self, grouping_strategy=None):
         """
@@ -163,7 +166,7 @@ class EventFilter(object):
         else:
             self.measure_filter = MeasureFilter(self.cat)
 
-    def _clone_with_measures(self, measure_filter):
+    def __clone_with_measures(self, measure_filter):
         """Create another EventFilter with the same catalogue and
         initializing queryset with the passed one"""
         new_em = EventFilter(self.cat, measure_filter)
@@ -179,41 +182,41 @@ class EventFilter(object):
 
     def before(self, time):
         """
-        return EventFilter.clone(self) which allows to get
+        return EventFilter._clone(self) which allows to get
         all events before a specified time, inside the earthquake catalogue.
         :param time: datetime object.
         """
         measure_filter = self.measure_filter.before(time)
-        return self._clone_with_measures(measure_filter)
+        return self.__clone_with_measures(measure_filter)
 
     def after(self, time):
         """
-        return EventFilter.clone(self) which allows to get
+        return EventFilter._clone(self) which allows to get
         all events after a specified time, inside the earthquake catalogue.
         :param time: datetime object.
         """
         measure_filter = self.measure_filter.after(time)
-        return self._clone_with_measures(measure_filter)
+        return self.__clone_with_measures(measure_filter)
 
     def between(self, time_lb, time_ub):
         """
-        return EventFilter.clone(self) which allows to get
+        return EventFilter._clone(self) which allows to get
         all events in a time range, inside the earthquake catalogue.
         :param time_lb: time range lower bound.
         :param time_ub: time range upper bound.
         """
         measure_filter = self.measure_filter.between(time_lb, time_ub)
-        return self._clone_with_measures(measure_filter)
+        return self.__clone_with_measures(measure_filter)
 
     def with_agencies(self, *agency_name_list):
         """
-        return EventFilter.clone_with_queryset(self) which allows to get
+        return EventFilter._clone_with_queryset(self) which allows to get
         all events with a specified agency, inside the earthquake catalogue.
         :param *agency_name_list: a list of agency names
         """
         measure_filter = self.measure_filter.with_agencies(
             *agency_name_list)
-        return self._clone_with_measures(measure_filter)
+        return self.__clone_with_measures(measure_filter)
 
     def with_magnitude_scales(self, *scales):
         """
@@ -222,21 +225,21 @@ class EventFilter(object):
         :param *magnitudes: a list containing of magnitude scales.
         """
         measure_filter = self.measure_filter.with_magnitude_scales(*scales)
-        return self._clone_with_measures(measure_filter)
+        return self.__clone_with_measures(measure_filter)
 
     def within_polygon(self, polygon):
         """
-        return EventFilter.clone_with_queryset(self) which allows to get
+        return EventFilter._clone_with_queryset(self) which allows to get
         all events within a specified polygon,
         inside the earthquake catalogue.
         :param polygon: a polygon specified in wkt format.
         """
         measure_filter = self.measure_filter.within_polygon(polygon)
-        return self._clone_with_measures(measure_filter)
+        return self.__clone_with_measures(measure_filter)
 
     def within_distance_from_point(self, point, distance):
         """
-        return EventFilter.clone_with_queryset(self) which allows to get
+        return EventFilter._clone_with_queryset(self) which allows to get
         all events within a specified distance from a point,
         inside the earthquake catalogue.
         :param point: a point specified in wkt format.
@@ -244,7 +247,7 @@ class EventFilter(object):
         """
         measure_filter = self.measure_filter.within_distance_from_point(
             point, distance)
-        return self._clone_with_measures(measure_filter)
+        return self.__clone_with_measures(measure_filter)
 
     def group_measures(self, grouping_strategy=None):
         """

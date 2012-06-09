@@ -12,3 +12,4 @@ nosetest*
 tests/data/actual*
 docs/build
 test_drop.db
+tests/data/actual_homo*.png
