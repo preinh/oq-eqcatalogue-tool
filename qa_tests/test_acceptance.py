@@ -6,7 +6,7 @@ from datetime import datetime
 from tests.test_utils import in_data_dir
 
 from eqcatalogue import models, selection
-from eqcatalogue.filters import EventFilter
+from eqcatalogue.filtering import EventFilter
 from eqcatalogue.regression import (EmpiricalMagnitudeScalingRelationship,
                                     LinearModel, PolynomialModel)
 from eqcatalogue.serializers import mpl
