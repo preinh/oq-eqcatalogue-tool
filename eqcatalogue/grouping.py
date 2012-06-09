@@ -20,18 +20,19 @@ import matplotlib
 matplotlib.use('Agg')
 from scipy.cluster import hierarchy
 
-import eqcatalogue.models as db
-
 
 class GroupMeasuresByEventSourceKey(object):
     """
     Group measures by event source key, that is for each source key of
     an event a group of measure is associated
     """
-    def group_measures(self, event_manager):
+    def group_measures(self, measure_filter):
         groups = {}
-        for ev in event_manager.all():
-            groups[str(ev.source_key)] = ev.measures
+        for m in measure_filter.all():
+            key = m.event.source_key
+            if not key in groups:
+                groups[key] = []
+            groups[key].append(m)
         return groups
 
 
@@ -61,18 +62,12 @@ class GroupMeasuresByHierarchicalClustering(object):
     def get_time(cls, measure):
         return float(measure.origin.time.strftime('%s'))
 
-    def group_measures(self, event_manager):
-        cat = db.CatalogueDatabase()
-        event_ids = [e.id for e in event_manager.all()]
-
-        # get the measures related with the event manager
-        measures = cat.session.query(db.MagnitudeMeasure).filter(
-            db.MagnitudeMeasure.event_id.in_(event_ids)).all()
+    def group_measures(self, measure_filter):
+        measures = measure_filter.all()
 
         data = np.array([self._key_fn(m) for m in measures])
         npdata = np.reshape(np.array(data), [len(data), 1])
 
-        # cluster them
         clusters = hierarchy.fclusterdata(npdata, **self._clustering_args)
 
         grouped = {}

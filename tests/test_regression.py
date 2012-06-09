@@ -20,7 +20,7 @@ from numpy.ma.testutils import assert_almost_equal
 
 from eqcatalogue.regression import (EmpiricalMagnitudeScalingRelationship,
                                     LinearModel, PolynomialModel)
-from eqcatalogue import filtering, grouping, exceptions
+from eqcatalogue import exceptions
 from eqcatalogue.importers import isf_bulletin
 from eqcatalogue import models as catalogue
 from eqcatalogue import selection
@@ -33,105 +33,6 @@ def _load_catalog():
         file(in_data_dir('isc-query-small.html')),
         cat)
     return cat
-
-
-class ShouldGroupMeasures(unittest.TestCase):
-    def setUp(self):
-        _load_catalog()
-        self.event_manager = filtering.EventFilter()
-
-    def test_group_by_time_clustering(self):
-        # Assess
-        g1 = grouping.GroupMeasuresByHierarchicalClustering()
-        g2 = grouping.GroupMeasuresByEventSourceKey()
-        r2 = g2.group_measures(self.event_manager)
-
-        # Act
-        r1 = g1.group_measures(self.event_manager)
-
-        # Assert
-        self.assertEqual(len(r2.values()), len(r1.values()))
-
-
-class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
-
-    def setUp(self):
-        self.cat = _load_catalog()
-        self.event_manager = filtering.EventFilter().with_agencies(
-            'ISC', 'IDC', 'GCMT').with_magnitudes(
-                'mb', 'MS', 'MW')
-        self.events = self.event_manager.all()
-        self.native_scale = 'mb'
-        self.target_scale = 'MW'
-        self.grouped_measures = {
-            '1': self.events[0].measures,
-            '2': self.events[1].measures,
-            '3': self.events[2].measures}
-
-    def test_simple_ranking(self):
-        # Assess
-        ranking = {'MW': ['GCMT', 'MOS', 'IDC'],
-                   'mb': ['IDC', 'ISC']}
-
-        # Act
-        emsr = EmpiricalMagnitudeScalingRelationship.make_from_measures(
-            self.native_scale, self.target_scale,
-            self.grouped_measures, selection.AgencyRankingStrategy(ranking),
-            selection.MUSSetEventMaximum())
-
-        # Assert
-        self.assertEqual(len(emsr.native_measures), 3)
-        self.assertEqual(len(emsr.target_measures), 3)
-        for measure in emsr.native_measures.magnitude_measures:
-            self.assertEqual(measure.scale, self.native_scale)
-            self.assertEqual(measure.agency.source_key, 'IDC')
-        for measure in emsr.target_measures.magnitude_measures:
-            self.assertEqual(measure.scale, self.target_scale)
-            self.assertEqual(measure.agency.source_key, 'GCMT',
-                             "%s is not from GCMT" % measure)
-
-    def test_pattern_ranking(self):
-        # Assess
-        ranking = {'mb': ['IDC'],
-                   'M.': ['GCMT', 'ISC', 'ISCJB']}
-
-        # Act
-        emsr = EmpiricalMagnitudeScalingRelationship.make_from_events(
-            self.native_scale, self.target_scale,
-            self.event_manager, selection.AgencyRankingStrategy(ranking),
-            selection.MUSSetEventMaximum())
-
-        # Assert
-        self.assertEqual(len(emsr.native_measures), 6)
-        self.assertEqual(len(emsr.target_measures), 6)
-        for measure in emsr.native_measures.magnitude_measures:
-            self.assertEqual(measure.scale, self.native_scale)
-            self.assertEqual(measure.agency.source_key, 'IDC')
-        for measure in emsr.target_measures.magnitude_measures:
-            self.assertEqual(measure.scale, self.target_scale)
-            self.assertEqual(measure.agency.source_key, 'GCMT',
-                             "%s is not from GCMT" % measure)
-
-    def test_random_ranking(self):
-        emsr = EmpiricalMagnitudeScalingRelationship.make_from_events(
-            self.native_scale, self.target_scale,
-            self.event_manager, selection.RandomStrategy(),
-            selection.MUSSetEventMaximum())
-
-        self.assertEqual(len(emsr.native_measures), 6)
-        self.assertEqual(len(emsr.target_measures), 6)
-
-    def test_minimum_sigma_selection(self):
-        emsr = EmpiricalMagnitudeScalingRelationship.make_from_events(
-            self.native_scale, self.target_scale,
-            self.event_manager, selection.PrecisionStrategy(),
-            selection.MUSSetEventMaximum())
-
-        self.assertEqual(len(emsr.native_measures), 6)
-        self.assertEqual(len(emsr.target_measures), 6)
-
-    def tearDown(self):
-        self.cat.session.commit()
 
 
 class ShouldPerformRegression(unittest.TestCase):

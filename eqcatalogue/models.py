@@ -113,7 +113,7 @@ class Event(object):
             self.name = name
 
     def __repr__(self):
-        return "Event %s (by %s)" % (self.source_key,
+        return "Event %s from %s" % (self.source_key,
                                      self.eventsource)
 
 
