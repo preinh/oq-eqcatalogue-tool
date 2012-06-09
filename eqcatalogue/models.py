@@ -18,7 +18,7 @@ This module contains the class definitions of the basic domain models.
 """
 
 
-DEFAULT_ENGINE = 'eqcatalogue.engines.spatialite'
+DEFAULT_ENGINE = 'eqcatalogue.stores.spatialite'
 
 SCALES = ('mL', 'mb', 'Mb',
           'Ms', 'md', 'MD',
@@ -113,7 +113,7 @@ class Event(object):
             self.name = name
 
     def __repr__(self):
-        return "Event %s (by %s)" % (self.source_key,
+        return "Event %s from %s" % (self.source_key,
                                      self.eventsource)
 
 

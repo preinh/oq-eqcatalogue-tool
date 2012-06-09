@@ -22,7 +22,7 @@ from tests.test_utils import DATA_DIR, get_data_path
 
 from eqcatalogue.importers.csv1 import CsvEqCatalogueReader, Converter
 from eqcatalogue import models
-from eqcatalogue.managers import EventManager
+from eqcatalogue.filtering import EventFilter
 
 
 def load_fixtures(session):
@@ -76,19 +76,19 @@ def load_fixtures(session):
         session.add(measure_meta)
 
 
-class AnEventManagerShould(unittest.TestCase):
+class AnEventFilterShould(unittest.TestCase):
 
     def setUp(self):
         self.cat_db = models.CatalogueDatabase(memory=True, drop=True)
         self.cat_db.recreate()
-        self.event = EventManager()
+        self.event = EventFilter()
         self.session = self.cat_db.session
         load_fixtures(self.session)
 
-    def test_allows_selection_of_all_events(self):
+    def test_allows_filtering_of_all_events(self):
         self.assertEqual(5, len(self.event.all()))
 
-    def test_allows_selection_events_on_time_criteria(self):
+    def test_allows_filtering_events_on_time_criteria(self):
         time = datetime.now()
         before_time = self.event.before(time)
         after_time = self.event.after(time)
@@ -96,16 +96,18 @@ class AnEventManagerShould(unittest.TestCase):
         time_ub = datetime(2001, 5, 2, 22, 34)
         between_time = self.event.between(time_lb, time_ub)
 
-        self.assertEqual(30, before_time.count())
+        self.assertEqual(5, before_time.count())
         self.assertEqual(0, after_time.count())
-        self.assertEqual(6, between_time.count())
+        self.assertEqual(1, between_time.count())
 
-    def test_allows_selection_of_events_given_two_mag(self):
-        self.assertEqual(3, len(self.event.with_magnitudes('MS', 'mb').all()))
+    def test_allows_filtering_of_events_given_two_mag(self):
+        self.assertEqual(4, len(self.event.with_magnitude_scales(
+            'MS', 'mb').all()))
 
-        self.assertEqual(0, self.event.with_magnitudes('MS', 'wtf').count())
+        self.assertEqual(0, self.event.with_magnitude_scales(
+            'wtf').count())
 
-    def test_allows_selection_of_events_on_agency_basis(self):
+    def test_allows_filtering_of_events_on_agency_basis(self):
         agency = 'LDG'
         self.assertEqual(1, len(self.event.with_agencies(agency).all()))
 
@@ -118,7 +120,7 @@ class AnEventManagerShould(unittest.TestCase):
         agencies = ['LDG', 'NEIC']
         self.assertEqual(3, len(self.event.with_agencies(*agencies).all()))
 
-    def test_allows_selection_of_events_given_polygon(self):
+    def test_allows_filtering_of_events_given_polygon(self):
         fst_polygon = 'POLYGON((85 35, 92 35, 92 25, 85 25, 85 35))'
         snd_polygon = 'POLYGON((92 15, 95 15, 95 10, 92 10, 92 15))'
         # Events inside first polygon: 1008566, 1008569, 1008570
@@ -128,7 +130,7 @@ class AnEventManagerShould(unittest.TestCase):
         # with a sum for measures of 13.
         self.assertEqual(1, len(self.event.within_polygon(snd_polygon).all()))
 
-    def test_allows_selection_of_events_given_distance_from_point(self):
+    def test_allows_filtering_of_events_given_distance_from_point(self):
         distance = 700000  # distance is expressed in meters using srid 4326
         point = 'POINT(88.20 33.10)'
         self.assertEqual(3, len(self.event.within_distance_from_point(point,
@@ -145,17 +147,6 @@ class AnEventManagerShould(unittest.TestCase):
         distance = 2400000
         self.assertEqual(5, len(self.event.within_distance_from_point(point,
             distance).all()))
-
-    def test_allows_grouping_of_measures(self):
-        all_events = self.event
-        groups = all_events.group_measures()
-
-        self.assertEqual(5, len(groups.keys()))
-        self.assertEqual(1, len(groups['1008568']))
-        self.assertEqual(4, len(groups['1008570']))
-        self.assertEqual(13, len(groups['1008567']))
-        self.assertEqual(6, len(groups['1008569']))
-        self.assertEqual(6, len(groups['1008566']))
 
     def tearDown(self):
         self.session.commit()
