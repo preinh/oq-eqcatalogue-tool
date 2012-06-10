@@ -43,11 +43,12 @@ class Homogeniser(object):
     FILTERS_MAP = {
         'before': MeasureFilter.before,
         'after': MeasureFilter.after,
-        'between': MeasureFilter.between,
+        'between': (lambda m, timestamps: m.between(*timestamps)),
         'agency__in': (lambda m, ags: m.with_agencies(*ags)),
         'scale__in': (lambda m, ss: m.with_magnitude_scales(*ss)),
         'within_polygon': MeasureFilter.within_polygon,
-        'within_distance_from': MeasureFilter.within_distance_from_point,
+        'within_distance_from_point': (
+            lambda m, dp: m.within_distance_from_point(*dp)),
         'magnitude__gt': lambda m, v: m.filter(
             models.MagnitudeMeasure.value > v)
     }
@@ -93,8 +94,11 @@ class Homogeniser(object):
     def set_grouper(self, grouper_class, **grouper_args):
         self._grouper = grouper_class(**grouper_args)
 
-    def set_selector(self, selector_class):
-        self._selector = selector_class
+    def set_selector(self, selector_class, **selector_args):
+        if selector_args:
+            self._selector = selector_class(**selector_args)
+        else:
+            self._selector = selector_class
 
     def set_missing_uncertainty_strategy(self, mu_strategy_class,
                                          **mu_strategy_args):
@@ -177,3 +181,9 @@ class Homogeniser(object):
         return self._serializer.plot(emsr,
                                      *serializer_args,
                                      **serializer_kwargs)
+
+    def plot(self, *args, **kwargs):
+        """
+        An alias for serialize
+        """
+        self.serialize(*args, **kwargs)

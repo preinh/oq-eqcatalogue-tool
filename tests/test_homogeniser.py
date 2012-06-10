@@ -30,7 +30,7 @@ class AnHomogeniserShould(unittest.TestCase):
     def setUp(self):
         _load_catalog()
         self.homogeniser = Homogeniser()
-        self.homogeniser.set_scales(native="mb", target="Mw")
+        self.homogeniser.set_scales(native="mb", target="MS")
         self.i = 0
 
     def _write_and_check(self):
@@ -87,18 +87,19 @@ class AnHomogeniserShould(unittest.TestCase):
         self.assertEqual(0, len(self.homogeniser.selected_native_measures()))
 
     def test_set_different_mus(self):
-        self.assertEqual(20, len(self.homogeniser.events()))
-        self.assertEqual(12, len(self.homogeniser.measures()))
-        self.assertEqual(12, len(self.homogeniser.grouped_measures().keys()))
-        self.assertEqual(50, len(self.homogeniser.selected_native_measures()))
+        self.homogeniser.set_scales(native="mb", target="Mw")
+        self.assertEqual(18, len(self.homogeniser.events()))
+        self.assertEqual(334, len(self.homogeniser.measures()))
+        self.assertEqual(18, len(self.homogeniser.grouped_measures().keys()))
+        self.assertEqual(0, len(self.homogeniser.selected_native_measures()))
 
         self.homogeniser.set_missing_uncertainty_strategy(
-            selection.MUSSetDefault(1))
+            selection.MUSSetDefault, default=1)
 
-        self.assertEqual(20, len(self.homogeniser.events()))
-        self.assertEqual(12, len(self.homogeniser.measures()))
-        self.assertEqual(12, len(self.homogeniser.grouped_measures().keys()))
-        self.assertEqual(50, len(self.homogeniser.selected_native_measures()))
+        self.assertEqual(18, len(self.homogeniser.events()))
+        self.assertEqual(334, len(self.homogeniser.measures()))
+        self.assertEqual(18, len(self.homogeniser.grouped_measures().keys()))
+        self.assertEqual(1, len(self.homogeniser.selected_native_measures()))
 
     def test_group_differently(self):
         self.assertEqual(18, len(self.homogeniser.grouped_measures().keys()))
@@ -108,9 +109,9 @@ class AnHomogeniserShould(unittest.TestCase):
         self.assertEqual(14, len(self.homogeniser.grouped_measures().keys()))
 
     def test_select_differently(self):
-        self.assertEqual(18, len(self.homogeniser.selected_native_measures()))
+        self.assertEqual(14, len(self.homogeniser.selected_native_measures()))
         self.homogeniser.set_selector(selection.PrecisionStrategy)
-        self.assertEqual(18, len(self.homogeniser.selected_native_measures()))
+        self.assertEqual(14, len(self.homogeniser.selected_native_measures()))
 
     def test_homogenise_after_different_setup_sequences_1(self):
         self.homogeniser.set_scales(native="MS", target="MW")

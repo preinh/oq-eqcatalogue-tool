@@ -120,6 +120,7 @@ class MUSSetDefault(MissingUncertaintyStrategy):
     """
 
     def __init__(self, default):
+        super(MUSSetDefault, self).__init__()
         self.default = default
 
     def get_default(self, _):
