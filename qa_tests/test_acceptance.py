@@ -35,7 +35,7 @@ class CatalogueTool(unittest.TestCase):
 
     def test_second_config(self):
         # Apply event selection
-        events = EventFilter().with_agencies("ISC").before(datetime.now())
+        events = EventFilter().before(datetime.now())
 
         # Computing Magnitude Scaling Relationship
         ranking = {"ML": ["ISC", "IDC"], "mb": ["ISC", "FUNV"]}
@@ -58,7 +58,7 @@ class CatalogueTool(unittest.TestCase):
             between(datetime(2010, 2, 28, 4, 11), datetime.now()).\
             within_polygon(polygon).\
             with_agencies("NIED", "IDC").\
-            with_magnitudes("ML", "mb")
+            with_magnitude_scales("ML", "mb")
 
         # Computing Magnitude Scaling Relationship
         emsr = EmpiricalMagnitudeScalingRelationship.make_from_events("ML",
@@ -78,7 +78,7 @@ class CatalogueTool(unittest.TestCase):
         events = EventFilter().\
             between(datetime(2010, 2, 28, 4, 11), datetime.now()).\
             with_agencies("NEIC", "IDC").\
-            with_magnitudes("ML", "mb")
+            with_magnitude_scales("ML", "mb")
 
         # Computing Magnitude Scaling Relationship
         emsr = EmpiricalMagnitudeScalingRelationship.make_from_events("ML",
