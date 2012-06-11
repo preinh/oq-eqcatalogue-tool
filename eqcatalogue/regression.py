@@ -314,7 +314,7 @@ class EmpiricalMagnitudeScalingRelationship(object):
 
         if len(self.native_measures) < 3:
             raise exceptions.NotEnoughSamples(
-                "Not enough measures to perform regression."
+                "Not enough measures to perform regression. "
                 "Please relax your query or selection criteria")
 
         regression_model = model_type(self.native_measures,
