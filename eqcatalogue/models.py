@@ -18,7 +18,7 @@ This module contains the class definitions of the basic domain models.
 """
 
 
-DEFAULT_ENGINE = 'eqcatalogue.stores.spatialite'
+DEFAULT_ENGINE = 'eqcatalogue.datastores.spatialite'
 
 SCALES = ('mL', 'mb', 'Mb',
           'Ms', 'md', 'MD',
