@@ -24,7 +24,7 @@ from eqcatalogue import selection
 from eqcatalogue import exceptions
 
 
-REGRESSOR_DEFAULT_MAX_ITERATIONS = 1000
+REGRESSOR_DEFAULT_MAX_ITERATIONS = 3000
 PL_DEFAULT_INITIAL_VALUE_ORDER = 2
 
 

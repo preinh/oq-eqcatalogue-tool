@@ -59,4 +59,3 @@ class HomogeniserAPI(unittest.TestCase):
         homo.add_filter(within_distance_from_point=[point, distance])
         homo.set_missing_uncertainty_strategy(selection.MUSDiscard)
         self._plot_and_assert(homo, 'fifth')
-
