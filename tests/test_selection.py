@@ -23,13 +23,13 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
 
     def setUp(self):
         _load_catalog()
-        events = filtering.EventFilter().with_agencies(
+        measures = filtering.MeasureFilter().with_agencies(
             'ISC', 'IDC', 'GCMT').with_magnitude_scales(
                 'mb', 'MS', 'MW')
         self.native_scale = 'mb'
         self.target_scale = 'MW'
         grouper = grouping.GroupMeasuresByEventSourceKey()
-        self.grouped_measures = grouper.group_measures(events.measure_filter)
+        self.grouped_measures = grouper.group_measures(measures)
         self.mus = selection.MUSSetDefault(1)
 
     def test_simple_ranking(self):

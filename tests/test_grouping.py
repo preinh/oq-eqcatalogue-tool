@@ -23,26 +23,26 @@ class AMeasureGrouperShould(unittest.TestCase):
     def setUp(self):
         self.cat_db = models.CatalogueDatabase(memory=True, drop=True)
         self.cat_db.recreate()
-        self.event = filtering.EventFilter()
+        self.measures = filtering.MeasureFilter()
         self.session = self.cat_db.session
         load_fixtures(self.session)
 
     def test_allows_grouping_of_measures(self):
-        all_events = self.event
+        all_events = self.measures
         groups = all_events.group_measures()
 
         self.assertEqual(5, len(groups.keys()))
-        self.assertEqual([1008566, 1008567, 1008570, u'1008568', u'1008569'],
+        self.assertEqual([1008566, 1008567, 1008568, 1008569, 1008570],
                          sorted(groups.keys()))
 
     def test_group_by_time_clustering(self):
         # Assess
         g1 = grouping.GroupMeasuresByHierarchicalClustering()
         g2 = grouping.GroupMeasuresByEventSourceKey()
-        r2 = g2.group_measures(self.event.measure_filter)
+        r2 = g2.group_measures(self.measures)
 
         # Act
-        r1 = g1.group_measures(self.event.measure_filter)
+        r1 = g1.group_measures(self.measures)
 
         # Assert
         self.assertEqual(len(r2.values()), len(r1.values()))
