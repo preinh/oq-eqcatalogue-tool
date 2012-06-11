@@ -110,7 +110,7 @@ class AnHomogeniserShould(unittest.TestCase):
 
     def test_select_differently(self):
         self.assertEqual(14, len(self.homogeniser.selected_native_measures()))
-        self.homogeniser.set_selector(selection.PrecisionStrategy)
+        self.homogeniser.set_selector(selection.Precise)
         self.assertEqual(14, len(self.homogeniser.selected_native_measures()))
 
     def test_homogenise_after_different_setup_sequences_1(self):
@@ -119,7 +119,7 @@ class AnHomogeniserShould(unittest.TestCase):
         self.homogeniser.set_grouper(
             grouping.GroupMeasuresByHierarchicalClustering,
             args={'t': 100})
-        self.homogeniser.set_selector(selection.PrecisionStrategy)
+        self.homogeniser.set_selector(selection.Precise)
         self.homogeniser.set_missing_uncertainty_strategy(
             selection.MUSSetDefault, default=1)
 
@@ -135,7 +135,7 @@ class AnHomogeniserShould(unittest.TestCase):
             grouping.GroupMeasuresByHierarchicalClustering,
             args={'t': 100})
         self.homogeniser.add_filter(magnitude__gt=4)
-        self.homogeniser.set_selector(selection.PrecisionStrategy)
+        self.homogeniser.set_selector(selection.Precise)
         self.homogeniser.set_missing_uncertainty_strategy(
             selection.MUSSetDefault, default=1)
 

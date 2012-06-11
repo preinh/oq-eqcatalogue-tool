@@ -62,7 +62,7 @@ class Homogeniser(object):
 
         self._measure_filter = measure_filter or MeasureFilter()
         self._grouper = grouper or grouping.GroupMeasuresByEventSourceKey()
-        self._selector = selector or selection.RandomStrategy
+        self._selector = selector or selection.Random()
         self._mu_strategy = (missing_uncertainty_strategy or
                              selection.MUSDiscard())
         self._serializer = mpl or serializer
@@ -95,10 +95,7 @@ class Homogeniser(object):
         self._grouper = grouper_class(**grouper_args)
 
     def set_selector(self, selector_class, **selector_args):
-        if selector_args:
-            self._selector = selector_class(**selector_args)
-        else:
-            self._selector = selector_class
+        self._selector = selector_class(**selector_args)
 
     def set_missing_uncertainty_strategy(self, mu_strategy_class,
                                          **mu_strategy_args):

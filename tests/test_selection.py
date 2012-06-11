@@ -38,7 +38,7 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
                    'mb': ['IDC', 'ISC']}
 
         # Act
-        n, t = selection.AgencyRankingStrategy(ranking).select(
+        n, t = selection.AgencyRanking(ranking).select(
             self.grouped_measures,
             self.native_scale, self.target_scale, self.mus)
 
@@ -59,7 +59,7 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
                    'M.': ['GCMT', 'ISC', 'ISCJB']}
 
         # Act
-        n, t = selection.AgencyRankingStrategy(ranking).select(
+        n, t = selection.AgencyRanking(ranking).select(
             self.grouped_measures,
             self.native_scale, self.target_scale, self.mus)
 
@@ -75,7 +75,7 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
                              "%s is not from GCMT" % measure)
 
     def test_random_ranking(self):
-        n, t = selection.RandomStrategy().select(
+        n, t = selection.Random().select(
             self.grouped_measures,
             self.native_scale, self.target_scale, self.mus)
 
@@ -84,7 +84,7 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
 
     def test_minimum_sigma_selection(self):
         print self.grouped_measures
-        n, t = selection.PrecisionStrategy().select(
+        n, t = selection.Precise().select(
             self.grouped_measures,
             self.native_scale, self.target_scale, self.mus)
 

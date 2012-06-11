@@ -24,14 +24,14 @@ class HomogeniserAPI(unittest.TestCase):
     def test_different_configs(self):
         homo = Homogeniser("mb", "MS")
         homo.add_filter(agency__in=["ISC", "BJI"])
-        homo.set_selector(selection.PrecisionStrategy)
+        homo.set_selector(selection.Precise)
         homo.add_model(LinearModel)
         self._plot_and_assert(homo, 'first')
 
         homo.reset_filters()
         homo.add_filter(before=datetime.now())
         ranking = {"ML": ["ISC", "IDC"], "mb": ["ISC", "FUNV"]}
-        homo.set_selector(selection.AgencyRankingStrategy, ranking=ranking)
+        homo.set_selector(selection.AgencyRanking, ranking=ranking)
         homo.set_scales("ML", "mb")
         homo.add_model(PolynomialModel, order=2)
         self._plot_and_assert(homo, 'second')
@@ -40,7 +40,7 @@ class HomogeniserAPI(unittest.TestCase):
         homo.add_filter(between=(datetime(2010, 2, 28, 4, 11), datetime.now()),
                         agency__in=["NIED", "IDC"],
                         scale__in=["ML", "mb"])
-        homo.set_selector(selection.PrecisionStrategy)
+        homo.set_selector(selection.Precise)
         homo.set_missing_uncertainty_strategy(selection.MUSSetDefault,
                                               default=0.2)
         homo.reset_models()

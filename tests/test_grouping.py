@@ -32,8 +32,8 @@ class AMeasureGrouperShould(unittest.TestCase):
         groups = all_events.group_measures()
 
         self.assertEqual(5, len(groups.keys()))
-        self.assertEqual([1008566, 1008567, 1008568, 1008569, 1008570],
-                         sorted(groups.keys()))
+        self.assertEqual(['1008566', '1008567', '1008568',
+                          '1008569', '1008570'], sorted(groups.keys()))
 
     def test_group_by_time_clustering(self):
         # Assess

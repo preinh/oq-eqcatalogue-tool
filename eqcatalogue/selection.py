@@ -139,9 +139,6 @@ class MeasureSelection(object):
     must implement the select method.
     """
 
-    __metaclass__ = abc.ABCMeta
-
-    @abc.abstractmethod
     def select(self, grouped_measures, native_scale, target_scale, mus):
         """
         Build a native_measure and a target_measure manager. Each
@@ -158,16 +155,18 @@ class MeasureSelection(object):
         A missing uncertainty strategy object used to handle the case
         when no standard error of a measure is provided
         """
+        return self.__class__._select(grouped_measures, native_scale,
+            target_scale, mus)
 
 
-class RandomStrategy(MeasureSelection):
+class Random(MeasureSelection):
     """
     RandomStrategy apply the measure selection by
     choosing one random measure among the available ones.
     """
 
     @classmethod
-    def select(cls, grouped_measures, native_scale, target_scale, mus):
+    def _select(cls, grouped_measures, native_scale, target_scale, mus):
         native_measures = MeasureManager(native_scale)
         target_measures = MeasureManager(target_scale)
 
@@ -190,7 +189,7 @@ class RandomStrategy(MeasureSelection):
         return native_measures, target_measures
 
 
-class PrecisionStrategy(MeasureSelection):
+class Precise(MeasureSelection):
     """
     PrecisionStrategy apply the selection by
     choosing the best measure for precision
@@ -217,7 +216,7 @@ class PrecisionStrategy(MeasureSelection):
         native_c_index = 0
         target_c_index = 1
         couples = list(product(native_selection, target_selection))
-        sigma_couples = [PrecisionStrategy._precision_score(n.value, t.value)
+        sigma_couples = [Precise._precision_score(n.value, t.value)
                             for n, t in couples]
         min_val = min(sigma_couples)
         index_min_val = sigma_couples.index(min_val)
@@ -225,7 +224,7 @@ class PrecisionStrategy(MeasureSelection):
                couples[index_min_val][target_c_index])
 
     @classmethod
-    def select(cls, grouped_measures, native_scale, target_scale, mus):
+    def _select(cls, grouped_measures, native_scale, target_scale, mus):
         native_measures = MeasureManager(native_scale)
         target_measures = MeasureManager(target_scale)
 
@@ -242,14 +241,14 @@ class PrecisionStrategy(MeasureSelection):
                 if measure.scale == target_scale:
                     target_selection.append(measure)
             if native_selection and target_selection:
-                couple = PrecisionStrategy._best_measures(
+                couple = Precise._best_measures(
                     native_selection, target_selection)
                 native_measures.append(couple[0])
                 target_measures.append(couple[1])
         return native_measures, target_measures
 
 
-class AgencyRankingStrategy(MeasureSelection):
+class AgencyRanking(MeasureSelection):
     """
     Measure Selection based on AgencyRanking
     """
@@ -264,7 +263,7 @@ class AgencyRankingStrategy(MeasureSelection):
         magnitude scale and the value is a list of agency in the order
         of preference
         """
-        super(AgencyRankingStrategy, self).__init__()
+        super(AgencyRanking, self).__init__()
         self._ranking = ranking
 
     def calculate_rank(self, measure):
