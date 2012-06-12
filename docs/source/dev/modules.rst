@@ -41,10 +41,20 @@ Module :mod:`eqcatalogue.homogeniser`
 .. automethod:: Homogeniser.serialize(filename)
 .. automethod:: Homogeniser.plot(filename)
 
-The module  provides the API to create and access
-the database and includes the model definitions of the entities stored
-into the db (eventsources, events, measures, origins and measure
-metadata).
+Module :mod:`eqcatalogue.homogeniser`
+------------------------------------------------------------------------------
+
+.. automodule:: eqcatalogue.models
+.. autoclass:: eqcatalogue.models.EventSource
+.. autoclass:: eqcatalogue.models.Agency
+.. autoclass:: eqcatalogue.models.Event
+.. autoclass:: eqcatalogue.models.MagnitudeMeasure
+.. autoclass:: eqcatalogue.models.Origin
+.. autoclass:: eqcatalogue.models.MeasureMetadata
+.. autoclass:: eqcatalogue.models.CatalogueDatabase
+
+
+
 
 The module (`eqcatalogue.importers.isf_bulletin`) is needed to
 import earthquake event data from files in the ISF Bulletin format.

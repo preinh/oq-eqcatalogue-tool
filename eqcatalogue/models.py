@@ -14,7 +14,12 @@
 # along with eqcatalogueTool. If not, see <http://www.gnu.org/licenses/>.
 
 """
-This module contains the class definitions of the basic domain models.
+The module  provides the API to create and access
+the database.
+
+Moreover, it contains the class definitions of the basic domain models
+stored into the db (eventsources, events, measures, origins and
+measure metadata).
 """
 
 
