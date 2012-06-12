@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with eqcataloguetool. If not, see <http://www.gnu.org/licenses/>.
 
+
 import re
 import datetime
 
@@ -414,18 +415,29 @@ class MeasureUKScaleBlockState(MeasureBlockState):
 
 class V1(object):
     """
-    The main class implementing the FSM.
+    Import data into a CatalogueDatabase from stream objects.
+
+    The specification of the format can be found at
+    http://www.isc.ac.uk/standards/isf/
+
+    Data file in ISF format can be generated at
+    http://www.isc.ac.uk/iscbulletin/search/bulletin/
+
+    by flagging "Only prime hypocentre" and checking that "Output web
+    links" is unchecked
     """
 
     def __init__(self, stream, cat):
         """
-        Initialize the FSM.
+        Initialize the importer.
 
-        :py:param:: stream
-        A stream object storing the seismic event data
+        :param: stream:
+          A stream object storing the seismic event data
+        :type stream: file
 
-        :py:param:: cat
-        The catalogue database used to import the data
+        :param: cat:
+          The catalogue database used to import the data
+        :type cat: CatalogueDatabase
         """
         self._stream = stream
         self._catalogue = cat
@@ -436,7 +448,7 @@ class V1(object):
     def load(self, allow_junk=True):
         """
         Read and parse from the input stream the data and insert them
-        into the catalogue db. If allow_junk is True, it allows
+        into the catalogue db. If `allow_junk` is True, it allows
         unexpected line inputs at the beginning of the file
         """
         for line in self._stream:
@@ -509,5 +521,9 @@ class V1(object):
 
     @classmethod
     def import_events(cls, stream, cat):
+        """
+          Utility that create an instance of the importer and load the
+          data from `stream`
+        """
         importer = cls(stream, cat)
         return importer.load()

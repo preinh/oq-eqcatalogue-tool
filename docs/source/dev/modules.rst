@@ -9,9 +9,9 @@ The High-Level API provides the tools to perform the following tasks:
 2. import event data into a the database;
 3. perform the homogenisation of different magnitude scale values and plot the results.
 
-Task 1, 2, 3 are handled by `eqcatalogue.models`,
-`eqcatalogue.importers.isf_bulletin` and `eqcatalogue.homogeniser`,
-respectively.
+Task 1, 2, 3 are handled by :mod:`~eqcatalogue.models`,
+:mod:`~eqcatalogue.importers.isf_bulletin` and
+:mod:`~eqcatalogue.homogeniser`, respectively.
 
 Module :mod:`eqcatalogue.homogeniser`
 ------------------------------------------------------------------------------
@@ -41,7 +41,7 @@ Module :mod:`eqcatalogue.homogeniser`
 .. automethod:: Homogeniser.serialize(filename)
 .. automethod:: Homogeniser.plot(filename)
 
-Module :mod:`eqcatalogue.homogeniser`
+Module :mod:`eqcatalogue.models`
 ------------------------------------------------------------------------------
 
 .. automodule:: eqcatalogue.models
@@ -52,15 +52,18 @@ Module :mod:`eqcatalogue.homogeniser`
 .. autoclass:: eqcatalogue.models.Origin
 .. autoclass:: eqcatalogue.models.MeasureMetadata
 .. autoclass:: eqcatalogue.models.CatalogueDatabase
+.. automethod:: eqcatalogue.models.CatalogueDatabase.recreate
+.. automethod:: eqcatalogue.models.CatalogueDatabase.reset_singleton
+.. automethod:: eqcatalogue.models.CatalogueDatabase.position_from_latlng
+.. automethod:: eqcatalogue.models.CatalogueDatabase.get_or_create
 
+Module :mod:`eqcatalogue.importers.isf_bulletin`
+------------------------------------------------------------------------------
 
-
-
-The module (`eqcatalogue.importers.isf_bulletin`) is needed to
-import earthquake event data from files in the ISF Bulletin format.
-
-The module
-
+.. automodule:: eqcatalogue.importers.isf_bulletin
+.. autoclass:: eqcatalogue.importers.isf_bulletin.V1
+.. automethod:: eqcatalogue.importers.isf_bulletin.V1.load
+.. automethod:: eqcatalogue.importers.isf_bulletin.V1.import_events
 
 Low-Level API modules
 ==============================================================================

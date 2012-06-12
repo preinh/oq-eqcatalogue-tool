@@ -45,19 +45,28 @@ METADATA_TYPES = ('phases', 'stations',
 
 
 class EventSource(object):
-    """A source of event catalogues. E.g. ISC Web Catalogue
+    """A source catalogue of seismic events. E.g. ISC Web Catalogue
 
-    We assume that for each event source there is only one file format
-we import data from
-
-    :py:attribute:: id
+    :attribute id:
       Internal identifier
 
-    :py:attribute:: created_at
+    :attribute created_at:
       When this object has been imported into the catalogue db
 
-    :py:attribute:: name
-    an unique event source short name.
+    :attribute name:
+      an unique event source short name.
+
+    :attribyte agencies:
+      a list of :py:class:`~eqcatalogue.models.Agency` instances
+      imported by this eventsource
+
+    :attribyte events:
+      a list of :py:class:`~eqcatalogue.models.Event` instances
+      imported by this eventsource
+
+    :attribyte origins:
+      a list of :py:class:`~eqcatalogue.models.Origin` instances
+      imported by this eventsource
     """
 
     def __init__(self, name):
@@ -68,21 +77,22 @@ we import data from
 
 
 class Agency(object):
-    """The agency which recorded and measured the events.
+    """
+    The agency which recorded the measures.
 
-    :py:attribute:: id
+    :attribute id:
       Internal identifier
 
-    :py:attribute:: created_at
+    :attribute created_at:
       When this object has been imported into the catalogue db
 
-    :py:attribute:: source_key
-    the identifier used by the event source for the object
+    :attribute source_key:
+      the identifier used by the event source for the object
 
-    :py:attribute:: eventsource
-    the source object we have imported the agency from. It is unique
-    together with `source_key`
-"""
+    :attribute eventsource:
+      the source object we have imported the agency from. It is unique
+      together with `source_key`
+    """
     def __repr__(self):
         return "Agency %s" % self.source_key
 
@@ -92,24 +102,25 @@ class Agency(object):
 
 
 class Event(object):
-    """Describes a sismic event.
+    """
+    Models a seismic event.
 
-    :py:attribute:: id
+    :attribute id:
       Internal identifier
 
-    :py:attribute:: created_at
+    :attribute created_at:
       When this object has been imported into the catalogue db
 
-    :py:attribute:: source_key
-    the identifier used by the event source for the object
+    :attribute source_key:
+      the identifier used by the event source for the object
 
-    :py:attribute:: name
-    an event name
+    :attribute name:
+      an event short name
 
-    :py:attribute:: eventsource
-    the source object we have imported the agency from. unique
-    together with `source_key`
-"""
+    :attribute eventsource:
+      the source object we have imported the agency from. unique
+      together with `source_key`
+      """
 
     def __init__(self, source_key, eventsource, name=None):
         self.source_key = source_key
@@ -123,31 +134,35 @@ class Event(object):
 
 
 class MagnitudeMeasure(object):
-    """Describes a single measure of the magnitude of an event
-    :py:attribute:: id
+    """
+    Describes a single measure of the magnitude of an event
+
+    :attribute id:
       Internal identifier
 
-    :py:attribute:: created_at
+    :attribute created_at:
       When this object has been imported into the catalogue db
 
-    :py:attribute:: event
-    the event object associated with this measure
+    :attribute event:
+      the :py:class:`~eqcatalogue.models.Event`
+      object associated with this measure
 
-    :py:attribute:: agency
-    the agency that has provided the measure
+    :attribute agency:
+      the :py:class:`~eqcatalogue.models.Agency`
+      that has provided the measure
 
-    :py:attribute:: origin
-    the origin related to this measure
+    :attribute origin:
+      the origin related to this measure
 
-    :py:attribute:: scale
-    the scale used for this measure.
-    It is unique together with `agency_id` and `origin_id`
+    :attribute scale:
+      the scale used for this measure.
+      It is unique together with `agency_id` and `origin_id`
 
-    :py:attribute:: value
-    the magnitude expressed in the unit suitable for the scale used
+    :attribute value:
+      the magnitude expressed in the unit suitable for the scale used
 
-    :py:attribute:: standard_error
-    the standard magnitude error
+    :attribute standard_error:
+      the standard error of the magnitude value
     """
 
     def __init__(self, agency, event, origin, scale, value,
@@ -172,48 +187,50 @@ class Origin(object):
     Describes a point at a given depth and a time.
     For each quantity a measure of the  accuracy is described.
 
-    :py:attribute:: id
+    :attribute id:
       Internal identifier
 
-    :py:attribute:: created_at
+    :attribute created_at:
       When this object has been imported into the catalogue db
 
-    :py:attribute:: source_key
-    the identifier used by the event source for the object
+    :attribute source_key:
+      the identifier used by the event source for the object
 
-    :py:attribute:: time
-    Time in format "YYYY-MM-DD HH:MM:SS.SSS".
+    :attribute time:
+      Time in format "YYYY-MM-DD HH:MM:SS.SSS".
 
-    :py:attribute:: time_error
-    Time errors expressed in seconds.
+    :attribute time_error:
+      Time errors expressed in seconds.
 
-    :py:attribute:: time_rms
-    Time error expressed as a Root Mean Square in seconds.
+    :attribute time_rms:
+      Time error expressed as a Root Mean Square in seconds.
 
-    :py:attribute:: position
-    Point coordinate (latitude and longitude)
+    :attribute position:
+      Point coordinate (latitude and longitude).
+      You can create a point object by using the utility function
+      `eqcatalogue.models.CatalogueDatabase.position_from_latlng`
 
-    :py:attribute:: semi_major_90error
-    Semi-Major axis of the 90th percentile confidence ellipsis of the
-    epicentre.
+    :attribute semi_major_90error:
+      Semi-Major axis of the 90th percentile confidence ellipsis of the
+      epicentre.
 
-    :py:attribute:: semi_minor_90error
-    Semi-Minor axis of the 90th percentile confidence ellipsis of the
-    epicentre.
+    :attribute semi_minor_90error:
+      Semi-Minor axis of the 90th percentile confidence ellipsis of the
+      epicentre.
 
-    :py:attribute:: azimuth_error
-    Azimuth with respect to geographical north of the Semi-Major axis.
+    :attribute azimuth_error:
+      Azimuth with respect to geographical north of the Semi-Major axis.
 
-    :py:attribute:: depth
-    depth of the hypocentre in km.
+    :attribute depth:
+      depth of the hypocentre in km.
 
-    :py:attribute:: depth_error
-    Error in km on the hypocentre depth.
+    :attribute depth_error:
+      Error in km on the hypocentre depth.
 
-    :py:attribute:: eventsource
-    the source object we have imported the origin from. unique
-    together with `source_key`
-"""
+    :attribute eventsource:
+      the source object we have imported the origin from. unique
+      together with `source_key`
+    """
     def __repr__(self):
         return "Origin %s %s" % (self.id, self.source_key)
 
@@ -229,20 +246,21 @@ class Origin(object):
 
 class MeasureMetadata(object):
     """Metadata of a measurement.
-    :py:attribute:: id
+
+    :attribute id:
       Internal identifier
 
-    :py:attribute:: created_at
+    :attribute created_at:
       When this object has been imported into the catalogue db
 
-    :py:attribute:: magnitudemeasure
-    the measure, the metadata is associated with
+    :attribute magnitudemeasure:
+      the measure, the metadata is associated with
 
-    :py:attribute:: name
-    the name of the metadata. It is unique together with magnitudemeasure
+    :attribute name:
+      the name of the metadata. It is unique together with magnitudemeasure
 
-    :py:attribute:: value
-    the float value of the metadata.
+    :attribute value:
+      the float value of the metadata.
     """
     def __repr__(self):
         return "%s = %s" % (self.name, self.value)
@@ -269,8 +287,29 @@ class Singleton(type):
 class CatalogueDatabase(object):
     """
     This is the main class used to access the database. It is a
-    singleton object, so it is instantiated only once in your
-    application
+    singleton object, so you should instantiate it only once in your
+    application, before using any other eqcatalogue object that access
+    to the database.
+
+    :param engine_class_module:
+      A module that implements an engine protocol.
+      If not provided, the default is eqcatalogue.datastores.spatialite
+
+    Any other params is passed to the engine constructor.
+    For spatialite, you have the following keyword arguments:
+
+    :keyword memory:
+      Open an in-memory database
+    :type memory: Boolean
+    :keyword filename:
+      Open a file database located at path `filename`. If not given, the
+      default is `eqcatalogue.db`
+    :type filename: string
+    :keyword drop:
+      Drop and recreate the database after opening
+
+    e.g.::
+      cat = CatalogueDatabase(filename="my-catalogue.db")
     """
 
     __metaclass__ = Singleton
@@ -280,10 +319,17 @@ class CatalogueDatabase(object):
         self._engine = self._engine_class(**engine_params)
 
     def recreate(self):
+        """
+        Recreate the database. It destroys all the data and recreate
+        the schema.
+        """
         self._engine.recreate()
 
     @classmethod
     def reset_singleton(cls):
+        """
+        Reset the singleton, allowing to switch between different databases
+        """
         cls.instance = None
 
     @classmethod
@@ -292,6 +338,10 @@ class CatalogueDatabase(object):
         return module.Engine
 
     def position_from_latlng(self, latitude, longitude):
+        """
+        Utility function to create a POINT object suitable to be stored
+        into :class:`eqcatalogue.models.Origin.position`
+        """
         return self._engine_class.position_from_latlng(latitude, longitude)
 
     @property
