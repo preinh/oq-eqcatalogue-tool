@@ -13,7 +13,7 @@ Task 1, 2, 3 are handled by :mod:`~eqcatalogue.models`,
 :mod:`~eqcatalogue.importers.isf_bulletin` and
 :mod:`~eqcatalogue.homogeniser`, respectively.
 
-Module :mod:`eqcatalogue.homogeniser`
+Homogeniser (:mod:`eqcatalogue.homogeniser`)
 ------------------------------------------------------------------------------
 
 .. automodule:: eqcatalogue.homogeniser
@@ -41,10 +41,16 @@ Module :mod:`eqcatalogue.homogeniser`
 .. automethod:: Homogeniser.serialize(filename)
 .. automethod:: Homogeniser.plot(filename)
 
-Module :mod:`eqcatalogue.models`
+Models definition (:mod:`eqcatalogue.models`)
 ------------------------------------------------------------------------------
 
 .. automodule:: eqcatalogue.models
+
+.. figure:: ../oq-eqcatalogue-tool-schema.png
+   :align: center
+
+   The ER diagram of the schema of the catalogue database.
+
 .. autoclass:: eqcatalogue.models.EventSource
 .. autoclass:: eqcatalogue.models.Agency
 .. autoclass:: eqcatalogue.models.Event
@@ -57,7 +63,7 @@ Module :mod:`eqcatalogue.models`
 .. automethod:: eqcatalogue.models.CatalogueDatabase.position_from_latlng
 .. automethod:: eqcatalogue.models.CatalogueDatabase.get_or_create
 
-Module :mod:`eqcatalogue.importers.isf_bulletin`
+Importer (:mod:`eqcatalogue.importers.isf_bulletin`)
 ------------------------------------------------------------------------------
 
 .. automodule:: eqcatalogue.importers.isf_bulletin
