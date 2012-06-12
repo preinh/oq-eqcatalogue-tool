@@ -6,11 +6,11 @@
 Welcome to oq-eqcatalogue-tool's documentation!
 ===============================================
 
-Release v\ |version|.
+Release version |version|.
 
-EqCatalogue Tool (ECT) is a `Python`_ library which allows the user 
-to homogenise an earthquake catalogue, useful in the context of the
-Openquake_ platform framework. ECT is written by GEM Foundation and
+Earthquake Catalogue Homogeniser Tool is a `Python`_ library which allows the user 
+to homogenise different earthquake catalogues, useful in the context of the
+Openquake_ platform framework. It is written by GEM Foundation and
 licensed under `GNU Affero General Public License`_.
 
 Requirements
