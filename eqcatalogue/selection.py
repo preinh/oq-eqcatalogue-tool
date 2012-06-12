@@ -14,7 +14,11 @@
 # along with eqcataloguetool. If not, see <http://www.gnu.org/licenses/>.
 
 """
-Implement Measure Selection Strategies and Missing Uncertainty Handling
+Module :mod:`eqcatalogue.selection` defines
+:class:`MeasureManager`, :class:`MissingUncertaintyStrategy`,
+:class:`MUSDiscard`, :class:`MUSSetEventMaximum`, :class:`MUSSetDefault`,
+:class:`MeasureSelection`, :class:`Precise`, :class:`Random`,
+:class:`AgencyRanking`.
 """
 
 import abc
@@ -25,17 +29,14 @@ import re
 
 
 class MeasureManager(object):
-    """
-    Manage a list of quantitative measures
-    :py:attribute:: measures
-    A list of float
-    :py:attribute:: sigma
-    Standard error of measures. Can be fixed (a single float) or a
-    list of float
-    :py:attribute:: name
-    the magnitude scale
-    """
+
     def __init__(self, name):
+        """
+        Manage a list of quantitative measures
+
+        :name: name of the magnitude scale
+        """
+
         self.measures = []
         self.sigma = []
         self.name = name
@@ -43,6 +44,12 @@ class MeasureManager(object):
         self.magnitude_measures = []
 
     def append(self, measure):
+        """
+        Add a measure to the list
+
+        :measure: measure to add to the list
+        """
+
         assert(measure and measure.value and measure.standard_error)
         self.magnitude_measures.append(measure)
         self.measures.append(measure.value)
@@ -59,10 +66,12 @@ class MeasureManager(object):
 
 
 class MissingUncertaintyStrategy(object):
-    """Missing uncertainty strategy base class. Used to determine if a
+    """
+    Missing uncertainty strategy base class. Used to determine if a
     measure should be discarded or accepted when it does not have any
     uncertainty data associated, that is its standard error (sigma).
-    When it is accepted it also provide a default value for its sigma"""
+    When it is accepted it also provide a default value for its sigma.
+    """
 
     __metaclass__ = abc.ABCMeta
 
@@ -76,9 +85,10 @@ class MissingUncertaintyStrategy(object):
 
 class MUSDiscard(MissingUncertaintyStrategy):
     """
-    Missing uncertainty strategy class:
-    Discard Measure if it has not a standard error
+    Missing uncertainty strategy class: discard measure if it has not a
+    standard error.
     """
+
     def should_be_discarded(self, measure):
         ret = not measure.standard_error
         return ret
@@ -90,12 +100,11 @@ class MUSDiscard(MissingUncertaintyStrategy):
 
 class MUSSetEventMaximum(MissingUncertaintyStrategy):
     """
-    Missing uncertainty strategy class:
-
-    Discard Measure if no measure of the same event has not a standard
-    error, otherwise takes the maximum error (in the same event) as
-    default
+    Missing uncertainty strategy class: discard measure if no measure of the
+    same event has not a standard error, otherwise takes the maximum error
+    (in the same event) as default.
     """
+
     def _get_event_errors(self, measure):
         errors = [m.standard_error for m in measure.event.measures
                   if m.standard_error]
@@ -146,14 +155,12 @@ class MeasureSelection(object):
         grouped_measures item. The selection is driven by the agency
         ranking.
 
-        :py:param:: grouped_measures
-         A dictionary where the keys identifies the events and
-        the value are the list of measures associated with it
-        :py:param:: native_scale, target_scale
-        The native and target scale used
-        :py:param:: mus
-        A missing uncertainty strategy object used to handle the case
-        when no standard error of a measure is provided
+        :grouped_measures: a dictionary where the keys identifies the events
+            and the value are the list of measures associated with it.
+        :native_scale: measure native scale.
+        :target_scale: measure target scale.
+        :mus: a missing uncertainty strategy object used to handle the case
+            when no standard error of a measure is provided.
         """
         return self.__class__._select(grouped_measures, native_scale,
             target_scale, mus)
@@ -161,7 +168,7 @@ class MeasureSelection(object):
 
 class Random(MeasureSelection):
     """
-    RandomStrategy apply the measure selection by
+    Random apply the measure selection by
     choosing one random measure among the available ones.
     """
 
@@ -191,7 +198,7 @@ class Random(MeasureSelection):
 
 class Precise(MeasureSelection):
     """
-    PrecisionStrategy apply the selection by
+    Precise apply the selection by
     choosing the best measure for precision
     among the available ones.
     """
@@ -251,18 +258,17 @@ class Precise(MeasureSelection):
 class AgencyRanking(MeasureSelection):
     """
     Measure Selection based on AgencyRanking
+
+    :param ranking:
+        a dictionary where the keys are regexp that can match a
+        magnitude scale and the value is a list of agency in the
+        order of preference.
     """
 
     RANK_IF_NOT_FOUND = -1
 
     def __init__(self, ranking):
-        """
-        Initialize an AgencyRanking object
-        :py:param:: ranking
-        a dictionary where the keys are regexp that can match a
-        magnitude scale and the value is a list of agency in the order
-        of preference
-        """
+
         super(AgencyRanking, self).__init__()
         self._ranking = ranking
 

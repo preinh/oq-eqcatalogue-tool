@@ -14,7 +14,9 @@
 # along with eqcataloguetool. If not, see <http://www.gnu.org/licenses/>.
 
 """
-Implement Regression models for Empirical Magnitude Scaling Relationship
+Module :mod:`eqcatalogue.regressions` defines
+:class:`RegressionModel`, :class:`LinearModel`, :class:`PolynomialModel`,
+:class:`EmpiricalMagnitudeScalingRelationship`.
 """
 
 import math
@@ -32,17 +34,34 @@ class RegressionModel(object):
     """
     The base class for a regression model
 
-    :py:attribute:: initial_values
-    The initial values used by the regression algorithm.
+    :param native_measures:
+        The native measures used by regression
 
-    :py:attribute:: akaike
-    The akaike information about the performed regression. The akaike
-    number gives you a measure of the goodness of fit of the
-    regression model
+    :param target_measures:
+        The target measures used by regression
 
-    :py:attribute:: akaike_corrected
-    The normalized akaike information about the performed regression
-    suitable for finite sample sizes
+    :param initial_values:
+        The initial values used by regression, if None it will be
+        generated from data using polyfit.
+
+    :param initial_value_order:
+        The order used to calculate initial_values with polyfit
+
+    :param model_params:
+        Additional parameters passed to scipy.odr.Model constructor
+
+    :param regressor_params:
+        Additional parameters passed to scipy.odr.ODR constructor
+
+    :attribute intial_values: the initial values used by the regression
+        algorithm.
+
+    :attribute akaike: akaike information about the performed regression.
+        The akaike number gives you a measure of the goodness of fit of the
+        regression model.
+
+    :attribute akaike_corrected: The normalized akaike information about
+        the performed regression suitable for finite sample sizes
     """
 
     is_regression_model = True
@@ -52,28 +71,7 @@ class RegressionModel(object):
                  initial_value_order=None,
                  model_params=None,
                  regressor_params=None):
-        """
-        Initialize a regression model
 
-        :py:param:: native_measures
-        The native measures used by regression
-
-        :py:param:: target_measures
-        The target measures used by regression
-
-        :py:param:: initial_values
-        The initial values used by regression, if None it will be
-        generated from data using polyfit.
-
-        :py:param:: initial_value_order
-        The order used to calculate initial_values with polyfit
-
-        :py:param:: model_params
-        Additional parameters passed to scipy.odr.Model constructor
-
-        :py:param:: regressor_params
-        Additional parameters passed to scipy.odr.ODR constructor
-        """
         if not initial_values:
             self.initial_values = self._setup_initial_values(
                 native_measures.measures,
@@ -117,7 +115,9 @@ class RegressionModel(object):
         return self._output.res_var
 
     def criterion_tests(self):
-        ''' Calculate AIC and AICc'''
+        """
+        Calculate AIC and AICc
+        """
 
         # number of parameters of the model
         nfree = self.parameter_number()
@@ -129,6 +129,7 @@ class RegressionModel(object):
 
     def run(self):
         """Perform regression analyisis"""
+
         self._output = self._regressor.run()
 
         if not 'Sum of squares convergence' in self._output.stopreason\
@@ -143,19 +144,18 @@ class RegressionModel(object):
 
 
 class PolynomialModel(RegressionModel):
+    """
+    Initialize a polynomial regression model.
+
+    :param order: The order of the polynomial used. It is used also for
+        `initial_value_order` when not provided
+    """
+
     def __init__(self, native_measures, target_measures, order,
                  initial_values=None,
                  initial_value_order=None,
                  model_params=None, regressor_params=None):
-        """
-        Initialize a polynomial regression model.
 
-        :py:param:: order
-        The order of the polynomial used. It is used also for
-        `initial_value_order` when not provided
-
-        Look at RegressionModel#__init__ for the other parameters
-        """
         if not order:
             raise ValueError("Please specify the polynomial order")
         self._order = order
@@ -173,15 +173,19 @@ class PolynomialModel(RegressionModel):
 
     def _setup_initial_values(self, native_measures, target_measures,
                               initial_value_order):
-        """Use a simple least squares to get initial values. See
+        """
+        Use a simple least squares to get initial values. See
         RegressionModel#__init__ for a description of the
-        parameters"""
+        parameters
+        """
+
         ols_data = np.polyfit(native_measures, target_measures,
                               initial_value_order)
         return np.flipud(ols_data)
 
     def _model_function(self, coefficients, xval):
-        '''nth order polynomial function'''
+        """nth order polynomial function"""
+
         yval = 0.
         for iloc, param in enumerate(coefficients):
             yval = yval + param * (xval ** float(iloc))
@@ -194,9 +198,6 @@ class LinearModel(PolynomialModel):
                  initial_value_order=None,
                  model_params=None,
                  regressor_params=None):
-        """Initialize a linear regression model. See
-        RegressionModel#__init__ for a description of the
-        parameters"""
         super(LinearModel, self).__init__(native_measures,
                                           target_measures,
                                           1,  # polynomial order
@@ -212,19 +213,19 @@ class EmpiricalMagnitudeScalingRelationship(object):
     """
     Decribes an Empirical Magnitude Scaling Relationship
 
-    :py:attribute:: regression_models
-    A dictionary where the keys are regression models objects and the
-    values are the output of the regression
+    :attribute regression_models:
+        A dictionary where the keys are regression models objects and the
+        values are the output of the regression.
 
-    :py:param:: regression_models
-    An array of RegressionModel instance object storing the
-    regression analysis data
+    :param regression_models:
+        An array of RegressionModel instance object storing the
+        regression analysis data.
 
-    :py:param:: grouped_measures
-    A dictionary that stores the association
-    between an event (the key) and a list of
-    measures (the value).
+    :param grouped_measures:
+        A dictionary that stores the association between an event (the key)
+        and a list of measures (the value).
     """
+
     DEFAULT_MODEL_TYPE = LinearModel
 
     @classmethod
@@ -235,8 +236,7 @@ class EmpiricalMagnitudeScalingRelationship(object):
         Build a EmpiricalMagnitudeScalingRelationship by a selecting
         measures from an event manager object according to
         a specific strategy.
-        :py:param:: events
-        An Event manager object.
+        :param events: An Event manager object.
         See EmpiricalMagnitudeScalingRelationship.make_from_measures
         for a description of other params
         """

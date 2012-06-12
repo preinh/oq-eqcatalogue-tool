@@ -13,6 +13,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with eqcataloguetool. If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Module :mod:`eqcatalogue.grouping` defines
+:class:`GroupMeasuresByEventSourceKey`,
+:class:`GroupMeasuresByHierarchicalClustering`.
+"""
+
 import numpy as np
 # we import matplotlib just to change the backend as scipy import
 # matplotlib making impossible to use this code on an headless machine
@@ -24,8 +30,9 @@ from scipy.cluster import hierarchy
 class GroupMeasuresByEventSourceKey(object):
     """
     Group measures by event source key, that is for each source key of
-    an event a group of measure is associated
+    an event a group of measure is associated.
     """
+
     def group_measures(self, measure_filter):
         groups = {}
         for m in measure_filter.all():
@@ -39,18 +46,15 @@ class GroupMeasuresByEventSourceKey(object):
 class GroupMeasuresByHierarchicalClustering(object):
     """
     Group measures by time clustering using a hierarchical clustering
-    algorithm
+    algorithm.
+
+    :param key_fn: the function used to get the measure feature we
+        perform the clustering on. If not given, a function that
+        extract the time of the measure is provided as default.
+    :param args: the args passed to scipy.cluster.hierarchy.fclusterdata.
     """
+
     def __init__(self, key_fn=None, args=None):
-        """
-        Initialize an instance.
-        :py:param:: key_fn
-        the function used to get the measure feature we perform the
-        clustering on. If not given, a function that extract the
-        time of the measure is provided as default
-        :py:param:: args
-        the args passed to scipy.cluster.hierarchy.fclusterdata
-        """
         self._clustering_args = {'t': 200,
             'criterion': 'distance'
             }

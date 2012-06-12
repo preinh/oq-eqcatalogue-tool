@@ -14,7 +14,8 @@
 # along with eqcataloguetool. If not, see <http://www.gnu.org/licenses/>.
 
 """
-Tools to filter events and measures
+Module :mod:`eqcatalogue.filtering` defines
+:class:`MeasureFilter`.
 """
 
 import eqcatalogue.models as db
@@ -22,9 +23,13 @@ import eqcatalogue.models as db
 
 class MeasureFilter(object):
     """
-    Allow to filter the measures in a catalogue database
+    Allows to filter measures stored in a catalogue database,
+    by applying one or more filters. Filters can be chained
+    together as method calls:
+    MeasureFilter().after(time).within_polygon(polygon).
 
-    :param cat: a Catalogue Database object
+    :param cat: a Catalogue Database object.
+    :param queryset: a Queryset instance of `sqlalchemy.orm.query.Query`.
     """
 
     def __init__(self, cat=None, queryset=None):
@@ -34,107 +39,134 @@ class MeasureFilter(object):
             db.MagnitudeMeasure).join(db.Origin).join(db.Agency)
 
     def _clone_with_queryset(self, queryset):
-        """Create another MeasureFilter with the same catalogue and
-        initializing queryset with the passed one"""
+        """
+        Returns a MeasureFilter instance with the same catalogue and
+        initializing queryset with the passed one.
+        """
+
         new_m = MeasureFilter(self.cat, queryset)
         return new_m
 
     def all(self):
-        """Layer compat with SQLAlchemy Query object"""
+        """
+        Returns all the measures available in the queryset as a list.
+        """
+
         return self.queryset.all()
 
     def count(self):
-        """Layer compat with SQLAlchemy Query object"""
+        """
+        Returns a count of the rows that the queryset would return.
+        """
+
         return self.queryset.count()
 
     def combine(self, measure_filter):
+        """
+        Returns a MeasureFilter instance which is the result of
+        a combination with the one provided.
+
+        :param measure_filter: A MeasureFilter instance to be combined.
+        """
+
         return self._clone_with_queryset(measure_filter.queryset)
 
     def events(self):
-        """Return all the distinct events associated with all the
-        measures"""
+        """
+        Returns all the distinct events associated with all the
+        measures, available in the queryset as a list.
+        """
+
         subquery = self.queryset.subquery()
         return self.cat.session.query(db.Event).join(subquery).all()
 
     def before(self, time):
         """
-        return MeasureFilter._clone(self) which allows to get
-        all measures before a specified time, inside the earthquake catalogue.
+        Returns all the measures before a specified time, available
+        in the queryset as a list.
+
         :param time: datetime object.
         """
-        queryset = self.queryset.filter(db.Origin.time < time)
 
+        queryset = self.queryset.filter(db.Origin.time < time)
         return self._clone_with_queryset(queryset)
 
     def after(self, time):
         """
-        return MeasureFilter._clone(self) which allows to get
-        all measures after a specified time, inside the earthquake catalogue.
+        Returns all the measures after a specified time, available
+        in the queryset as a list.
+
         :param time: datetime object.
         """
-        queryset = self.queryset.filter(db.Origin.time > time)
 
+        queryset = self.queryset.filter(db.Origin.time > time)
         return self._clone_with_queryset(queryset)
 
     def between(self, time_lb, time_ub):
         """
-        return MeasureFilter._clone(self) which allows to get
-        all measures in a time range, inside the earthquake catalogue.
+        Returns all the measures within a time range, available
+        in the queryset as a list.
+
         :param time_lb: time range lower bound.
         :param time_ub: time range upper bound.
         """
+
         return self.after(time_lb).before(time_ub)
 
     def filter(self, *filter_args, **filter_kwargs):
         """
-        Generic SQLAlchemy filter wrapper. Returns a _clone of the
-        current measures filtered by filter_args and filter_kwargs.
-        They can be any filter that you can pass to a SQLAlchemy Query
-        object
+        Returns all the measures, available in the queryset as a
+        list. This method is a SQLAlchemy filter wrapper.
         """
+
         queryset = self.queryset.filter(*filter_args, **filter_kwargs)
         return self._clone_with_queryset(queryset)
 
     def with_agencies(self, *agency_name_list):
         """
-        return MeasureFilter._clone_with_queryset(self) which allows to get
-        all measures with a specified agency, inside the earthquake catalogue.
-        :param *agency_name_list: a list of agency names
+        Returns all the measures which have one of the defined agencies,
+        available in the queryset as a list.
+
+        :param agency_name_list: a list of agency names
         """
+
         queryset = self.queryset.filter(
             db.Agency.source_key.in_(agency_name_list))
         return self._clone_with_queryset(queryset)
 
     def with_magnitude_scales(self, *scales):
         """
-        return a MeasureFilter with all the measures which have one of
-        the specified magnitude scales inside the earthquake
-        catalogue.
-        :param *scales: a list of magnitude scales.
+        Returns all the measures which have one of the specified magnitude
+        scales, available in the queryset as a list.
+
+        :param scales: a list of magnitude scales.
         """
+
         queryset = self.queryset.filter(
                 db.MagnitudeMeasure.scale.in_(scales))
         return self._clone_with_queryset(queryset)
 
     def within_polygon(self, polygon):
         """
-        return MeasureFilter._clone_with_queryset(self) which allows to get
-        all measures within a specified polygon,
-        inside the earthquake catalogue.
+        Returns all the measures within a specified polygon, available
+        in the queryset as a list.
+
         :param polygon: a polygon specified in wkt format.
         """
+
         queryset = self.queryset.filter(
             db.Origin.position.within(polygon))
         return self._clone_with_queryset(queryset)
 
     def within_distance_from_point(self, point, distance):
         """
-        return MeasureFilter._clone_with_queryset(self) which allows to get
-        all measures within a specified distance from a point,
-        inside the earthquake catalogue.
+        Returns all measures within a specified distance from a point,
+        available in the queryset as a list.
+
         :param point: a point specified in wkt format.
         :param distance: distance specified in meters (see srid 4326).
         """
+
         queryset = self.queryset.filter(
                 "PtDistWithin(catalogue_origin.position, GeomFromText('%s', "
                 "4326), %s)" % (point, distance))
@@ -142,10 +174,14 @@ class MeasureFilter(object):
 
     def group_measures(self, grouping_strategy=None):
         """
-        Group all measures by event :param grouping_strategy: a
-        function that returns a dictionary where the key identifies an
-        event, and the value stores a list of measures
+        Returns a dictionary where the key identifies an event,
+        and the value stores a list of associated measures
+
+        :grouping_strategy: an instance of
+           :class:`~eqcatalogue.grouping.GroupMeasuresByHierarchicalClustering`
+           or :class:`~eqcatalogue.grouping.GroupMeasuresByEventSourceKey`.
         """
+
         if not grouping_strategy:
             from eqcatalogue.grouping import GroupMeasuresByEventSourceKey
             grouping_strategy = GroupMeasuresByEventSourceKey()
