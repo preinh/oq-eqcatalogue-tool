@@ -20,6 +20,21 @@ Requirements
 
    dev/requirements.rst
 
+Tutorials
+===============================================
+.. toctree::
+   :maxdepth: 2
+
+   dev/tutorials.rst
+
+Modules API
+===============================================
+.. toctree::
+   :maxdepth: 2
+
+   dev/modules.rst
+
+
 Indices and tables
 ==================
 
