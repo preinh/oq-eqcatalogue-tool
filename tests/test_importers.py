@@ -93,15 +93,15 @@ class EqCatalogueReaderTestCase(unittest.TestCase):
                                 'minDistance': 7.05, 'depthError': None,
                                 'second': 37.11, 'year': 2002,
                                 'Latitude': 25.4812, 'time_rms': 0.95,
-                                'originID': 4644028, 'phases': 6,
-                                'solutionKey': 1, 'solutionDesc': '1_IDC_ML',
-                                'timeError': 1.29, 'solutionID': 4644028,
+                                'originID': '4644028', 'phases': 6,
+                                'solutionKey': '1', 'solutionDesc': '1_IDC_ML',
+                                'timeError': 1.29, 'solutionID': '4644028',
                                 'semiMajor90': 61.5, 'semiMinor90': 18.6,
                                 'Longitude': 97.9598, 'errorAzimuth': 73.0,
                                 'maxDistance': 59.32, 'day': 3, 'minute': 37,
                                 'mag_type': 'ML', 'magStations': 1, 'hour': 21,
                                 'stations': None, 'depth': 0.0,
-                                'magnitude': 3.9, 'eventKey': 1009476,
+                                'magnitude': 3.9, 'eventKey': '1009476',
                                 'magnitudeError': 0.3}
 
         self.reader = CsvEqCatalogueReader(self.fst_three_rows)

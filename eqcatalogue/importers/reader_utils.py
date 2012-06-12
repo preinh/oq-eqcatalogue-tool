@@ -46,8 +46,8 @@ STR_TRANSF = [str.strip]
 INT_TRANSF = [convert_to_int]
 FLOAT_TRANSF = [convert_to_float]
 
-TRANSF_MAP = {'eventKey': INT_TRANSF, 'solutionKey': INT_TRANSF,
-                'solutionDesc': STR_TRANSF, 'originID': INT_TRANSF,
+TRANSF_MAP = {'eventKey': STR_TRANSF, 'solutionKey': STR_TRANSF,
+                'solutionDesc': STR_TRANSF, 'originID': STR_TRANSF,
                 'year': INT_TRANSF, 'month': INT_TRANSF, 'day': INT_TRANSF,
                 'hour': INT_TRANSF, 'minute': INT_TRANSF,
                 'second': FLOAT_TRANSF, 'timeError': FLOAT_TRANSF,
@@ -57,7 +57,7 @@ TRANSF_MAP = {'eventKey': INT_TRANSF, 'solutionKey': INT_TRANSF,
                 'depth': FLOAT_TRANSF, 'depthError': FLOAT_TRANSF,
                 'phases': INT_TRANSF, 'stations': INT_TRANSF,
                 'azimuthGap': FLOAT_TRANSF, 'minDistance': FLOAT_TRANSF,
-                'maxDistance': FLOAT_TRANSF, 'solutionID': INT_TRANSF,
+                'maxDistance': FLOAT_TRANSF, 'solutionID': STR_TRANSF,
                 'magnitude': FLOAT_TRANSF, 'solutionAgency': STR_TRANSF,
                 'mag_type': STR_TRANSF, 'mag_agency': STR_TRANSF,
                 'magnitudeError': FLOAT_TRANSF, 'magStations': INT_TRANSF}

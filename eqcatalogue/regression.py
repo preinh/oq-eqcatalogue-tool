@@ -24,7 +24,7 @@ from eqcatalogue import selection
 from eqcatalogue import exceptions
 
 
-REGRESSOR_DEFAULT_MAX_ITERATIONS = 1000
+REGRESSOR_DEFAULT_MAX_ITERATIONS = 3000
 PL_DEFAULT_INITIAL_VALUE_ORDER = 2
 
 
@@ -314,7 +314,7 @@ class EmpiricalMagnitudeScalingRelationship(object):
 
         if len(self.native_measures) < 3:
             raise exceptions.NotEnoughSamples(
-                "Not enough measures to perform regression."
+                "Not enough measures to perform regression. "
                 "Please relax your query or selection criteria")
 
         regression_model = model_type(self.native_measures,
