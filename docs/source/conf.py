@@ -205,5 +205,6 @@ latex_documents = [
 # If false, no module index is generated.
 #latex_domain_indices = True
 
-
+# This value selects what content will be inserted into the main body
+# of an autoclass directive. Only the class’ docstring is inserted.
 autoclass_content="class"
