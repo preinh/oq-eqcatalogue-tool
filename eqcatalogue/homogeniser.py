@@ -32,13 +32,13 @@ class Homogeniser(object):
 
     This class allow to select a native and a target magnitude scale
     and plot different regression models against a set of values got
-    from an event catalogue database.
+    from an Event Catalogue database.
 
-    Each instance can
-    1) apply filters to refine the considered set of events/measures
-    2) use different measure clustering strategies
-    3) use different measure selection strategies
-    4) use different strategy to handle uncertainty
+    Each instance can:
+     #. apply filters to refine the considered set of events/measures;
+     #. use different measure clustering grouping algorithm;
+     #. use different measure selection algorithm;
+     #. use different strategy to handle uncertainty.
     """
     FILTERS_MAP = {
         'before': MeasureFilter.before,
@@ -83,10 +83,11 @@ class Homogeniser(object):
     def set_scales(self, native, target):
         """
         Set Native and Target Scale
-        :param native
-        The native magnitude scale (e.g. MW). Case Sensitive
-        :param target
-        The target magnitude scale (e.g. MW). Case Sensitive
+
+        :param native:
+         The native magnitude scale (e.g. MW). Case Sensitive
+        :param target:
+         The target magnitude scale (e.g. MW). Case Sensitive
         """
         self._native_scale = native
         self._target_scale = target

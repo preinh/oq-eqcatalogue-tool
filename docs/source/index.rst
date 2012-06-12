@@ -27,7 +27,7 @@ Tutorials
 
    dev/tutorials.rst
 
-Modules API
+Modules Low-Level API
 ===============================================
 .. toctree::
    :maxdepth: 2
