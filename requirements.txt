@@ -1,4 +1,5 @@
-geoalchemy=0.7
+geoalchemy==0.7
 scipy==0.10
 matplotlib==1.1
 PIL==1.0
+nose

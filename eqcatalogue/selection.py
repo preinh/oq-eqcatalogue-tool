@@ -35,6 +35,8 @@ class MeasureManager(object):
         Manage a list of quantitative measures
 
         :name: name of the magnitude scale
+        :measures: the measures considered for regression
+        :sigma: the standard errors associated to measures
         """
 
         self.measures = []
@@ -56,7 +58,7 @@ class MeasureManager(object):
         self.sigma.append(measure.standard_error)
 
     def __repr__(self):
-        return self.name
+        return "scale: %s, measures: %s, sigma: %s" % (self.name, self.measures, self.sigma)
 
     def __iter__(self):
         return self.measures.__iter__()

@@ -108,6 +108,7 @@ class Homogeniser(object):
         self._native_scale = native_scale
         self._target_scale = target_scale
         self._models = []
+        self._emsr = None
 
     def reset_filters(self):
         """
@@ -286,25 +287,35 @@ class Homogeniser(object):
         """
         return self._selected_measures()[1]
 
-    def _get_emsr(self):
-        emsr = EmpiricalMagnitudeScalingRelationship.make_from_measures(
+    def _perform_regression(self):
+        self._emsr = EmpiricalMagnitudeScalingRelationship.make_from_measures(
             self._native_scale, self._target_scale,
             self.grouped_measures(), self._selector,
             self._mu_strategy)
+        scipy_outputs = []
         for model_class, model_kwargs in self._models:
-            emsr.apply_regression_model(model_class,
-                                        **model_kwargs)
-        return emsr
+            model, output = self._emsr.apply_regression_model(model_class,
+                                                              **model_kwargs)
+            scipy_outputs.append({'model': model,
+                                  'output': output})
+        return scipy_outputs
 
     def serialize(self, *serializer_args, **serializer_kwargs):
         """
-        Plot the selected native magnitude values against the target
-        ones and the considered regression models to `filename`
+        Perform the regression and plot the selected native magnitude
+        values against the target ones and the considered regression
+        models to `filename`.
+
+        :return:
+          a list of dictionary where the keys are 'model' (a
+          :class:`~eqcatalogue.regression.RegressionModel` instance)
+          and 'output' (with the output of the regression)
         """
-        emsr = self._get_emsr()
-        return self._serializer.plot(emsr,
-                                     *serializer_args,
-                                     **serializer_kwargs)
+        scipy_outputs = self._perform_regression()
+        self._serializer.plot(self._emsr,
+                              *serializer_args,
+                              **serializer_kwargs)
+        return scipy_outputs
 
     def plot(self, *args, **kwargs):
         """

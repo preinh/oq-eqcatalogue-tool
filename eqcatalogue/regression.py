@@ -34,6 +34,8 @@ class RegressionModel(object):
     """
     The base class for a regression model
 
+    :output: the scipy output of the regression
+
     :param native_measures:
         The native measures used by regression
 
@@ -98,21 +100,21 @@ class RegressionModel(object):
                                   **actual_regressor_params)
         self.akaike = None
         self.akaike_corrected = None
-        self._output = None
+        self.output = None
         self.sample_size = float(np.shape(native_measures.measures)[0])
 
     def long_str(self):
         return "%s. AICc: %s" % (self, self.akaike_corrected)
 
     def func(self, x):
-        return self._model_function(self._output.beta, x)
+        return self._model_function(self.output.beta, x)
 
     def parameter_number(self):
         """Returns the number of parameters of the regression model"""
-        return float(len(self._output.beta))
+        return float(len(self.output.beta))
 
     def residual(self):
-        return self._output.res_var
+        return self.output.res_var
 
     def criterion_tests(self):
         """
@@ -130,17 +132,17 @@ class RegressionModel(object):
     def run(self):
         """Perform regression analyisis"""
 
-        self._output = self._regressor.run()
+        self.output = self._regressor.run()
 
-        if not 'Sum of squares convergence' in self._output.stopreason\
-            and not 'Parameter convergence' in self._output.stopreason:
+        if not 'Sum of squares convergence' in self.output.stopreason\
+            and not 'Parameter convergence' in self.output.stopreason:
             # ODR Failed
             raise exceptions.RegressionFailedException(
-                "Regression failed: %s" % self._output.stopreason)
+                "Regression failed: %s" % self.output.stopreason)
 
         self.criterion_tests()
 
-        return self._output
+        return self.output
 
 
 class PolynomialModel(RegressionModel):
@@ -323,6 +325,9 @@ class EmpiricalMagnitudeScalingRelationship(object):
         :param regression_params:
             Arguments passed to the RegressionModel being constructed. See
             RegressionModel#__init__ documentation for details.
+
+        :return:
+            a tuple with a RegressionModel instance and its output
         """
         if not hasattr(model_type, 'is_regression_model'):
             raise TypeError("Invalid Model type selected (%s). \
@@ -338,4 +343,4 @@ class EmpiricalMagnitudeScalingRelationship(object):
                                       **regression_params)
         output = regression_model.run()
         self.regression_models.append(regression_model)
-        return output
+        return regression_model, output

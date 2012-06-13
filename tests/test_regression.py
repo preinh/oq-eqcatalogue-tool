@@ -52,7 +52,7 @@ class ShouldPerformRegression(unittest.TestCase):
             target_measures)
 
         # Act
-        output = emsr.apply_regression_model(LinearModel)
+        _, output = emsr.apply_regression_model(LinearModel)
 
         # Assert
         self.assertTrue(allclose(np.array([A, B]), output.beta))
@@ -75,7 +75,7 @@ class ShouldPerformRegression(unittest.TestCase):
             target_measures)
 
         # Act
-        output = emsr.apply_regression_model(PolynomialModel,
+        _, output = emsr.apply_regression_model(PolynomialModel,
                                              order=2)
 
         # Assert
@@ -116,8 +116,8 @@ class ShouldPerformRegression(unittest.TestCase):
             target_measures)
 
         # Act
-        output = emsr.apply_regression_model(LinearModel,
-                                             initial_values=[0, 0])
+        _, output = emsr.apply_regression_model(LinearModel,
+                                                initial_values=[0, 1])
 
         # Assert
         self.assertTrue(allclose(np.array([A, B]), output.beta))
