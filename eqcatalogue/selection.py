@@ -58,7 +58,8 @@ class MeasureManager(object):
         self.sigma.append(measure.standard_error)
 
     def __repr__(self):
-        return "scale: %s, measures: %s, sigma: %s" % (self.name, self.measures, self.sigma)
+        return "scale: %s, measures: %s, sigma: %s" % (
+            self.name, self.measures, self.sigma)
 
     def __iter__(self):
         return self.measures.__iter__()

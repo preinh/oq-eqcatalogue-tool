@@ -321,4 +321,4 @@ class Homogeniser(object):
         """
         An alias for serialize
         """
-        self.serialize(*args, **kwargs)
+        return self.serialize(*args, **kwargs)

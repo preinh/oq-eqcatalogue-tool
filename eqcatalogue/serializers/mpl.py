@@ -49,7 +49,7 @@ def plot(emsr, filename=None, errorbar_params=None,
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.set_title("Empirical Magnitude Scaling Relationship between %s and %s" %
-                 (emsr.native_measures, emsr.target_measures))
+                 (emsr.native_measures.name, emsr.target_measures.name))
 
     x = emsr.native_measures.measures
     actual_line_params = {'linestyle': '-', 'lw': 1.5}
@@ -74,11 +74,12 @@ def plot(emsr, filename=None, errorbar_params=None,
     plt.errorbar(x, y, xerr=[xerr, xerr], yerr=[yerr, yerr],
                  **actual_errorbar_params)
 
-    plt.xlabel(emsr.native_measures)
-    plt.ylabel(emsr.target_measures)
+    plt.xlabel(emsr.native_measures.name)
+    plt.ylabel(emsr.target_measures.name)
     leg = plt.legend(loc=2, shadow=True, ncol=1)
-    ltext = leg.get_texts()
-    plt.setp(ltext, fontsize='small')
+    if leg:
+        ltext = leg.get_texts()
+        plt.setp(ltext, fontsize='small')
     actual_figure_params = {}
     if figure_params:
         actual_figure_params.update(figure_params)
