@@ -74,7 +74,7 @@ Importer (:mod:`eqcatalogue.importers.isf_bulletin`)
 Low-Level API modules
 ==============================================================================
 
-Filtering
+Filtering (:mod:`eqcatalogue.filgering`)
 ------------------------------------------------------------------------------
 
 .. currentmodule:: eqcatalogue
@@ -94,7 +94,7 @@ Filtering
 .. automethod:: MeasureFilter.within_distance_from_point
 .. automethod:: MeasureFilter.group_measures
 
-Grouping
+Grouping (:mod:`eqcatalogue.grouping`)
 ------------------------------------------------------------------------------
 
 .. currentmodule:: eqcatalogue
@@ -102,13 +102,17 @@ Grouping
 .. autoclass:: GroupMeasuresByEventSourceKey
 .. autoclass:: GroupMeasuresByHierarchicalClustering
 
-Regression
+Regression (:mod:`eqcatalogue.regression`)
 ------------------------------------------------------------------------------
 
 .. currentmodule:: eqcatalogue
 .. automodule:: eqcatalogue.regression
+.. autoclass:: RegressionModel
+.. autoclass:: EmpiricalMagnitudeScalingRelationship
+.. automethod:: EmpiricalMagnitudeScalingRelationship.make_from_measures
+.. automethod:: EmpiricalMagnitudeScalingRelationship.make_from_events
 
-Selection
+Selection (:mod:`eqcatalogue.selection`)
 ------------------------------------------------------------------------------
 
 .. currentmodule:: eqcatalogue

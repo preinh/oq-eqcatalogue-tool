@@ -217,13 +217,23 @@ class EmpiricalMagnitudeScalingRelationship(object):
         A dictionary where the keys are regression models objects and the
         values are the output of the regression.
 
+    :attribute grouped_measures:
+        A dictionary that stores the association between an event (the key)
+        and a list of measures (the value).
+
     :param regression_models:
         An array of RegressionModel instance object storing the
         regression analysis data.
 
-    :param grouped_measures:
-        A dictionary that stores the association between an event (the key)
-        and a list of measures (the value).
+    :param native_measures:
+        A :class:`~eqcatalogue.selection.MeasureManager` instance holding
+        information about the native measure values and their standard
+        deviation error.
+
+    :param target_measures:
+        A :class:`~eqcatalogue.selection.MeasureManager` instance holding
+        information about the target measure values and their standard
+        deviation error.
     """
 
     DEFAULT_MODEL_TYPE = LinearModel
@@ -236,10 +246,24 @@ class EmpiricalMagnitudeScalingRelationship(object):
         Build a EmpiricalMagnitudeScalingRelationship by a selecting
         measures from an event manager object according to
         a specific strategy.
-        :param events: An Event manager object.
-        See EmpiricalMagnitudeScalingRelationship.make_from_measures
-        for a description of other params
+
+        :param native_scale: The native scale of the
+            EmpiricalMagnitudeScalingRelationship.
+
+        :param target_scale: The target scale of the
+            EmpiricalMagnitudeScalingRelationship.
+
+        :param events: A :class:`~eqcatalogue.filtering.MeasureFilter`
+            instance.
+
+        :param selection_strategy:
+            A :class:`~eqcatalogue.selection.MeasureSelection` instance.
+
+        :param missing_uncertainty_strategy:
+            A :class:`~eqcatalogue.selection.MissingUncertaintyStrategy`
+            instance.
         """
+
         return cls.make_from_measures(native_scale, target_scale,
                                       events.group_measures(),
                                       selection_strategy,
@@ -253,24 +277,26 @@ class EmpiricalMagnitudeScalingRelationship(object):
         Build a EmpiricalMagnitudeScalingRelationship by a selecting
         measures from a grouped event measure dictionary according to
         a specific strategy.
-        :py:param:: native_scale
-        The native scale of the EmpiricalMagnitudeScalingRelationship
 
-        :py:param:: target_scale
-        The target scale of the EmpiricalMagnitudeScalingRelationship
+        :param native_scale: The native scale of the
+            EmpiricalMagnitudeScalingRelationship.
 
-        :py:param:: grouped_measures
-        A dictionary that stores the association
-        between an event (the key) and a list of
-        measures (the value).
+        :param target_scale: The target scale of the
+            EmpiricalMagnitudeScalingRelationship.
 
-        :py:param:: selection_strategy
-        A MeasureSelectionStrategy object used to select the proper measures
+        :param grouped_measures:
+            A dictionary that stores the association
+            between an event (the key) and a list of
+            measures (the value).
 
-        :py:param:: missing_uncertainty_strategy
-        A MissingUncertaintyStrategy object used to handle measures
-        without standard error info
+        :param selection_strategy:
+            A :class:`~eqcatalogue.selection.MeasureSelection` instance.
+
+        :param missing_uncertainty_strategy:
+            A :class:`~eqcatalogue.selection.MissingUncertaintyStrategy`
+            instance.
         """
+
         new_emsr = cls()
         native_measures, target_measures = selection_strategy.select(
             grouped_measures,
@@ -282,16 +308,6 @@ class EmpiricalMagnitudeScalingRelationship(object):
         return new_emsr
 
     def __init__(self, native_measures=None, target_measures=None):
-        """Initialize an Empirical Magnitude Scaling Relationship instance
-
-        :py:param:: native_measures
-        A MeasureManager object holding information about the native measure
-        values and their standard deviation error
-
-        :py:param:: target_measures
-        A MeasureManager object holding information about the target measure
-        values and their standard deviation error
-        """
         self.native_measures = native_measures
         self.target_measures = target_measures
         self.regression_models = []
@@ -301,12 +317,12 @@ class EmpiricalMagnitudeScalingRelationship(object):
                                **regression_params):
         """
         Apply a regression model to the measures
-        :py:param:: model_type
-        A RegressionModel subclass
+        :param model_type:
+            an instance of :class:`~eqcatalgue.regression.RegressionModel`.
 
-        :py:param:: regression_params
-        Arguments passed to the RegressionModel being constructed. See
-        RegressionModel#__init__ documentation for details
+        :param regression_params:
+            Arguments passed to the RegressionModel being constructed. See
+            RegressionModel#__init__ documentation for details.
         """
         if not hasattr(model_type, 'is_regression_model'):
             raise TypeError("Invalid Model type selected (%s). \
