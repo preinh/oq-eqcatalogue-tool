@@ -1,8 +1,8 @@
--e hg+https://defmacro@code.google.com/r/defmacro-load-extension/#egg=pysqlite2
-geoalchemy==0.7.1
-numpy==1.6.2
-scipy==0.10
-matplotlib==1.1
-PIL==1.0
+hg+https://defmacro@code.google.com/r/defmacro-load-extension/#egg=pysqlite2
+geoalchemy
+numpy
+scipy
+matplotlib
+PIL
 nose
 

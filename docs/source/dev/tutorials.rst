@@ -14,13 +14,22 @@ Installation
 -------------------------------------
 The following installation instructions apply to Ubuntu 12.04.
 
+You may need some development packages that you can install with apt:
+
+    sudo apt-get install git mercurial python-software-properties python-imaging python-numpy python-scipy python-matplotlib python-nose libspatialite-dev
+
 Get the code from github:
 
-    git clone http://github.com/gem/oq-eqcatalogue/
+    git clone http://github.com/gem/oq-eqcatalogue-tool/
 
-Then, install the required libraries
+Then, install the remaining requirements
 
-    pip install -r oq-eqcatalogue/requirements.txt
+    sudo pip install -r oq-eqcatalogue-tool/requirements.txt
+
+
+To check that the installation works properly you can issue the command
+    cd oq-eqcatalogue-tool
+    ./run_qa_tests
 
 
 Data format
