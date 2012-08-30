@@ -12,11 +12,11 @@ with a simple regression plot to compare two different magnitude scales.
 
 Installation
 -------------------------------------
-The following installation instructions apply to Ubuntu 12.04.
+The following installation instructions apply to Ubuntu 12.04 and Ubuntu 11.x.
 
 You may need some development packages that you can install with apt:
 
-    sudo apt-get install git mercurial python-software-properties python-imaging python-numpy python-scipy python-matplotlib python-nose libspatialite-dev
+    sudo apt-get install git mercurial python-software-properties python-pip python-imaging python-numpy python-scipy python-matplotlib python-nose libspatialite-dev
 
 Get the code from github:
 
