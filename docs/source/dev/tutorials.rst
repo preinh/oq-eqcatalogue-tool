@@ -12,7 +12,15 @@ with a simple regression plot to compare two different magnitude scales.
 
 Installation
 -------------------------------------
-(To be updated when new procedure is in place!)
+The following installation instructions apply to Ubuntu 12.04.
+
+Get the code from github:
+
+    git clone http://github.com/gem/oq-eqcatalogue/
+
+Then, install the required libraries
+
+    pip install -r oq-eqcatalogue/requirements.txt
 
 
 Data format
