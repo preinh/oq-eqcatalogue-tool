@@ -32,6 +32,10 @@ To check that the installation works properly you can issue the command
     ./run_qa_tests
 
 
+(Optional) To install oq-eqcatalogue-tool system-wide, you can issue:
+    sudo python setup.py install
+
+
 Data format
 -------------------------------------
 
