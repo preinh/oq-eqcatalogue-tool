@@ -27,45 +27,7 @@ from math import sqrt, pow
 from itertools import product
 import re
 
-
-class MeasureManager(object):
-
-    def __init__(self, name):
-        """
-        Manage a list of quantitative measures
-
-        :name: name of the magnitude scale
-        :measures: the measures considered for regression
-        :sigma: the standard errors associated to measures
-        """
-
-        self.measures = []
-        self.sigma = []
-        self.name = name
-        # holds a list of magnitude measure objects
-        self.magnitude_measures = []
-
-    def append(self, measure):
-        """
-        Add a measure to the list
-
-        :measure: measure to add to the list
-        """
-
-        assert(measure and measure.value and measure.standard_error)
-        self.magnitude_measures.append(measure)
-        self.measures.append(measure.value)
-        self.sigma.append(measure.standard_error)
-
-    def __repr__(self):
-        return "scale: %s, measures: %s, sigma: %s" % (
-            self.name, self.measures, self.sigma)
-
-    def __iter__(self):
-        return self.measures.__iter__()
-
-    def __len__(self):
-        return len(self.measures)
+from eqcatalogue.models import MeasureManager
 
 
 class MissingUncertaintyStrategy(object):
@@ -165,8 +127,12 @@ class MeasureSelection(object):
         :mus: a missing uncertainty strategy object used to handle the case
             when no standard error of a measure is provided.
         """
-        return self.__class__._select(grouped_measures, native_scale,
+        return self.__class__.do_select(grouped_measures, native_scale,
             target_scale, mus)
+
+    @classmethod
+    def do_select(cls, grouped_measures, native_scale, target_scale, mus):
+        raise NotImplementedError
 
 
 class Random(MeasureSelection):
@@ -176,7 +142,7 @@ class Random(MeasureSelection):
     """
 
     @classmethod
-    def _select(cls, grouped_measures, native_scale, target_scale, mus):
+    def do_select(cls, grouped_measures, native_scale, target_scale, mus):
         native_measures = MeasureManager(native_scale)
         target_measures = MeasureManager(target_scale)
 
@@ -234,7 +200,7 @@ class Precise(MeasureSelection):
                couples[index_min_val][target_c_index])
 
     @classmethod
-    def _select(cls, grouped_measures, native_scale, target_scale, mus):
+    def do_select(cls, grouped_measures, native_scale, target_scale, mus):
         native_measures = MeasureManager(native_scale)
         target_measures = MeasureManager(target_scale)
 

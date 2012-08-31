@@ -55,6 +55,8 @@ Models definition (:mod:`eqcatalogue.models`)
 .. autoclass:: eqcatalogue.models.Agency
 .. autoclass:: eqcatalogue.models.Event
 .. autoclass:: eqcatalogue.models.MagnitudeMeasure
+.. autoclass:: MeasureManager
+.. automethod:: MeasureManager.append
 .. autoclass:: eqcatalogue.models.Origin
 .. autoclass:: eqcatalogue.models.MeasureMetadata
 .. autoclass:: eqcatalogue.models.CatalogueDatabase
@@ -117,8 +119,6 @@ Selection (:mod:`eqcatalogue.selection`)
 
 .. currentmodule:: eqcatalogue
 .. automodule:: eqcatalogue.selection
-.. autoclass:: MeasureManager
-.. automethod:: MeasureManager.append
 
 .. autoclass:: MissingUncertaintyStrategy
 .. automethod:: MissingUncertaintyStrategy.should_be_discarded
