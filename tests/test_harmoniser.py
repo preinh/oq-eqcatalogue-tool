@@ -22,8 +22,10 @@ from eqcatalogue.regression import (LinearModel,
 from eqcatalogue.models import MagnitudeMeasure, Event
 
 
-class HarmoniserWithModelTestCase(unittest.TestCase):
-
+class HarmoniserWithFixturesAbstractTestCase(unittest.TestCase):
+    """
+    Create an harmonizer and some basic fixtures
+    """
     def setUp(self):
         self.target_scale = "Mw"
         self.a_native_scale = "mb"
@@ -57,6 +59,15 @@ class HarmoniserWithModelTestCase(unittest.TestCase):
                     standard_error=1, value=(i + 1) * 2.0))
 
         self.number_of_measures = len(self.measures)
+
+
+class HarmoniserWithModelTestCase(HarmoniserWithFixturesAbstractTestCase):
+    """
+    Tests harmonization by using regression models as conversion formula
+    """
+
+    def setUp(self):
+        super(HarmoniserWithModelTestCase, self).setUp()
         native_measures_1 = self.measures[0:self.number_of_measures / 3]
         native_measures_2 = self.measures[
             self.number_of_measures / 3:2 * self.number_of_measures / 3]
@@ -137,6 +148,108 @@ class HarmoniserWithModelTestCase(unittest.TestCase):
 
         h.add_conversion_from_model(self.a_model)
         h.add_conversion_from_model(self.ya_model)
+        converted, unconverted = h.harmonise(self.measures)
+
+        self.assertEqual(0, len(unconverted))
+        self.assertEqual(self.number_of_measures, len(converted))
+
+        for measure in self.measures:
+            converted_measure = converted[measure]
+            if measure.scale == self.a_native_scale:
+                self.assertEqual(1, len(converted_measure['formulas']))
+                self.assertAlmostEqual(converted_measure['value'],
+                                       measure.value * 2)
+            elif measure.scale == self.target_scale:
+                self.assertEqual(0, len(converted_measure['formulas']))
+                self.assertAlmostEqual(converted_measure['value'],
+                                       measure.value)
+            elif measure.scale == self.ya_native_scale:
+                self.assertEqual(1, len(converted_measure['formulas']))
+                self.assertAlmostEqual(converted_measure['value'],
+                                       measure.value / 1.5)
+
+
+class HarmoniserWithFormulaTestCase(HarmoniserWithFixturesAbstractTestCase):
+    def setUp(self):
+        super(HarmoniserWithFormulaTestCase, self).setUp()
+        native_measures_1 = self.measures[0:self.number_of_measures / 3]
+        native_measures_2 = self.measures[
+            self.number_of_measures / 3:2 * self.number_of_measures / 3]
+
+        self.a_conversion = {'formula': lambda x: x * 2.,
+                             'domain': native_measures_1,
+                             'target_scale': self.target_scale}
+        self.ya_conversion = {'formula': lambda x: x / 1.5,
+                              'domain': native_measures_2,
+                              'target_scale': self.target_scale}
+
+    def test_one_conversion(self):
+        """
+        Test with one conversion. Given a target scale, a list of measures
+        (in a single magnitude scales), and an empirical magnitude
+        scaling relationship (between a native scale mb and the
+        considered target scale), an Harmoniser should convert to the
+        target scale only the measure in that native scale
+        """
+
+        mismatches = self.number_of_measures / 3
+
+        h = Harmoniser(target_scale=self.target_scale)
+        h.add_conversion(**self.a_conversion)
+        converted, unconverted = h.harmonise(self.measures)
+
+        self.assertEqual(self.number_of_measures - mismatches,
+                         len(converted))
+        self.assertEqual(len(unconverted), mismatches)
+        for measure in self.measures:
+            if measure in converted:
+                converted_measure = converted[measure]
+                if measure.scale == self.a_native_scale:
+                    self.assertEqual(1, len(converted_measure['formulas']))
+                    self.assertAlmostEqual(converted_measure['value'],
+                                           measure.value * 2)
+                elif measure.scale == self.target_scale:
+                    self.assertEqual(converted_measure['formulas'], [])
+                    self.assertAlmostEqual(converted_measure['value'],
+                                           measure.value)
+
+    def test_no_match(self):
+        """
+        Test limit situations where no harmonization should happen
+        """
+
+        # conversion provided applies to a different domain
+        h = Harmoniser(target_scale=self.target_scale)
+        self.a_conversion.update({'domain': []})
+        h.add_conversion(**self.a_conversion)
+        converted, unconverted = h.harmonise(self.measures)
+
+        # 1/3 of the measures are already in the target_scale
+        self.assertEqual(self.number_of_measures / 3, len(converted))
+        self.assertEqual(self.number_of_measures * 2 / 3, len(unconverted))
+
+        # no conversion are provided
+        h = Harmoniser(target_scale=self.target_scale)
+        converted, unconverted = h.harmonise(self.measures)
+
+        self.assertEqual(self.number_of_measures / 3, len(converted))
+        self.assertEqual(self.number_of_measures * 2 / 3, len(unconverted))
+
+        # no conversion matches the target scale
+        h = Harmoniser(target_scale="wrong scale")
+        h.add_conversion(**self.a_conversion)
+        converted, unconverted = h.harmonise(self.measures)
+        self.assertEqual(0, len(converted))
+        self.assertEqual(self.number_of_measures, len(unconverted))
+
+    def test_more_conversion(self):
+        """
+        Test with several conversions
+        """
+        h = Harmoniser(target_scale=self.target_scale)
+
+        h.add_conversion(**self.a_conversion)
+        h.add_conversion(**self.ya_conversion)
         converted, unconverted = h.harmonise(self.measures)
 
         self.assertEqual(0, len(unconverted))
