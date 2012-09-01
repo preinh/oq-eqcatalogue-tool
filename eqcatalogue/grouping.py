@@ -20,10 +20,17 @@ Module :mod:`eqcatalogue.grouping` defines
 """
 
 import numpy as np
-# we import matplotlib just to change the backend as scipy import
-# matplotlib making impossible to use this code on an headless machine
+
+# FIXME: Remove the unused import of matplotlib.
+# To allow the use of this code on an headless machine we import mpl
+# and change the rendering backend to Agg before the module
+# scipy.cluster, that is needed in this module and imports matplotlib,
+# chooses a rendering backend that requires a display. We remark that
+# it is not possible to change the mpl rendering backend once it has
+# been set.
 import matplotlib
 matplotlib.use('Agg')
+
 from scipy.cluster import hierarchy
 
 
@@ -33,7 +40,11 @@ class GroupMeasuresByEventSourceKey(object):
     an event a group of measure is associated.
     """
 
-    def group_measures(self, measure_filter):
+    @classmethod
+    def group(cls, measure_filter):
+        """
+        Groups the measures that are the result of measure_filter
+        """
         groups = {}
         for m in measure_filter.all():
             key = m.event.source_key
@@ -41,6 +52,12 @@ class GroupMeasuresByEventSourceKey(object):
                 groups[key] = []
             groups[key].append(m)
         return groups
+
+    def group_measures(self, measure_filter):
+        """
+        Groups the measures that are the result of measure_filter
+        """
+        return self.__class__.group(measure_filter)
 
 
 class GroupMeasuresByHierarchicalClustering(object):
@@ -64,9 +81,16 @@ class GroupMeasuresByHierarchicalClustering(object):
 
     @classmethod
     def get_time(cls, measure):
+        """
+        return the origin time of the measure, a float with the unix
+        timestamp (plus milliseconds)
+        """
         return float(measure.origin.time.strftime('%s'))
 
     def group_measures(self, measure_filter):
+        """
+        Groups the measures that are the result of measure_filter
+        """
         measures = measure_filter.all()
 
         data = np.array([self._key_fn(m) for m in measures])

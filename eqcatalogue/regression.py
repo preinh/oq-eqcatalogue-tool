@@ -26,7 +26,7 @@ from eqcatalogue import selection
 from eqcatalogue import exceptions
 
 
-REGRESSOR_DEFAULT_MAX_ITERATIONS = 3000
+REGRESSOR_DEFAULT_MAX_ITERATIONS = 10000
 PL_DEFAULT_INITIAL_VALUE_ORDER = 2
 
 
@@ -76,10 +76,14 @@ class RegressionModel(object):
         self.native_measures = native_measures
         self.target_measures = target_measures
 
+        native_values = [m.value for m in native_measures]
+        native_sigmas = [m.standard_error for m in native_measures]
+        target_values = [m.value for m in target_measures]
+        target_sigmas = [m.standard_error for m in target_measures]
+
         if not initial_values:
             self.initial_values = self._setup_initial_values(
-                native_measures.measures,
-                target_measures.measures,
+                native_values, target_values,
                 initial_value_order)
         else:
             self.initial_values = initial_values
@@ -88,10 +92,9 @@ class RegressionModel(object):
             actual_model_params.update(model_params)
         self._regression_model = odr.Model(self._model_function,
                                            **actual_model_params)
-        self._regression_data = odr.RealData(native_measures.measures,
-                                             target_measures.measures,
-                                             sx=native_measures.sigma,
-                                             sy=target_measures.sigma)
+        self._regression_data = odr.RealData(
+            native_values, target_values,
+            sx=native_sigmas, sy=target_sigmas)
         actual_regressor_params = {'maxit': REGRESSOR_DEFAULT_MAX_ITERATIONS}
         if regressor_params:
             actual_regressor_params.update(regressor_params)
@@ -103,7 +106,7 @@ class RegressionModel(object):
         self.akaike = None
         self.akaike_corrected = None
         self.output = None
-        self.sample_size = float(np.shape(native_measures.measures)[0])
+        self.sample_size = len(native_measures)
 
     @property
     def target_scale(self):

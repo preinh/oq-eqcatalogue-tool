@@ -49,9 +49,10 @@ def plot(emsr, filename=None, errorbar_params=None,
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.set_title("Empirical Magnitude Scaling Relationship between %s and %s" %
-                 (emsr.native_measures.name, emsr.target_measures.name))
+                 (emsr.native_measures[0].scale,
+                  emsr.target_measures[0].scale))
 
-    x = emsr.native_measures.measures
+    x = [m.value for m in emsr.native_measures]
     actual_line_params = {'linestyle': '-', 'lw': 1.5}
     if line_params:
         actual_line_params.update(line_params)
@@ -64,9 +65,11 @@ def plot(emsr, filename=None, errorbar_params=None,
         ax.plot(x_sorted, y, label=model.long_str(),
                 **actual_line_params)
 
-    y = emsr.target_measures.measures
-    yerr = np.multiply(emsr.native_measures.sigma, QUANTILE_NDISTRIB_975)
-    xerr = np.multiply(emsr.native_measures.sigma, QUANTILE_NDISTRIB_975)
+    y = [m.value for m in emsr.target_measures]
+    yerr = np.multiply([m.standard_error for m in emsr.native_measures],
+                       QUANTILE_NDISTRIB_975)
+    xerr = np.multiply([m.standard_error for m in emsr.native_measures],
+                       QUANTILE_NDISTRIB_975)
 
     actual_errorbar_params = {'fmt': 'b.', 'ecolor': 'r'}
     if errorbar_params:
@@ -74,8 +77,8 @@ def plot(emsr, filename=None, errorbar_params=None,
     plt.errorbar(x, y, xerr=[xerr, xerr], yerr=[yerr, yerr],
                  **actual_errorbar_params)
 
-    plt.xlabel(emsr.native_measures.name)
-    plt.ylabel(emsr.target_measures.name)
+    plt.xlabel(emsr.native_measures[0].scale)
+    plt.ylabel(emsr.target_measures[0].scale)
     leg = plt.legend(loc=2, shadow=True, ncol=1)
     if leg:
         ltext = leg.get_texts()

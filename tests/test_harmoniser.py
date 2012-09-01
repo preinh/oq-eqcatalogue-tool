@@ -19,7 +19,7 @@ import unittest
 from eqcatalogue.harmoniser import Harmoniser
 from eqcatalogue.regression import (LinearModel,
                                     EmpiricalMagnitudeScalingRelationship)
-from eqcatalogue.models import MagnitudeMeasure, MeasureManager, Event
+from eqcatalogue.models import MagnitudeMeasure, Event
 
 
 class HarmoniserWithModelTestCase(unittest.TestCase):
@@ -30,22 +30,22 @@ class HarmoniserWithModelTestCase(unittest.TestCase):
         self.ya_native_scale = "Ml"
 
         # generate a set of measures
-        self.measures = MeasureManager()
+        self.measures = []
 
-        events = [Event(source_key=i, eventsource="test event source",
+        events = [Event(source_key=i, eventsource=None,
                   name="test event %d" % i) for i in range(0, 10)]
 
         for i in range(0, 10):
             self.measures.append(
                 MagnitudeMeasure(
-                    agency="test agency", event=events[i], origin=None,
+                    agency=None, event=events[i], origin=None,
                     scale=self.a_native_scale,
                     standard_error=1, value=(i + 1) * 1.0))
 
         for i in range(0, 10):
             self.measures.append(
                 MagnitudeMeasure(
-                    agency="test agency", event=events[i], origin=None,
+                    agency=None, event=events[i], origin=None,
                     scale=self.ya_native_scale,
                     standard_error=1, value=(i + 1) * 3.0))
 

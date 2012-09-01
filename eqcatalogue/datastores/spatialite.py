@@ -289,15 +289,15 @@ def _load_extension(session):
     for library in [SO_LIBRARY, DLL_LIBRARY, DYLIB_LIBRARY]:
         try:
             session.execute("select load_extension('%s')" % library)
-            loaded = True
-        except sqlite.OperationalError:
-            pass
+            loaded, exception = True, None
+        except sqlite.OperationalError as e:
+            exception = e
 
     if not loaded:
         raise RuntimeError("""
     Could not load libspatial extension.
-    Check your spatialite and pysqlite2 installation"""
-            )
+    Check your spatialite and pysqlite2 installation
+    Error %s""" % exception)
 
     # spatialite needs this initialization on the first usage. This
     # should be probably go into a package installation script

@@ -20,39 +20,90 @@ of a set of measures to a single target scale
 
 
 class ConversionFormula(object):
-    def __init__(self, fn, domain, target_scale):
-        self.fn = fn
+    """
+    An object holding a formula that can convert a measure into a
+    target magnitude scale
+
+    :attribute formula:
+      A callable that accepts one argument that holds the measure value
+      to be converted
+
+    :attribute domain:
+      A list of measures that stores exhaustively the domain of the
+      formula
+
+    :attribute target_scale
+      The target scale
+    """
+    def __init__(self, formula, domain, target_scale):
+        self.formula = formula
         self.domain = domain
         self.target_scale = target_scale
 
     def is_applicable_for(self, measure):
+        """Returns true if the measure given in input can be converted"""
         return measure in self.domain
 
     @classmethod
     def make_from_model(cls, model):
-        return cls(fn=model.func, domain=model.native_measures,
+        """
+        Build a conversion model by a regression model
+        """
+        return cls(formula=model.func, domain=model.native_measures,
                    target_scale=model.target_scale)
 
     def apply(self, measure):
-        return self.fn(measure.value)
+        """
+        Apply the conversion to `measure`
+        """
+        return self.formula(measure.value)
 
 
 class Harmoniser(object):
+    """
+    This class is responsable to convert a set of measures into a
+    target scale by using a set of conversion formula
+
+    :attribute target_scale
+      The target scale considered
+
+    :attribute _formulas
+      The list of formulas used to convert measures
+    """
     def __init__(self, target_scale):
         self.target_scale = target_scale
         self._formulas = {}
 
     def add_conversion_from_model(self, model):
+        """
+        Create a conversion formula from a regression model and make
+        it available for the harmonizer
+
+        :param model
+          A regression model
+        """
         formula = ConversionFormula.make_from_model(model)
         scale = formula.target_scale
         self._formulas[scale] = self._formulas.get(scale, [])
         self._formulas[scale].append(formula)
 
     def harmonise(self, measures):
+        """
+        Harmonize an iterator of measures.
+
+        :param measures
+          the measures to be converted
+
+        :return the converted and the unconverted measures
+        :rtype a 2-tuple. The former is dictionary where the keys are
+        the converted measures and the value is a dictionary storing
+        the converted value and the formula used for the conversion.
+        The latter is a list of the unconverted measures
+        """
         converted = {}
         unconverted = []
         for m in measures:
-            formula = self.find_formula_for(m)
+            formula = self._find_formula_for(m)
             if formula:
                 converted[m] = dict(
                     value=formula.apply(m),
@@ -65,7 +116,10 @@ class Harmoniser(object):
                 unconverted.append(m)
         return converted, unconverted
 
-    def find_formula_for(self, measure, target_scale=None):
+    def _find_formula_for(self, measure, target_scale=None):
+        """
+        Find a formula to convert `measure` to `target_scale`
+        """
         target_scale = target_scale or self.target_scale
         if target_scale not in self._formulas:
             return

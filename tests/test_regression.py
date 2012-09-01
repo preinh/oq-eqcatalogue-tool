@@ -23,7 +23,6 @@ from eqcatalogue.regression import (EmpiricalMagnitudeScalingRelationship,
 from eqcatalogue import exceptions
 from eqcatalogue.importers import isf_bulletin
 from eqcatalogue import models as catalogue
-from eqcatalogue import selection
 
 
 def _load_catalog():
@@ -41,12 +40,14 @@ class ShouldPerformRegression(unittest.TestCase):
         # Assess
         A = 0.85
         B = 1.03
-        native_measures = selection.MeasureManager('mb')
-        target_measures = selection.MeasureManager('Mw')
-        native_measures.measures = np.random.uniform(3., 8.5, 1000)
-        native_measures.sigma = np.random.uniform(0.02, 0.2, 1000)
-        target_measures.measures = A + B * native_measures.measures
-        target_measures.sigma = np.random.uniform(0.025, 0.2, 1000)
+        native_measures = catalogue.MagnitudeMeasure.make_from_lists(
+            'mb',
+            np.random.uniform(3., 8.5, 1000),
+            np.random.uniform(0.02, 0.2, 1000))
+        target_measures = catalogue.MagnitudeMeasure.make_from_lists(
+            "Mw",
+            A + B * np.array([m.value for m in native_measures]),
+            np.random.uniform(0.025, 0.2, 1000))
         emsr = EmpiricalMagnitudeScalingRelationship(
             native_measures,
             target_measures)
@@ -63,13 +64,14 @@ class ShouldPerformRegression(unittest.TestCase):
         A = 0.046
         B = 0.556
         C = 0.673
-        native_measures = selection.MeasureManager('mb')
-        target_measures = selection.MeasureManager('Mw')
-        native_measures.measures = np.random.uniform(3., 8.5, 1000)
-        native_measures.sigma = np.random.uniform(0.02, 0.2, 1000)
-        target_measures.measures = C + B * native_measures.measures +\
-          A * (native_measures.measures ** 2.)
-        target_measures.sigma = np.random.uniform(0.025, 0.2, 1000)
+        native_measures = catalogue.MagnitudeMeasure.make_from_lists(
+            'mb', np.random.uniform(3., 8.5, 1000),
+            np.random.uniform(0.02, 0.2, 1000))
+        target_measures = catalogue.MagnitudeMeasure.make_from_lists(
+            'Mw',
+            (C + B * np.array([m.value for m in native_measures]) +
+             A * (np.array([m.value for m in native_measures]) ** 2.)),
+             np.random.uniform(0.025, 0.2, 1000))
         emsr = EmpiricalMagnitudeScalingRelationship(
             native_measures,
             target_measures)
@@ -83,16 +85,14 @@ class ShouldPerformRegression(unittest.TestCase):
         self.assertTrue(output.res_var < 1e-20)
 
     def test_fail_regression_not_enough_measures(self):
-        native_measures = selection.MeasureManager('mb')
-        target_measures = selection.MeasureManager('Mw')
-        native_measures.measures = [np.random.poisson(
-            size=np.random.randint(0, 2))]
-        native_measures.sigma = [np.random.poisson(
-            size=np.random.randint(0, 2))]
-        target_measures.measures = [np.random.poisson(
-            size=np.random.randint(0, 2))]
-        target_measures.sigma = [np.random.poisson(
-            size=np.random.randint(0, 2))]
+        native_measures = catalogue.MagnitudeMeasure.make_from_lists(
+            'mb',
+            [np.random.poisson(size=np.random.randint(0, 2))],
+            [np.random.poisson(size=np.random.randint(0, 2))])
+        target_measures = catalogue.MagnitudeMeasure.make_from_lists(
+            'Mw',
+            [np.random.poisson(size=np.random.randint(0, 2))],
+            [np.random.poisson(size=np.random.randint(0, 2))])
         emsr = EmpiricalMagnitudeScalingRelationship(
             native_measures,
             target_measures)
@@ -105,12 +105,13 @@ class ShouldPerformRegression(unittest.TestCase):
         # Assess
         A = 0.85
         B = 1.03
-        native_measures = selection.MeasureManager('mb')
-        target_measures = selection.MeasureManager('Mw')
-        native_measures.measures = np.random.uniform(3., 8.5, 1000)
-        native_measures.sigma = np.random.uniform(0.02, 0.2, 1000)
-        target_measures.measures = A + B * native_measures.measures
-        target_measures.sigma = np.random.uniform(0.025, 0.2, 1000)
+        native_measures = catalogue.MagnitudeMeasure.make_from_lists(
+            'mb',
+            np.random.uniform(3., 8.5, 1000),
+            np.random.uniform(0.02, 0.2, 1000))
+        target_measures = catalogue.MagnitudeMeasure.make_from_lists(
+        'Mw', A + B * np.array([m.value for m in native_measures]),
+        np.random.uniform(0.025, 0.2, 1000))
         emsr = EmpiricalMagnitudeScalingRelationship(
             native_measures,
             target_measures)

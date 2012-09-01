@@ -45,10 +45,10 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
         # Assert
         self.assertEqual(len(n), 6)
         self.assertEqual(len(t), 6)
-        for measure in n.magnitude_measures:
+        for measure in n:
             self.assertEqual(measure.scale, self.native_scale)
             self.assertEqual(measure.agency.source_key, 'IDC')
-        for measure in t.magnitude_measures:
+        for measure in t:
             self.assertEqual(measure.scale, self.target_scale)
             self.assertEqual(measure.agency.source_key, 'GCMT',
                              "%s is not from GCMT" % measure)
@@ -66,10 +66,10 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
         # Assert
         self.assertEqual(len(n), 6)
         self.assertEqual(len(t), 6)
-        for measure in n.magnitude_measures:
+        for measure in n:
             self.assertEqual(measure.scale, self.native_scale)
             self.assertEqual(measure.agency.source_key, 'IDC')
-        for measure in t.magnitude_measures:
+        for measure in t:
             self.assertEqual(measure.scale, self.target_scale)
             self.assertEqual(measure.agency.source_key, 'GCMT',
                              "%s is not from GCMT" % measure)

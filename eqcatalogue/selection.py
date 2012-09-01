@@ -15,7 +15,7 @@
 
 """
 Module :mod:`eqcatalogue.selection` defines
-:class:`MeasureManager`, :class:`MissingUncertaintyStrategy`,
+:class:`MissingUncertaintyStrategy`,
 :class:`MUSDiscard`, :class:`MUSSetEventMaximum`, :class:`MUSSetDefault`,
 :class:`MeasureSelection`, :class:`Precise`, :class:`Random`,
 :class:`AgencyRanking`.
@@ -26,8 +26,6 @@ from random import choice
 from math import sqrt, pow
 from itertools import product
 import re
-
-from eqcatalogue.models import MeasureManager
 
 
 class MissingUncertaintyStrategy(object):
@@ -115,8 +113,8 @@ class MeasureSelection(object):
 
     def select(self, grouped_measures, native_scale, target_scale, mus):
         """
-        Build a native_measure and a target_measure manager. Each
-        manager is built by selecting a measure from a
+        Build a list of native_measure and a list of target_measure.
+        Each list is built by selecting a measure from a
         grouped_measures item. The selection is driven by the agency
         ranking.
 
@@ -143,8 +141,8 @@ class Random(MeasureSelection):
 
     @classmethod
     def do_select(cls, grouped_measures, native_scale, target_scale, mus):
-        native_measures = MeasureManager(native_scale)
-        target_measures = MeasureManager(target_scale)
+        native_measures = []
+        target_measures = []
 
         for measures in grouped_measures.values():
             native_selection = []
@@ -201,8 +199,8 @@ class Precise(MeasureSelection):
 
     @classmethod
     def do_select(cls, grouped_measures, native_scale, target_scale, mus):
-        native_measures = MeasureManager(native_scale)
-        target_measures = MeasureManager(target_scale)
+        native_measures = []
+        target_measures = []
 
         for measures in grouped_measures.values():
             native_selection = []
@@ -258,8 +256,8 @@ class AgencyRanking(MeasureSelection):
                native_scale, target_scale,
                mus):
         """
-        Build a native_measure and a target_measure manager. Each
-        manager is built by selecting a measure from a
+        Build two lists for native_measure and target_measure. Each
+        list is built by selecting a measure from a
         grouped_measures item. The selection is driven by the agency
         ranking.
 
@@ -272,8 +270,8 @@ class AgencyRanking(MeasureSelection):
         A missing uncertainty strategy object used to handle the case
         when no standard error of a measure is provided
         """
-        native_measures = MeasureManager(native_scale)
-        target_measures = MeasureManager(target_scale)
+        native_measures = []
+        target_measures = []
 
         for measures in grouped_measures.values():
             sorted_native_measures = []

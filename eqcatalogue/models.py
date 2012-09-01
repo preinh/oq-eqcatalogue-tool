@@ -167,7 +167,6 @@ class MagnitudeMeasure(object):
 
     def __init__(self, agency, event, origin, scale, value,
                  standard_error=None):
-        assert(scale in SCALES)
         self.agency = agency
         self.event = event
         self.origin = origin
@@ -181,53 +180,15 @@ class MagnitudeMeasure(object):
             self.event, self.origin, self.agency, self.value, self.scale,
             self.standard_error)
 
-
-class MeasureManager(object):
-
-    def __init__(self):
+    @classmethod
+    def make_from_lists(cls, scale, values, sigmas):
         """
-        Manage a list of magnitude measures
-
-        :measures: the measures considered for regression
-        :sigma: the standard errors associated to measures
+        Returns a list of measures with the given scale, values and
+        standard errors
         """
-
-        self.measures = []
-        self.sigma = []
-        # holds a list of magnitude measure objects
-        self.magnitude_measures = []
-
-    def append(self, measure):
-        """
-        Add a measure to the list
-
-        :measure: measure to add to the list
-        """
-
-        assert(measure and
-               measure.value is not None and
-               measure.standard_error is not None)
-        self.magnitude_measures.append(measure)
-        self.measures.append(measure.value)
-        self.sigma.append(measure.standard_error)
-
-    def __repr__(self):
-        return self.magnitude_measures
-
-    def __iter__(self):
-        return self.magnitude_measures.__iter__()
-
-    def __len__(self):
-        return len(self.magnitude_measures)
-
-    def __getitem__(self, key):
-        if isinstance(key, slice):
-            clone = self.__class__()
-            for m in self.magnitude_measures[key]:
-                clone.append(m)
-            return clone
-        else:
-            return self.magnitude_measures[key]
+        return [cls(agency=None, event=None, origin=None,
+                    scale=scale, value=v[0], standard_error=v[1])
+                    for v in zip(values, sigmas)]
 
 
 class Origin(object):
