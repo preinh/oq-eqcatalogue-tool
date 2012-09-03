@@ -19,51 +19,6 @@ of a set of measures to a single target scale
 """
 
 
-class ConversionFormula(object):
-    """
-    An object holding a formula that can convert a measure into a
-    target magnitude scale
-
-    :attribute formula:
-      A callable that accepts one argument that holds the measure value
-      to be converted
-
-    :attribute domain:
-      A list of measures that stores exhaustively the domain of the
-      formula
-
-    :attribute target_scale
-      The target scale
-    """
-    def __init__(self, formula, domain, target_scale):
-        self.formula = formula
-        self.domain = domain
-        self.target_scale = target_scale
-
-    def is_applicable_for(self, measure):
-        """Returns true if the measure given in input can be converted"""
-        return measure in self.domain
-
-    @classmethod
-    def make_from_model(cls, model):
-        """
-        Build a conversion model by a regression model
-        """
-        return cls(formula=model.func, domain=model.native_measures,
-                   target_scale=model.target_scale)
-
-    def apply(self, measure):
-        """
-        Apply the conversion to `measure`. Raise an error if the
-        `measure` does not belong to the domain of the conversion
-        formula
-        """
-        if not self.is_applicable_for(measure):
-            raise ValueError(
-                "You can not apply the conversion to this measure")
-        return self.formula(measure.value)
-
-
 class Harmoniser(object):
     """
     This class is responsable to convert a set of measures into a
@@ -80,6 +35,22 @@ class Harmoniser(object):
         self._formulas = {}
 
     def add_conversion(self, formula, domain, target_scale):
+        """
+        Create a conversion formula from a conversion formula and make
+        it available for the harmonizer
+
+        :param formula
+          A callable that requires in input the value to be converted
+
+        :param domain
+          The domain of measures mapped by conversion formula (an
+          object, e.g. a list/set that can be queried with the in
+          operator)
+
+        :param target_scale
+          The target scale
+        """
+
         formula = ConversionFormula(formula, domain, target_scale)
         self._add_formula(formula)
 
@@ -138,3 +109,48 @@ class Harmoniser(object):
         for formula in self._formulas[target_scale]:
             if formula.is_applicable_for(measure):
                 return formula
+
+
+class ConversionFormula(object):
+    """
+    An object holding a formula that can convert a measure into a
+    target magnitude scale
+
+    :attribute formula:
+      A callable that accepts one argument that holds the measure value
+      to be converted
+
+    :attribute domain:
+      A list of measures that stores exhaustively the domain of the
+      formula
+
+    :attribute target_scale
+      The target scale
+    """
+    def __init__(self, formula, domain, target_scale):
+        self.formula = formula
+        self.domain = domain
+        self.target_scale = target_scale
+
+    def is_applicable_for(self, measure):
+        """Returns true if the measure given in input can be converted"""
+        return measure in self.domain
+
+    @classmethod
+    def make_from_model(cls, model):
+        """
+        Build a conversion model by a regression model
+        """
+        return cls(formula=model.func, domain=model.native_measures,
+                   target_scale=model.target_scale)
+
+    def apply(self, measure):
+        """
+        Apply the conversion to `measure`. Raise an error if the
+        `measure` does not belong to the domain of the conversion
+        formula
+        """
+        if not self.is_applicable_for(measure):
+            raise ValueError(
+                "You can not apply the conversion to this measure")
+        return self.formula(measure.value)
