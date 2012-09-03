@@ -110,7 +110,7 @@ class RegressionModel(object):
 
     @property
     def target_scale(self):
-        if len(self.target_measures):
+        if self.target_measures:
             return self.target_measures[0].scale
 
     def _setup_initial_values(self, native_measure_values,
