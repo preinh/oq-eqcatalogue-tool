@@ -54,8 +54,13 @@ class ConversionFormula(object):
 
     def apply(self, measure):
         """
-        Apply the conversion to `measure`
+        Apply the conversion to `measure`. Raise an error if the
+        `measure` does not belong to the domain of the conversion
+        formula
         """
+        if not self.is_applicable_for(measure):
+            raise ValueError(
+                "You can not apply the conversion to this measure")
         return self.formula(measure.value)
 
 
