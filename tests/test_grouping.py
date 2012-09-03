@@ -23,7 +23,7 @@ class AMeasureGrouperShould(unittest.TestCase):
     def setUp(self):
         self.cat_db = models.CatalogueDatabase(memory=True, drop=True)
         self.cat_db.recreate()
-        self.measures = filtering.MeasureFilter()
+        self.measures = filtering.Criteria()
         self.session = self.cat_db.session
         load_fixtures(self.session)
 

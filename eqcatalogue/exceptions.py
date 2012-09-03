@@ -33,8 +33,8 @@ class NotEnoughSamples(BaseException):
     pass
 
 
-class InvalidFilter(BaseException):
+class InvalidCriteria(BaseException):
     """
-    Invalid Filter Argument
+    Invalid Criteria argument given to a factory
     """
     pass
