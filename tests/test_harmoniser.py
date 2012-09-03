@@ -37,28 +37,19 @@ class HarmoniserWithFixturesAbstractTestCase(unittest.TestCase):
         events = [Event(source_key=i, eventsource=None,
                   name="test event %d" % i) for i in range(0, 10)]
 
-        for i in range(0, 10):
-            self.measures.append(
-                MagnitudeMeasure(
-                    agency=None, event=events[i], origin=None,
-                    scale=self.a_native_scale,
-                    standard_error=1, value=(i + 1) * 1.0))
-
-        for i in range(0, 10):
-            self.measures.append(
-                MagnitudeMeasure(
-                    agency=None, event=events[i], origin=None,
-                    scale=self.ya_native_scale,
-                    standard_error=1, value=(i + 1) * 3.0))
-
-        for i in range(0, 10):
-            self.measures.append(
-                MagnitudeMeasure(
-                    agency=None, event=events[i], origin=None,
-                    scale=self.target_scale,
-                    standard_error=1, value=(i + 1) * 2.0))
+        self._append_fixture_measures(events, self.a_native_scale, 1.0)
+        self._append_fixture_measures(events, self.ya_native_scale, 3.0)
+        self._append_fixture_measures(events, self.target_scale, 2.0)
 
         self.number_of_measures = len(self.measures)
+
+    def _append_fixture_measures(self, events, scale, mfactor, count=10):
+        for i in range(0, count):
+            self.measures.append(
+                MagnitudeMeasure(
+                    agency=None, event=events[i], origin=None,
+                    scale=scale,
+                    standard_error=1, value=(i + 1) * mfactor))
 
 
 class HarmoniserWithModelTestCase(HarmoniserWithFixturesAbstractTestCase):
