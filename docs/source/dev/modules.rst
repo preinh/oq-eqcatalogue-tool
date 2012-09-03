@@ -117,8 +117,6 @@ Selection (:mod:`eqcatalogue.selection`)
 
 .. currentmodule:: eqcatalogue
 .. automodule:: eqcatalogue.selection
-.. autoclass:: MeasureManager
-.. automethod:: MeasureManager.append
 
 .. autoclass:: MissingUncertaintyStrategy
 .. automethod:: MissingUncertaintyStrategy.should_be_discarded

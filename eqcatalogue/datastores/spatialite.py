@@ -285,19 +285,23 @@ def _load_extension(session):
     :param:: session:
     A sqlalchemy session."""
 
-    loaded = False
+    # FIXME: This is a workaround to load the spatialite library. We
+    # guess different filename for the spatialite extension and use a
+    # variable as a sentinel. The exceptions raised are saved in the
+    # variable exception for further printing/logging
+    exceptions, loaded = {}, False
     for library in [SO_LIBRARY, DLL_LIBRARY, DYLIB_LIBRARY]:
         try:
             session.execute("select load_extension('%s')" % library)
             loaded = True
-        except sqlite.OperationalError:
-            pass
+        except sqlite.OperationalError as e:
+            exceptions[library] = e
 
     if not loaded:
         raise RuntimeError("""
     Could not load libspatial extension.
-    Check your spatialite and pysqlite2 installation"""
-            )
+    Check your spatialite and pysqlite2 installation
+    Errors %s""" % exceptions)
 
     # spatialite needs this initialization on the first usage. This
     # should be probably go into a package installation script

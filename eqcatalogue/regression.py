@@ -26,7 +26,7 @@ from eqcatalogue import selection
 from eqcatalogue import exceptions
 
 
-REGRESSOR_DEFAULT_MAX_ITERATIONS = 3000
+REGRESSOR_DEFAULT_MAX_ITERATIONS = 10000
 PL_DEFAULT_INITIAL_VALUE_ORDER = 2
 
 
@@ -73,11 +73,17 @@ class RegressionModel(object):
                  initial_value_order=None,
                  model_params=None,
                  regressor_params=None):
+        self.native_measures = native_measures
+        self.target_measures = target_measures
+
+        native_values = [m.value for m in native_measures]
+        native_sigmas = [m.standard_error for m in native_measures]
+        target_values = [m.value for m in target_measures]
+        target_sigmas = [m.standard_error for m in target_measures]
 
         if not initial_values:
             self.initial_values = self._setup_initial_values(
-                native_measures.measures,
-                target_measures.measures,
+                native_values, target_values,
                 initial_value_order)
         else:
             self.initial_values = initial_values
@@ -86,10 +92,9 @@ class RegressionModel(object):
             actual_model_params.update(model_params)
         self._regression_model = odr.Model(self._model_function,
                                            **actual_model_params)
-        self._regression_data = odr.RealData(native_measures.measures,
-                                             target_measures.measures,
-                                             sx=native_measures.sigma,
-                                             sy=target_measures.sigma)
+        self._regression_data = odr.RealData(
+            native_values, target_values,
+            sx=native_sigmas, sy=target_sigmas)
         actual_regressor_params = {'maxit': REGRESSOR_DEFAULT_MAX_ITERATIONS}
         if regressor_params:
             actual_regressor_params.update(regressor_params)
@@ -101,7 +106,17 @@ class RegressionModel(object):
         self.akaike = None
         self.akaike_corrected = None
         self.output = None
-        self.sample_size = float(np.shape(native_measures.measures)[0])
+        self.sample_size = len(native_measures)
+
+    @property
+    def target_scale(self):
+        if self.target_measures:
+            return self.target_measures[0].scale
+
+    def _setup_initial_values(self, native_measure_values,
+                              target_measure_values,
+                              initial_value_order):
+        raise NotImplementedError
 
     def long_str(self):
         return "%s. AICc: %s" % (self, self.akaike_corrected)
@@ -109,12 +124,19 @@ class RegressionModel(object):
     def func(self, x):
         return self._model_function(self.output.beta, x)
 
+    def _model_function(self, coefficients, x):
+        raise NotImplementedError
+
     def parameter_number(self):
         """Returns the number of parameters of the regression model"""
         return float(len(self.output.beta))
 
     def residual(self):
-        return self.output.res_var
+        res_var = getattr(self.output, 'res_var')
+        if res_var is None:
+            raise RuntimeError("Residual are not expected")
+        else:
+            return res_var
 
     def criterion_tests(self):
         """
@@ -286,11 +308,6 @@ class EmpiricalMagnitudeScalingRelationship(object):
         :param target_scale: The target scale of the
             EmpiricalMagnitudeScalingRelationship.
 
-        :param grouped_measures:
-            A dictionary that stores the association
-            between an event (the key) and a list of
-            measures (the value).
-
         :param selection_strategy:
             A :class:`~eqcatalogue.selection.MeasureSelection` instance.
 
@@ -312,8 +329,9 @@ class EmpiricalMagnitudeScalingRelationship(object):
     def __init__(self, native_measures=None, target_measures=None):
         self.native_measures = native_measures
         self.target_measures = target_measures
+
+        # used to record the regression models used
         self.regression_models = []
-        self.grouped_measures = None
 
     def apply_regression_model(self, model_type=DEFAULT_MODEL_TYPE,
                                **regression_params):

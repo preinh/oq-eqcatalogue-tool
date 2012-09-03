@@ -167,19 +167,28 @@ class MagnitudeMeasure(object):
 
     def __init__(self, agency, event, origin, scale, value,
                  standard_error=None):
-        assert(scale in SCALES)
         self.agency = agency
         self.event = event
         self.origin = origin
         self.scale = scale
         self.value = value
-        if standard_error:
+        if standard_error is not None:
             self.standard_error = standard_error
 
     def __repr__(self):
         return "measure of %s at %s by %s: %s %s (sigma=%s)" % (
             self.event, self.origin, self.agency, self.value, self.scale,
             self.standard_error)
+
+    @classmethod
+    def make_from_lists(cls, scale, values, sigmas):
+        """
+        Returns a list of measures with the given scale, values and
+        standard errors
+        """
+        return [cls(agency=None, event=None, origin=None,
+                    scale=scale, value=v[0], standard_error=v[1])
+                    for v in zip(values, sigmas)]
 
 
 class Origin(object):
