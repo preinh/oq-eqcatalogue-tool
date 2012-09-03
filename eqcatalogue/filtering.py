@@ -14,8 +14,8 @@
 # along with eqcataloguetool. If not, see <http://www.gnu.org/licenses/>.
 
 """
-Module :mod:`eqcatalogue.filtering` defines
-:class:`MeasureFilter`.
+Module :mod:`eqcatalogue.filtering` defines the abstract class
+:class:`Criteria` and its derived classes.
 """
 
 import eqcatalogue.models as db
