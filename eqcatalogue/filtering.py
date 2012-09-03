@@ -63,6 +63,9 @@ class Criteria(object):
     def __len__(self):
         return self.count()
 
+    def __contains__(self, el):
+        return self.predicate(el)
+
     def events(self):
         """
         Returns all the distinct events associated with all the
@@ -225,7 +228,7 @@ class WithAgencies(Criteria):
             db.Agency.source_key.in_(self.agencies))
 
     def predicate(self, measure):
-        return measure.agency.name in self.agencies
+        return measure.agency.source_key in self.agencies
 
 
 class WithMagnitudeScales(Criteria):
