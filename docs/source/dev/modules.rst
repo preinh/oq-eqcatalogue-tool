@@ -55,8 +55,6 @@ Models definition (:mod:`eqcatalogue.models`)
 .. autoclass:: eqcatalogue.models.Agency
 .. autoclass:: eqcatalogue.models.Event
 .. autoclass:: eqcatalogue.models.MagnitudeMeasure
-.. autoclass:: MeasureManager
-.. automethod:: MeasureManager.append
 .. autoclass:: eqcatalogue.models.Origin
 .. autoclass:: eqcatalogue.models.MeasureMetadata
 .. autoclass:: eqcatalogue.models.CatalogueDatabase
