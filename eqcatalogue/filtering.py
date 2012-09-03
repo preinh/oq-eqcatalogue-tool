@@ -143,8 +143,8 @@ class AlternativeCriteria(Criteria):
 
     def filter(self, queryset=None):
         queryset = queryset or self.default_queryset
-        return (self.criteria1.filter(queryset) or
-                self.criteria2.filter(queryset))
+        return (self.criteria1.filter(queryset).union(
+                self.criteria2.filter(queryset)))
 
     def predicate(self, measure):
         return (self.criteria1.predicate(measure) or

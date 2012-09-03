@@ -147,5 +147,17 @@ class ACriteriaShould(unittest.TestCase):
         self.assertEqual(30, len(filtering.WithinDistanceFromPoint(
             (point, distance))))
 
+    def test_allows_or_combination(self):
+        agencies = ['LDG', 'NEIC']
+        measures1 = filtering.WithAgencies(agencies)
+        self.assertEqual(6, len(measures1))
+
+        agencies = ['BJI']
+        measures2 = filtering.WithAgencies(agencies)
+
+        self.assertEqual(5, len(measures2))
+
+        self.assertEqual(11, len(measures1 | measures2))
+
     def tearDown(self):
         self.session.commit()
