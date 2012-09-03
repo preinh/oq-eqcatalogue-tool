@@ -94,7 +94,7 @@ class HarmoniserWithModelTestCase(HarmoniserWithFixturesAbstractTestCase):
         mismatches = self.number_of_measures / 3
 
         h = Harmoniser(target_scale=self.target_scale)
-        h.add_conversion_from_model(self.a_model)
+        h.add_conversion_formula_from_model(self.a_model)
         converted, unconverted = h.harmonise(self.measures)
 
         self.assertEqual(self.number_of_measures - mismatches,
@@ -122,7 +122,7 @@ class HarmoniserWithModelTestCase(HarmoniserWithFixturesAbstractTestCase):
             measure.scale = "fake scale"
 
         h = Harmoniser(target_scale=self.target_scale)
-        h.add_conversion_from_model(self.a_model)
+        h.add_conversion_formula_from_model(self.a_model)
         converted, unconverted = h.harmonise(self.measures)
         self.assertEqual(0, len(converted))
         self.assertEqual(self.number_of_measures, len(unconverted))
@@ -135,7 +135,7 @@ class HarmoniserWithModelTestCase(HarmoniserWithFixturesAbstractTestCase):
 
         # no model matches the target scale
         h = Harmoniser(target_scale="wrong scale")
-        h.add_conversion_from_model(self.a_model)
+        h.add_conversion_formula_from_model(self.a_model)
         converted, unconverted = h.harmonise(self.measures)
         self.assertEqual(0, len(converted))
         self.assertEqual(self.number_of_measures, len(unconverted))
@@ -146,8 +146,8 @@ class HarmoniserWithModelTestCase(HarmoniserWithFixturesAbstractTestCase):
         """
         h = Harmoniser(target_scale=self.target_scale)
 
-        h.add_conversion_from_model(self.a_model)
-        h.add_conversion_from_model(self.ya_model)
+        h.add_conversion_formula_from_model(self.a_model)
+        h.add_conversion_formula_from_model(self.ya_model)
         converted, unconverted = h.harmonise(self.measures)
 
         self.assertEqual(0, len(unconverted))
@@ -195,7 +195,7 @@ class HarmoniserWithFormulaTestCase(HarmoniserWithFixturesAbstractTestCase):
         mismatches = self.number_of_measures / 3
 
         h = Harmoniser(target_scale=self.target_scale)
-        h.add_conversion(**self.a_conversion)
+        h.add_conversion_formula(**self.a_conversion)
         converted, unconverted = h.harmonise(self.measures)
 
         self.assertEqual(self.number_of_measures - mismatches,
@@ -221,7 +221,7 @@ class HarmoniserWithFormulaTestCase(HarmoniserWithFixturesAbstractTestCase):
         # conversion provided applies to a different domain
         h = Harmoniser(target_scale=self.target_scale)
         self.a_conversion.update({'domain': []})
-        h.add_conversion(**self.a_conversion)
+        h.add_conversion_formula(**self.a_conversion)
         converted, unconverted = h.harmonise(self.measures)
 
         # 1/3 of the measures are already in the target_scale
@@ -237,7 +237,7 @@ class HarmoniserWithFormulaTestCase(HarmoniserWithFixturesAbstractTestCase):
 
         # no conversion matches the target scale
         h = Harmoniser(target_scale="wrong scale")
-        h.add_conversion(**self.a_conversion)
+        h.add_conversion_formula(**self.a_conversion)
         converted, unconverted = h.harmonise(self.measures)
         self.assertEqual(0, len(converted))
         self.assertEqual(self.number_of_measures, len(unconverted))
@@ -248,8 +248,8 @@ class HarmoniserWithFormulaTestCase(HarmoniserWithFixturesAbstractTestCase):
         """
         h = Harmoniser(target_scale=self.target_scale)
 
-        h.add_conversion(**self.a_conversion)
-        h.add_conversion(**self.ya_conversion)
+        h.add_conversion_formula(**self.a_conversion)
+        h.add_conversion_formula(**self.ya_conversion)
         converted, unconverted = h.harmonise(self.measures)
 
         self.assertEqual(0, len(unconverted))

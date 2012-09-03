@@ -34,7 +34,7 @@ class Harmoniser(object):
         self.target_scale = target_scale
         self._formulas = {}
 
-    def add_conversion(self, formula, domain, target_scale):
+    def add_conversion_formula(self, formula, domain, target_scale):
         """
         Create a conversion formula from a conversion formula and make
         it available for the harmonizer
@@ -54,7 +54,7 @@ class Harmoniser(object):
         formula = ConversionFormula(formula, domain, target_scale)
         self._add_formula(formula)
 
-    def add_conversion_from_model(self, model):
+    def add_conversion_formula_from_model(self, model):
         """
         Create a conversion formula from a regression model and make
         it available for the harmonizer
