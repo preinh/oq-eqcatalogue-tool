@@ -51,6 +51,29 @@ class HarmoniserWithFixturesAbstractTestCase(unittest.TestCase):
                     scale=scale,
                     standard_error=1, value=(i + 1) * mfactor))
 
+    def assertConversion(self, converted, converted_count,
+                         unconverted, unconverted_count):
+        self.assertEqual(converted_count, len(converted))
+        self.assertEqual(unconverted_count, len(unconverted))
+
+        for measure in self.measures:
+            if measure in converted:
+                converted_measure = converted[measure]
+                if measure.scale == self.a_native_scale:
+                    self.assertEqual(1, len(converted_measure['formulas']))
+                    self.assertAlmostEqual(converted_measure['value'],
+                                           measure.value * 2)
+                elif measure.scale == self.target_scale:
+                    self.assertEqual(converted_measure['formulas'], [])
+                    self.assertAlmostEqual(converted_measure['value'],
+                                           measure.value)
+                elif measure.scale == self.ya_native_scale:
+                    self.assertEqual(1, len(converted_measure['formulas']))
+                    self.assertAlmostEqual(converted_measure['value'],
+                                           measure.value / 1.5)
+            else:
+                self.assertTrue(measure in unconverted)
+
 
 class HarmoniserWithModelTestCase(HarmoniserWithFixturesAbstractTestCase):
     """
@@ -88,20 +111,8 @@ class HarmoniserWithModelTestCase(HarmoniserWithFixturesAbstractTestCase):
         h.add_conversion_formula_from_model(self.a_model)
         converted, unconverted = h.harmonise(self.measures)
 
-        self.assertEqual(self.number_of_measures - mismatches,
-                         len(converted))
-        self.assertEqual(len(unconverted), mismatches)
-        for measure in self.measures:
-            if measure in converted:
-                converted_measure = converted[measure]
-                if measure.scale == self.a_native_scale:
-                    self.assertEqual(1, len(converted_measure['formulas']))
-                    self.assertAlmostEqual(converted_measure['value'],
-                                           measure.value * 2)
-                elif measure.scale == self.target_scale:
-                    self.assertEqual(converted_measure['formulas'], [])
-                    self.assertAlmostEqual(converted_measure['value'],
-                                           measure.value)
+        self.assertConversion(converted, self.number_of_measures - mismatches,
+                              unconverted, mismatches)
 
     def test_no_match(self):
         """
@@ -141,23 +152,8 @@ class HarmoniserWithModelTestCase(HarmoniserWithFixturesAbstractTestCase):
         h.add_conversion_formula_from_model(self.ya_model)
         converted, unconverted = h.harmonise(self.measures)
 
-        self.assertEqual(0, len(unconverted))
-        self.assertEqual(self.number_of_measures, len(converted))
-
-        for measure in self.measures:
-            converted_measure = converted[measure]
-            if measure.scale == self.a_native_scale:
-                self.assertEqual(1, len(converted_measure['formulas']))
-                self.assertAlmostEqual(converted_measure['value'],
-                                       measure.value * 2)
-            elif measure.scale == self.target_scale:
-                self.assertEqual(0, len(converted_measure['formulas']))
-                self.assertAlmostEqual(converted_measure['value'],
-                                       measure.value)
-            elif measure.scale == self.ya_native_scale:
-                self.assertEqual(1, len(converted_measure['formulas']))
-                self.assertAlmostEqual(converted_measure['value'],
-                                       measure.value / 1.5)
+        self.assertConversion(converted, self.number_of_measures,
+                              unconverted, 0)
 
 
 class HarmoniserWithFormulaTestCase(HarmoniserWithFixturesAbstractTestCase):
@@ -188,21 +184,8 @@ class HarmoniserWithFormulaTestCase(HarmoniserWithFixturesAbstractTestCase):
         h = Harmoniser(target_scale=self.target_scale)
         h.add_conversion_formula(**self.a_conversion)
         converted, unconverted = h.harmonise(self.measures)
-
-        self.assertEqual(self.number_of_measures - mismatches,
-                         len(converted))
-        self.assertEqual(len(unconverted), mismatches)
-        for measure in self.measures:
-            if measure in converted:
-                converted_measure = converted[measure]
-                if measure.scale == self.a_native_scale:
-                    self.assertEqual(1, len(converted_measure['formulas']))
-                    self.assertAlmostEqual(converted_measure['value'],
-                                           measure.value * 2)
-                elif measure.scale == self.target_scale:
-                    self.assertEqual(converted_measure['formulas'], [])
-                    self.assertAlmostEqual(converted_measure['value'],
-                                           measure.value)
+        self.assertConversion(converted, self.number_of_measures - mismatches,
+                              unconverted, mismatches)
 
     def test_no_match(self):
         """
@@ -242,21 +225,5 @@ class HarmoniserWithFormulaTestCase(HarmoniserWithFixturesAbstractTestCase):
         h.add_conversion_formula(**self.a_conversion)
         h.add_conversion_formula(**self.ya_conversion)
         converted, unconverted = h.harmonise(self.measures)
-
-        self.assertEqual(0, len(unconverted))
-        self.assertEqual(self.number_of_measures, len(converted))
-
-        for measure in self.measures:
-            converted_measure = converted[measure]
-            if measure.scale == self.a_native_scale:
-                self.assertEqual(1, len(converted_measure['formulas']))
-                self.assertAlmostEqual(converted_measure['value'],
-                                       measure.value * 2)
-            elif measure.scale == self.target_scale:
-                self.assertEqual(0, len(converted_measure['formulas']))
-                self.assertAlmostEqual(converted_measure['value'],
-                                       measure.value)
-            elif measure.scale == self.ya_native_scale:
-                self.assertEqual(1, len(converted_measure['formulas']))
-                self.assertAlmostEqual(converted_measure['value'],
-                                       measure.value / 1.5)
+        self.assertConversion(converted, self.number_of_measures,
+                              unconverted, 0)
