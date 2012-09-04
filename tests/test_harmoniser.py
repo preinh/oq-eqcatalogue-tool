@@ -252,3 +252,38 @@ class HarmoniserWithFormulaAndCriteriaTestCase(
         converted, unconverted = h.harmonise(self.measures)
 
         self.assertConversion(converted, 6, unconverted, 24)
+
+
+class HarmoniserWithDifferentTargetScales(
+        HarmoniserWithFixturesAbstractTestCase):
+    """
+    Tests the usage of an harmoniser with formula that targets
+    different scales
+    """
+
+    def setUp(self):
+        super(HarmoniserWithDifferentTargetScales, self).setUp()
+
+    def test_shortest_path(self):
+        """
+        Test the utility
+        """
+        ret = Harmoniser._shortest_path({1: {2: 1, 5: 7},
+                             2: {3: 1},
+                             3: {4: 1},
+                             4: {},
+                             5: {4: 1}}, 1, 4)
+        self.assertEqual([1, 2, 3, 4], ret)
+
+    def test_conversion(self):
+        h = Harmoniser(target_scale=self.target_scale)
+
+        h.add_conversion_formula(formula=lambda x: x * 2.,
+                                 domain=self.measures,
+                                 target_scale="M2")
+        h.add_conversion_formula(formula=lambda x: x * 2.,
+                                 domain=C(scale__in=["M2"]),
+                                 target_scale=self.target_scale)
+        converted, unconverted = h.harmonise(self.measures)
+        self.assertConversion(converted, len(self.measures),
+                              unconverted, 0)

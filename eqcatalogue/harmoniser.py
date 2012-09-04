@@ -33,6 +33,7 @@ class Harmoniser(object):
     def __init__(self, target_scale):
         self.target_scale = target_scale
         self._formulas = {}
+        self._formula_graph = {}
 
     def add_conversion_formula(self, formula, domain, target_scale):
         """
@@ -86,11 +87,16 @@ class Harmoniser(object):
         converted = {}
         unconverted = []
         for m in measures:
-            formula = self._find_formula_for(m)
-            if formula:
+            formulas = self._find_formulas_for(m)
+            if formulas:
+
+                value = formulas[0].apply(m)
+                for formula in formulas[1:]:
+                    value = formula(value)
+
                 converted[m] = dict(
-                    value=formula.apply(m),
-                    formulas=[formula])
+                    value=value,
+                    formulas=formulas)
             elif m.scale == self.target_scale:
                 converted[m] = dict(
                     value=m.value,
@@ -99,7 +105,7 @@ class Harmoniser(object):
                 unconverted.append(m)
         return converted, unconverted
 
-    def _find_formula_for(self, measure, target_scale=None):
+    def _find_formulas_for(self, measure, target_scale=None):
         """
         Find a formula to convert `measure` to `target_scale`
         """
@@ -108,7 +114,83 @@ class Harmoniser(object):
             return
         for formula in self._formulas[target_scale]:
             if formula.is_applicable_for(measure):
-                return formula
+                return [formula]
+        # get possible starting formulas
+        all_formulas = sum([f[1] for f in self._formulas.items()], [])
+        starting_formulas = [f for f in all_formulas
+                             if f.is_applicable_for(measure)]
+        # for each possible starting formula solve a shortest path
+        #for starting_formula in starting_formulas:
+        #    graph = 
+        # problem
+        return
+
+    @staticmethod
+    def _shortest_path(graph, start, end, neighbourhood_fn=None):
+        """
+        Classical Dijkstra's algorithm. Returns the shortest path from
+        node `start` to `end`
+
+        :param graph
+            A dictionary describing the graph (key -> vertices,
+            values -> dictionary of distances)
+
+        :param start
+            Start vertex.
+
+        :param end
+            End vertex.
+
+        :param neighbourhood_fn
+            A function that returns the neighbours of a node with
+            their distance from node
+        """
+
+        # FIXME: change this algorithm to the more efficient version based
+        # on priority queues
+
+        if not neighbourhood_fn:
+            neighbourhood_fn = lambda g, n: g[n].items()
+
+        # initialize graph
+        final_distances, predecessors = {}, {}
+        for node in graph:
+            final_distances[node], predecessors[node] = float('inf'), None
+
+        final_distances[start] = 0
+        unvisited = graph.keys()
+
+        while len(unvisited) > 0:
+            # extract min
+            shortest, node = None, None
+            for temp_node in unvisited:
+                if shortest is None:
+                    shortest = final_distances[temp_node]
+                    node = temp_node
+                elif final_distances[temp_node] < shortest:
+                    shortest = final_distances[temp_node]
+                    node = temp_node
+
+            unvisited.remove(node)
+
+            # relax edges
+            for child_node, child_value in neighbourhood_fn(graph, node):
+                if (final_distances[child_node] >
+                    final_distances[node] + child_value):
+                    final_distances[child_node] = (final_distances[node] +
+                        child_value)
+                    predecessors[child_node] = node
+
+        path = []
+        node = end
+
+        while not (node == start):
+            path.insert(0, node)
+            node = predecessors[node]
+
+        path.insert(0, start)
+        return path
+
 
 
 class ConversionFormula(object):
