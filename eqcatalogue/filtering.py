@@ -102,6 +102,9 @@ class Criteria(object):
         """
         return AlternativeCriteria(self, criteria)
 
+    def __getitem__(self, key):
+        return self.filter()[key]
+
     def group_measures(self, grouping_strategy=None):
         """
         Returns a dictionary where the key identifies an event,
@@ -343,4 +346,7 @@ def C(**criteria_kwargs):
         else:
             criteria = criteria & current_criteria
 
-    return criteria or Criteria()
+    if criteria is None:
+        return Criteria()
+    else:
+        return criteria
