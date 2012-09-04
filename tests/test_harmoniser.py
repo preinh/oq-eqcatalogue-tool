@@ -74,8 +74,6 @@ class HarmoniserWithFixturesAbstractTestCase(unittest.TestCase):
                     self.assertAlmostEqual(converted_measure['value'],
                                            measure.value / 1.5)
             else:
-                if not measure in unconverted:
-                    1/0
                 self.assertTrue(measure in unconverted)
 
 
