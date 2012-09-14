@@ -19,10 +19,10 @@ between different magnitude scales value.
 """
 
 
-from eqcatalogue import selection, grouping, exceptions, models
-from eqcatalogue.filtering import MeasureFilter
+from eqcatalogue import selection, grouping
 from eqcatalogue.regression import EmpiricalMagnitudeScalingRelationship
 from eqcatalogue.serializers import mpl
+from eqcatalogue.filtering import Criteria
 
 
 class Homogeniser(object):
@@ -33,31 +33,16 @@ class Homogeniser(object):
 
     Each instance of this class can:
 
-    1. apply filters to refine the considered set of events/measures;
+    1. apply criterias to filter events/measures;
     2. use different measure clustering grouping algorithm;
     3. use different measure selection algorithm;
     4. use different strategy to handle uncertainty.
     5. serialize or plot the results
     """
-    FILTERS_MAP = {
-        'before': MeasureFilter.before,
-        'after': MeasureFilter.after,
-        'between': (lambda m, timestamps: m.between(*timestamps)),
-        'agency__in': (lambda m, ags: m.with_agencies(*ags)),
-        'scale__in': (lambda m, ss: m.with_magnitude_scales(*ss)),
-        'within_polygon': MeasureFilter.within_polygon,
-        'within_distance_from_point': (
-            lambda m, dp: m.within_distance_from_point(*dp)),
-        'magnitude__gt': lambda m, v: m.filter(
-            models.MagnitudeMeasure.value > v)
-    }
-
-    #: Filter arguments that can be used in the add_filter method
-    AVAILABLE_FILTERS = FILTERS_MAP.keys()
 
     def __init__(self,
                  native_scale=None, target_scale=None,
-                 measure_filter=None,
+                 criteria=None,
                  grouper=None, selector=None,
                  missing_uncertainty_strategy=None,
                  serializer=None):
@@ -73,11 +58,11 @@ class Homogeniser(object):
         :param target_cale: The target magnitude scale (case sensitive)
         :type target_scale: string
 
-        :param measure_filter:
-          A MeasureFilter instance object used to filter measures. If
+        :param criteria:
+          A Criteria instance object used to filter measures. If
           not given, a filter that selects all the measures is used as
           default.
-        :type measure_filter: MeasureFilter
+        :type criteria: Criteria
 
         :param grouper:
           A MeasureGrouper instance object used to group
@@ -98,7 +83,7 @@ class Homogeniser(object):
           error is used.
         :type missing_uncertainty_strategy: MissingUncertaintyStrategy
         """
-        self._measure_filter = measure_filter or MeasureFilter()
+        self._criteria = criteria or Criteria()
         self._grouper = grouper or grouping.GroupMeasuresByEventSourceKey()
         self._selector = selector or selection.Random()
         self._mu_strategy = (missing_uncertainty_strategy or
@@ -109,12 +94,6 @@ class Homogeniser(object):
         self._target_scale = target_scale
         self._models = []
         self._emsr = None
-
-    def reset_filters(self):
-        """
-        Reset the filters back to the catch-all measure filter.
-        """
-        self._measure_filter = MeasureFilter()
 
     def reset_models(self):
         """
@@ -211,38 +190,22 @@ class Homogeniser(object):
     def set_serializer(self, serializer):
         self._serializer = serializer
 
-    def add_filter(self, **filter_kwargs):
+    def set_criteria(self, criteria=None):
         """
-        Add a filter to the current measure filter query.
+        Set the criteria used to filters measures
 
         E.g.
         homo = Homogeniser()
-        homo.add_filter(agency__in=a_list_agency)
-        homo.add_filter(magnitude__gt=4, within_polygon=a_polygon)
-
-        See FILTERS_MAP for a list of the available filter keyword argument
+        homo.set_criteria(C(agency__in=a_list_agency) or C(magnitude__gt=4))
         """
-        measure_filter = MeasureFilter()
-        for filter_desc, value in filter_kwargs.items():
-            filter_fn = self._get_filter_fn(filter_desc)
-            new_filter = filter_fn(MeasureFilter(), value)
-            measure_filter = measure_filter.combine(new_filter)
-        self._measure_filter = self._measure_filter.combine(measure_filter)
-
-    def _get_filter_fn(self, filter_desc):
-        if not filter_desc in self.__class__.FILTERS_MAP:
-            raise exceptions.InvalidFilter(
-                """%s does not indicate any known filter.
-        Valid filter keywords includes: %s""" % (
-            filter_desc, "\n".join(self.__class__.FILTERS_MAP.keys())))
-        return self.__class__.FILTERS_MAP[filter_desc]
+        self._criteria = criteria or Criteria()
 
     def events(self):
         """
         :return: the current set of filtered events.
         :rtype: a list of :py:class:`~eqcatalogue.models.Event` instances
         """
-        return self._measure_filter.events()
+        return self._criteria.events()
 
     def measures(self):
         """
@@ -250,14 +213,14 @@ class Homogeniser(object):
         :rtype:
           a list of :py:class:`~eqcatalogue.models.MagnitudeMeasure` instances
         """
-        return self._measure_filter.all()
+        return self._criteria.all()
 
     def grouped_measures(self):
         """
         Returns the measures grouped by event according with the
         current grouping strategy
         """
-        return self._measure_filter.group_measures(self._grouper)
+        return self._criteria.group_measures(self._grouper)
 
     def _selected_measures(self):
         return self._selector.select(self.grouped_measures(),

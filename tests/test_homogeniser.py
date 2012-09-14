@@ -21,6 +21,7 @@ from tests.test_regression import _load_catalog
 from tests.test_utils import in_data_dir
 from eqcatalogue.regression import LinearModel, PolynomialModel
 from eqcatalogue import selection, grouping, models
+from eqcatalogue.filtering import C
 
 ACTUAL_OUTPUT = [in_data_dir("actual_homo%d.png" % i)
                  for i in range(1, 14)]
@@ -45,7 +46,7 @@ class AnHomogeniserShould(unittest.TestCase):
         self._write_and_check()
 
     def test_homogenise_different_scales(self):
-        self.homogeniser.reset_filters()
+        self.homogeniser.set_criteria()
         self.homogeniser.set_scales(native="mb", target="MS")
         self.homogeniser.set_missing_uncertainty_strategy(
             selection.MUSSetDefault, default=0.2)
@@ -53,34 +54,21 @@ class AnHomogeniserShould(unittest.TestCase):
         self._write_and_check()
 
     def test_filter(self):
-        self.homogeniser.add_filter(agency__in=["ISC", "GCMT"],
-                                    magnitude__gt=5.5)
+        self.homogeniser.set_criteria(
+            C(agency__in=["ISC", "GCMT"]) & C(magnitude__gt=5.5))
+
+        self.assertEqual(7, len(self.homogeniser.measures()))
 
         self.assertEqual([
-            "Event 14342462 from EventSource ISC Bulletin",
-            "Event 14357799 from EventSource ISC Bulletin",
             "Event 14342120 from EventSource ISC Bulletin",
-            "Event 14342464 from EventSource ISC Bulletin",
-            "Event 14342123 from EventSource ISC Bulletin",
-            "Event 14986337 from EventSource ISC Bulletin",
-            "Event 14342499 from EventSource ISC Bulletin",
             "Event 17273456 from EventSource ISC Bulletin",
-            "Event 14342516 from EventSource ISC Bulletin",
-            "Event 14342520 from EventSource ISC Bulletin",
             "Event 14357818 from EventSource ISC Bulletin"],
             [str(e) for e in self.homogeniser.events()])
 
-        self.assertEqual(53, len(self.homogeniser.measures()))
-
-        self.assertEqual([u'14342464', u'14986337',
-                          u'14342462', u'14357799',
-                          u'14357818', u'14342516',
-                          u'14342123', u'17273456',
-                          u'14342120', u'14342499',
-                          u'14342520'],
+        self.assertEqual([u'17273456', u'14342120', u'14357818'],
                          self.homogeniser.grouped_measures().keys())
 
-        self.homogeniser.add_filter(scale__in=["Mw", "mb"])
+        self.homogeniser.set_criteria(C(scale__in=["Mw", "mb"]))
         self.assertEqual(17, len(self.homogeniser.events()))
         self.assertEqual(97, len(self.homogeniser.measures()))
         self.assertEqual(17, len(self.homogeniser.grouped_measures().keys()))
@@ -115,7 +103,7 @@ class AnHomogeniserShould(unittest.TestCase):
 
     def test_homogenise_after_different_setup_sequences_1(self):
         self.homogeniser.set_scales(native="MS", target="MW")
-        self.homogeniser.add_filter(magnitude__gt=4)
+        self.homogeniser.set_criteria(C(magnitude__gt=4))
         self.homogeniser.set_grouper(
             grouping.GroupMeasuresByHierarchicalClustering,
             args={'t': 100})
@@ -134,7 +122,7 @@ class AnHomogeniserShould(unittest.TestCase):
         self.homogeniser.set_grouper(
             grouping.GroupMeasuresByHierarchicalClustering,
             args={'t': 100})
-        self.homogeniser.add_filter(magnitude__gt=4)
+        self.homogeniser.set_criteria(C(magnitude__gt=4))
         self.homogeniser.set_selector(selection.Precise)
         self.homogeniser.set_missing_uncertainty_strategy(
             selection.MUSSetDefault, default=1)
