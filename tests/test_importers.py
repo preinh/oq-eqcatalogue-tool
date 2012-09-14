@@ -20,17 +20,20 @@ from eqcatalogue.importers.csv1 import CsvEqCatalogueReader, Converter
 from eqcatalogue.importers.reader_utils import (STR_TRANSF,
                                                 INT_TRANSF, FLOAT_TRANSF)
 from eqcatalogue.importers import isf_bulletin as isf
+from eqcatalogue.importers.iaspei import IaspeiReader
 from eqcatalogue import models as catalogue
 from tests.test_utils import in_data_dir
 
 
-DATAFILE = in_data_dir('isc-query-small.html')
+DATAFILE_ISC = in_data_dir('isc-query-small.html')
+
+DATAFILE_IASPEI = in_data_dir('iaspei.csv')
 
 
 class ShouldImportFromISFBulletinV1(unittest.TestCase):
 
     def setUp(self):
-        self.f = file(DATAFILE)
+        self.f = file(DATAFILE_ISC)
         self.cat = catalogue.CatalogueDatabase(memory=True, drop=True)
         self.cat.recreate()
 
@@ -72,6 +75,29 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
         self.assertEqual(events.count(),  18)
         self.assertEqual(origins.count(),  128)
         self.assertEqual(measures.count(),  334)
+
+
+class AIaspeiImporterShould(unittest.TestCase):
+
+    def setUp(self):
+        self.file = file(DATAFILE_IASPEI)
+        self.cat = catalogue.CatalogueDatabase(memory=True, drop=True)
+        self.cat.recreate()
+
+    def tearDown(self):
+        self.file.close()
+
+    def test_parse_csv_file(self):
+        reader = IaspeiReader(self.file, self.cat)
+        summary = reader.store()
+        self.assertEqual(summary, {
+            'eventsource_created': 1,
+            'agency_created': 1,
+            'event_created': 46,
+            'origin_created': 46,
+            'measure_created':  61,
+        })
+
 
 
 class EqCatalogueReaderTestCase(unittest.TestCase):
