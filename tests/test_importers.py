@@ -16,12 +16,15 @@
 import unittest
 from StringIO import StringIO
 
-from eqcatalogue.importers.csv1 import CsvEqCatalogueReader, Converter
-from eqcatalogue.importers.reader_utils import (STR_TRANSF,
-                                                INT_TRANSF, FLOAT_TRANSF)
-from eqcatalogue.importers import isf_bulletin as isf
-from eqcatalogue.importers.iaspei import IaspeiReader
+
+from eqcatalogue.importers import (CsvEqCatalogueReader, Converter, Importer,
+    Iaspei, V1, isf_bulletin as isf)
+
+from eqcatalogue.importers.reader_utils import (STR_TRANSF, INT_TRANSF,
+                                                FLOAT_TRANSF)
+
 from eqcatalogue import models as catalogue
+
 from tests.test_utils import in_data_dir
 
 
@@ -44,24 +47,25 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
         # Common Assess part in setUp method
 
         # Act
-        importer = isf.V1(self.f, self.cat)
+        importer = V1(self.f, self.cat)
 
         # Assert
-        self.assertRaises(isf.UnexpectedLine, importer.load, (False))
+        self.assertRaises(isf.UnexpectedLine, importer.store, (False))
 
     def test_parse_html_file(self):
         # Common Assess part in setUp method
 
         # Act
-        summary = isf.V1.import_events(self.f, self.cat)
+        v1_importer = V1(self.f, self.cat)
+        v1_importer.store()
 
         # Assert
-        self.assertEqual(summary, {
-                    'eventsource_created': 1,
-                    'agency_created': 17,
-                    'event_created': 18,
-                    'origin_created': 128,
-                    'measure_created':  334,
+        self.assertEqual(v1_importer.get_summary(), {
+                    Importer.EVENT_SOURCE: 1,
+                    Importer.AGENCY: 17,
+                    Importer.EVENT: 18,
+                    Importer.ORIGIN: 128,
+                    Importer.MEASURE:  334,
                     })
 
         sources = self.cat.session.query(catalogue.EventSource)
@@ -83,21 +87,38 @@ class AIaspeiImporterShould(unittest.TestCase):
         self.file = file(DATAFILE_IASPEI)
         self.cat = catalogue.CatalogueDatabase(memory=True, drop=True)
         self.cat.recreate()
+        self.csv_importer = Iaspei(self.file, self.cat)
 
     def tearDown(self):
         self.file.close()
 
-    def test_parse_csv_file(self):
-        reader = IaspeiReader(self.file, self.cat)
-        summary = reader.store()
-        self.assertEqual(summary, {
-            'eventsource_created': 1,
-            'agency_created': 1,
-            'event_created': 46,
-            'origin_created': 46,
-            'measure_created':  61,
-        })
+    def test_raise_exception_with_invalid_mag_group(self):
+        # Each mag is well defined when there are Author, Type and Value
+        mag_group = ['IASPEI', 'MS', '3.4', 'IASPEI', 'mb', '4.3', 'NEIC']
+        self.assertRaises(RuntimeError,
+            self.csv_importer._check_magnitude_group, mag_group)
 
+    def test_csv_parsing(self):
+        csv_file = StringIO(
+            '10525612,IASPEI,2008-02-09,07:12:06.43,32.4850,-115.2935, 20.6,,'
+            'IASPEI,MS,4.7,IASPEI,mb, 4.9\n'
+            '10526626,IASPEI,2008-02-11,18:29:32.64,32.4765,-115.2965,16.5,,'
+            'IASPEI,MS,4.8,IASPEI,mb, 4.8\n')
+        importer = Iaspei(csv_file, self.cat)
+        exp_num_entries = 2
+        self.assertEqual(exp_num_entries, len(
+            importer._parse_csv(header=False)))
+
+    def test_import_csv_iaspei(self):
+        self.csv_importer.store()
+        summary = self.csv_importer.get_summary()
+        self.assertEqual(summary, {
+            Importer.EVENT_SOURCE: 1,
+            Importer.AGENCY: 1,
+            Importer.EVENT: 46,
+            Importer.ORIGIN: 46,
+            Importer.MEASURE:  61,
+        })
 
 
 class EqCatalogueReaderTestCase(unittest.TestCase):

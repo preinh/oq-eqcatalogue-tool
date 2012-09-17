@@ -19,6 +19,8 @@ import datetime
 
 from eqcatalogue import models as catalogue
 
+from eqcatalogue.importers import Importer
+
 CATALOG_URL = 'http://www.isc.ac.uk/cgi-bin/web-db-v4'
 
 ANALYSIS_TYPES = {'a': 'automatic',
@@ -118,7 +120,7 @@ class StartState(BaseState):
 
     def process_line(self, line):
         self.eventsource, created = self._save_eventsource(line)
-        return {'eventsource_created': 1 if created else 0}
+        return {Importer.EVENT_SOURCE: 1 if created else 0}
 
     def _save_eventsource(self, name):
         return self._catalogue.get_or_create(catalogue.EventSource,
@@ -151,7 +153,7 @@ class EventState(BaseState):
         result = self.__class__.match(line)
         created = self._save_event(**result.groupdict())
         created_nr = 1 if created else 0
-        return {'event_created': created_nr}
+        return {Importer.EVENT: created_nr}
 
     def _save_event(self, source_event_id, name):
         self.event, created = self._catalogue.get_or_create(
@@ -308,8 +310,8 @@ class OriginBlockState(BaseState):
         self._process_metadata(line)
 
         return {
-            'agency_created': 1 if agency_created else 0,
-            'origin_created': 1 if origin_created else 0}
+            Importer.AGENCY: 1 if agency_created else 0,
+            Importer.ORIGIN: 1 if origin_created else 0}
 
     def _save_agency(self, author):
         return self._catalogue.get_or_create(
@@ -364,7 +366,7 @@ class MeasureBlockState(BaseState):
                            standard_error=standard_magnitude_error,
             )
         self._save_metadata(stations=stations)
-        return {'measure_created': 1 if created else 0}
+        return {Importer.MEASURE: 1 if created else 0}
 
     def _save_measure(self, agency_name, origin_source_key,
                       scale, value, standard_error):
@@ -410,10 +412,10 @@ class MeasureUKScaleBlockState(MeasureBlockState):
                            value=data['val'],
                            standard_error=data.get('error'))
         self._save_metadata(stations=data.get('stations'))
-        return {'measure_created': 1 if created else 0}
+        return {Importer.MEASURE: 1 if created else 0}
 
 
-class V1(object):
+class V1(Importer):
     """
     Import data into a CatalogueDatabase from stream objects.
 
@@ -439,19 +441,17 @@ class V1(object):
           The catalogue database used to import the data
         :type cat: CatalogueDatabase
         """
-        self._stream = stream
-        self._catalogue = cat
-        self._summary = {}
+        super(V1, self).__init__(stream, cat)
         self._state = None
         self._transition(StartState())
 
-    def load(self, allow_junk=True):
+    def store(self, allow_junk=True):
         """
         Read and parse from the input stream the data and insert them
         into the catalogue db. If `allow_junk` is True, it allows
         unexpected line inputs at the beginning of the file
         """
-        for line in self._stream:
+        for line in self._file_stream:
             line = line.strip()
 
             # line_type acts as "event" in the traditional fsm jargon.
@@ -468,7 +468,7 @@ class V1(object):
                 next_state = self._state.transition_rule(line_type)
                 self._transition(next_state)
                 state_output = next_state.process_line(line)
-                self._update_summary(state_output)
+                self.update_summary(state_output)
             except UnexpectedLine as e:
                 current = self._state
                 if current.is_start() and line_type == 'junk' and allow_junk:
@@ -515,15 +515,8 @@ class V1(object):
         self._state = next_state
         self._state.setup(self._catalogue)
 
-    def _update_summary(self, output):
+    def update_summary(self, output):
         for object_type, nr in output.items():
             self._summary[object_type] = self._summary.get(object_type, 0) + nr
 
-    @classmethod
-    def import_events(cls, stream, cat):
-        """
-          Utility that create an instance of the importer and load the
-          data from `stream`
-        """
-        importer = cls(stream, cat)
-        return importer.load()
+

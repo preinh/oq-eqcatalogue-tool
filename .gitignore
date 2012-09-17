@@ -17,3 +17,4 @@ tests/data/qa_homo*.png
 import-graph.png
 ext-graph.png
 int-graph.png
+*.DS_Store

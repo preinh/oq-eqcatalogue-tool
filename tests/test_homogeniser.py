@@ -17,7 +17,7 @@
 import unittest
 from os import path
 from eqcatalogue.homogeniser import Homogeniser
-from tests.test_regression import _load_catalog
+from tests.test_utils import _load_catalog
 from tests.test_utils import in_data_dir
 from eqcatalogue.regression import LinearModel, PolynomialModel
 from eqcatalogue import selection, grouping, models

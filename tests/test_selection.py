@@ -16,7 +16,7 @@
 import unittest
 from eqcatalogue import filtering, grouping
 from eqcatalogue import selection, models
-from tests.test_regression import _load_catalog
+from tests.test_utils import _load_catalog
 
 
 class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):

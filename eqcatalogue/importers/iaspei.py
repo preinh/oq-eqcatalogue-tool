@@ -13,50 +13,36 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with eqcataloguetool. If not, see <http://www.gnu.org/licenses/>.
 
-from csv import DictReader
 from datetime import datetime
 
 from eqcatalogue import models as catalogue
 
-class IaspeiReader(object):
+from eqcatalogue.importers.base import Importer
 
-    EVENTID_INDEX = 0
-    AUTHOR_INDEX = 1
-    DATE_INDEX = 2
-    TIME_INDEX = 3
-    LAT_INDEX = 4
-    LON_INDEX = 5
-    DEPTH_INDEX = 6
-    DEPFIX_INDEX = 7
 
-    MAG_GROUP_INDEX = 8
+
+class Iaspei(Importer):
+
+    (EVENTID_INDEX, AUTHOR_INDEX, DATE_INDEX, TIME_INDEX, LAT_INDEX,
+     LON_INDEX, DEPTH_INDEX, DEPFIX_INDEX, MAG_GR_INDEX) = list(xrange(0, 9))
+
     MAG_MEASURE_ITEMS = 3
 
-
-    def __init__(self, stream, catalogue):
-        """
-        Initialize the importer.
-
-        :param: stream:
-          A stream object storing the seismic event data
-        :type stream: file
-
-        :param: cat:
-          The catalogue database used to import the data
-        :type catalogue: CatalogueDatabase
-        """
-        self._stream = stream
-        self._catalogue = catalogue
-        self._summary = {'eventsource_created': 0,
-                         'agency_created': 0,
-                         'event_created': 0,
-                         'origin_created': 0,
-                         'measure_created': 0}
+    ERR_MAG_GROUP = ('Each Magnitude should be defined by '
+                     '3 Values: Author, Type and Value')
 
 
     def _parse_csv(self, header):
+        """
+        Returns a list of entries parsed in the csv file
+        if the header is present in the csv it is skipped
+        in the result.
+        :param header:
+            A flag which states if the header is in the csv file.
+        """
+
         entries = []
-        for line in self._stream:
+        for line in self._file_stream:
             entries.append([item.strip() for item in line.split(',')])
         if header:
             #skip the header line
@@ -64,31 +50,35 @@ class IaspeiReader(object):
 
         return entries
 
+    def _check_magnitude_group(self, mag_group):
+        if len(mag_group) % 3 != 0:
+            raise RuntimeError(self.ERR_MAG_GROUP)
+
+    def update_summary(self, item_key):
+        self._summary[item_key] += 1
+
     def store(self, header=True):
         """
         Read and parse from the input stream the data and insert them
-        into the catalogue db.
+        into the catalogue db, a summary of entities stored is returned.
         """
 
         entries =  self._parse_csv(header)
-        print len(entries)
         for entry in entries:
 
             event_source, created = self._catalogue.get_or_create(
                     catalogue.EventSource, {'name': 'IASPEI'})
             if created:
-                self._increase_key_in_summary('eventsource_created')
+                self.update_summary(Importer.EVENT_SOURCE)
 
             event, created = self._catalogue.get_or_create(catalogue.Event,
                 {'source_key': entry[self.EVENTID_INDEX],
                  'eventsource': event_source})
             if created:
-                self._increase_key_in_summary('event_created')
+                self.update_summary(Importer.EVENT)
 
+            self._check_magnitude_group(entry[self.MAG_GR_INDEX:])
 
-            if len(entry[self.MAG_GROUP_INDEX:]) % 3 != 0:
-                raise RuntimeError('Each Magnitude should be defined by '
-                                   '3 Values: Author, Type and Value')
 
             # Time String Creation
             microsec = int(float(entry[self.TIME_INDEX][8:]) * 10000)
@@ -102,10 +92,9 @@ class IaspeiReader(object):
                         entry[self.LAT_INDEX], entry[self.LON_INDEX]),
                     'depth': float(entry[self.DEPTH_INDEX]),
                     'eventsource': event_source,
-                    #todo can eat your kittens
                     'source_key': entry[self.EVENTID_INDEX]}
 
-            magnitude_group = entry[self.MAG_GROUP_INDEX:]
+            magnitude_group = entry[self.MAG_GR_INDEX:]
 
             for mag_group_start in xrange(0, len(magnitude_group),
                 self.MAG_MEASURE_ITEMS):
@@ -114,11 +103,12 @@ class IaspeiReader(object):
                                 {'source_key': magnitude_group[mag_group_start],
                                  'eventsource': event_source})
                 if created:
-                    self._increase_key_in_summary('agency_created')
+                    self.update_summary(Importer.AGENCY)
 
-                origin, created = self._catalogue.get_or_create(catalogue.Origin, values)
+                origin, created = self._catalogue.get_or_create(
+                    catalogue.Origin, values)
                 if created:
-                    self._increase_key_in_summary('origin_created')
+                    self.update_summary(Importer.ORIGIN)
                 mag_measure,  created = self._catalogue.get_or_create(
                     catalogue.MagnitudeMeasure,
                     {'event': event,
@@ -128,15 +118,7 @@ class IaspeiReader(object):
                      'origin': origin
                      })
                 if created:
-                    self._increase_key_in_summary('measure_created')
+                    self.update_summary(Importer.MEASURE)
 
         self._catalogue.session.commit()
-
-        return self._summary
-
-
-    def _increase_key_in_summary(self, key):
-        self._summary[key] += 1
-
-
 
