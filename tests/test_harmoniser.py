@@ -19,7 +19,9 @@ import unittest
 from eqcatalogue.harmoniser import Harmoniser
 from eqcatalogue.regression import (LinearModel,
                                     EmpiricalMagnitudeScalingRelationship)
-from eqcatalogue.models import MagnitudeMeasure, Event
+from eqcatalogue.models import MagnitudeMeasure, Event, CatalogueDatabase
+from tests.test_filtering import load_fixtures
+from eqcatalogue.filtering import C
 
 
 class HarmoniserWithFixturesAbstractTestCase(unittest.TestCase):
@@ -227,3 +229,27 @@ class HarmoniserWithFormulaTestCase(HarmoniserWithFixturesAbstractTestCase):
         converted, unconverted = h.harmonise(self.measures)
         self.assertConversion(converted, self.number_of_measures,
                               unconverted, 0)
+
+
+class HarmoniserWithFormulaAndCriteriaTestCase(
+        HarmoniserWithFixturesAbstractTestCase):
+    """
+    Test the usage of an Homogeniser by using a formula associated
+    with a criteria
+    """
+    def setUp(self):
+        super(HarmoniserWithFormulaAndCriteriaTestCase, self).setUp()
+        cat = CatalogueDatabase(memory=True, drop=True)
+        cat.recreate()
+        load_fixtures(cat.session)
+        self.measures = C()
+
+    def test_conversion(self):
+        h = Harmoniser(target_scale=self.target_scale)
+
+        h.add_conversion_formula(formula=lambda x: x * 2,
+                                 domain=C(agency__in=['LDG', 'NEIC']),
+                                 target_scale=self.target_scale)
+        converted, unconverted = h.harmonise(self.measures)
+
+        self.assertConversion(converted, 6, unconverted, 24)

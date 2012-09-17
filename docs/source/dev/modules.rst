@@ -18,12 +18,10 @@ Homogeniser (:mod:`eqcatalogue.homogeniser`)
 
 .. automodule:: eqcatalogue.homogeniser
 .. autoclass:: Homogeniser()
-.. automethod:: Homogeniser.__init__([native_scale[, target_scale[, measure_filter[, grouper[, selector[, missing_uncertainty_strategy]]]]]])
+.. automethod:: Homogeniser.__init__([native_scale[, target_scale[, criteria[, grouper[, selector[, missing_uncertainty_strategy]]]]]])
 .. automethod:: Homogeniser.set_scales
 
-.. automethod:: Homogeniser.add_filter
-.. autoattribute:: Homogeniser.AVAILABLE_FILTERS
-.. automethod:: Homogeniser.reset_filters
+.. automethod:: Homogeniser.add_criteria
 .. automethod:: Homogeniser.events
 .. automethod:: Homogeniser.measures
 
@@ -79,20 +77,23 @@ Filtering (:mod:`eqcatalogue.filgering`)
 
 .. currentmodule:: eqcatalogue
 .. automodule:: eqcatalogue.filtering
-.. autoclass:: MeasureFilter
-.. automethod:: MeasureFilter.all
-.. automethod:: MeasureFilter.count
-.. automethod:: MeasureFilter.combine
-.. automethod:: MeasureFilter.events
-.. automethod:: MeasureFilter.before
-.. automethod:: MeasureFilter.after
-.. automethod:: MeasureFilter.between
-.. automethod:: MeasureFilter.filter
-.. automethod:: MeasureFilter.with_agencies
-.. automethod:: MeasureFilter.with_magnitude_scales
-.. automethod:: MeasureFilter.within_polygon
-.. automethod:: MeasureFilter.within_distance_from_point
-.. automethod:: MeasureFilter.group_measures
+.. autoclass:: Criteria
+.. automethod:: Criteria.all
+.. automethod:: Criteria.count
+.. automethod:: Criteria.__and__
+.. automethod:: Criteria.__or__
+.. automethod:: Criteria.events
+.. automethod:: Criteria.filter
+.. automethod:: Criteria.predicate
+.. automethod:: Criteria.group_measures
+.. autoclass:: Before
+.. autoclass:: After
+.. autoclass:: Between
+.. autoclass:: WithAgencies
+.. autoclass:: WithMagnitudeScales
+.. autoclass:: WithinPolygon
+.. autoclass:: WithinDistanceFromPoint
+
 
 Grouping (:mod:`eqcatalogue.grouping`)
 ------------------------------------------------------------------------------
