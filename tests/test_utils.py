@@ -27,8 +27,8 @@ def in_data_dir(filename):
     return os.path.join(DATA_DIR, filename)
 
 
-def _load_catalog():
+def load_catalog():
     cat = CatalogueDatabase(memory=True)
     cat.recreate()
-    store_events(V1,file(in_data_dir('isc-query-small.html')), cat)
+    store_events(V1, file(in_data_dir('isc-query-small.html')), cat)
     return cat

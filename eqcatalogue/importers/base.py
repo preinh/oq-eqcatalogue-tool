@@ -31,6 +31,9 @@ def store_events(cls, stream, cat, **kwargs):
 
 
 class Importer(object):
+    """
+    Base class for Importers.
+    """
 
     __metaclass__ = abc.ABCMeta
 
@@ -63,7 +66,8 @@ class Importer(object):
         Update the summary key values.
         """
 
-    def get_summary(self):
+    @property
+    def summary(self):
         """
         Returns a dictionary where each key and associated value
         represents the number of entities, stored in the catalogue db.

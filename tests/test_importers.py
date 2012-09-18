@@ -22,6 +22,7 @@ from eqcatalogue.importers import (CsvEqCatalogueReader, Converter, Importer,
 
 from eqcatalogue.importers.reader_utils import (STR_TRANSF, INT_TRANSF,
                                                 FLOAT_TRANSF)
+from eqcatalogue.exceptions import InvalidMagnitudeSeq
 
 from eqcatalogue import models as catalogue
 
@@ -60,7 +61,7 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
         v1_importer.store()
 
         # Assert
-        self.assertEqual(v1_importer.get_summary(), {
+        self.assertEqual(v1_importer.summary, {
                     Importer.EVENT_SOURCE: 1,
                     Importer.AGENCY: 17,
                     Importer.EVENT: 18,
@@ -95,8 +96,10 @@ class AIaspeiImporterShould(unittest.TestCase):
     def test_raise_exception_with_invalid_mag_group(self):
         # Each mag is well defined when there are Author, Type and Value
         mag_group = ['IASPEI', 'MS', '3.4', 'IASPEI', 'mb', '4.3', 'NEIC']
-        self.assertRaises(RuntimeError,
-            self.csv_importer._check_magnitude_group, mag_group)
+        with self.assertRaises(InvalidMagnitudeSeq) as exp:
+            self.csv_importer._check_magnitude_group(mag_group)
+
+            self.assertEqual(Iaspei.ERR_MAG_GROUP, exp.message)
 
     def test_csv_parsing(self):
         csv_file = StringIO(
@@ -111,7 +114,8 @@ class AIaspeiImporterShould(unittest.TestCase):
 
     def test_import_csv_iaspei(self):
         self.csv_importer.store()
-        summary = self.csv_importer.get_summary()
+        summary = self.csv_importer.summary
+
         self.assertEqual(summary, {
             Importer.EVENT_SOURCE: 1,
             Importer.AGENCY: 1,
@@ -119,6 +123,29 @@ class AIaspeiImporterShould(unittest.TestCase):
             Importer.ORIGIN: 46,
             Importer.MEASURE:  61,
         })
+
+        importer = Iaspei(self.file, self.cat)
+        importer.store()
+
+    def test_importing_once_the_same_csv(self):
+
+        first_importer = Iaspei(self.file, self.cat)
+        first_importer.store()
+
+        second_importer = Iaspei(self.file, self.cat)
+        second_importer.store()
+
+        sources = self.cat.session.query(catalogue.EventSource)
+        agencies = self.cat.session.query(catalogue.Agency)
+        events = self.cat.session.query(catalogue.Event)
+        origins = self.cat.session.query(catalogue.Origin)
+        measures = self.cat.session.query(catalogue.MagnitudeMeasure)
+
+        self.assertEqual(sources.count(),  1)
+        self.assertEqual(agencies.count(),  1)
+        self.assertEqual(events.count(),  46)
+        self.assertEqual(origins.count(),  46)
+        self.assertEqual(measures.count(),  61)
 
 
 class EqCatalogueReaderTestCase(unittest.TestCase):

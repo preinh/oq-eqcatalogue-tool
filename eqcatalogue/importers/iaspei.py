@@ -16,21 +16,23 @@
 from datetime import datetime
 
 from eqcatalogue import models as catalogue
+from eqcatalogue.exceptions import InvalidMagnitudeSeq
 
 from eqcatalogue.importers.base import Importer
 
 
-
 class Iaspei(Importer):
+    """
+    Implements the Importer for the Iaspei format.
+    """
 
     (EVENTID_INDEX, AUTHOR_INDEX, DATE_INDEX, TIME_INDEX, LAT_INDEX,
-     LON_INDEX, DEPTH_INDEX, DEPFIX_INDEX, MAG_GR_INDEX) = list(xrange(0, 9))
+     LON_INDEX, DEPTH_INDEX, DEPFIX_INDEX, MAG_GR_INDEX) = range(0, 9)
 
     MAG_MEASURE_ITEMS = 3
 
     ERR_MAG_GROUP = ('Each Magnitude should be defined by '
                      '3 Values: Author, Type and Value')
-
 
     def _parse_csv(self, header):
         """
@@ -51,8 +53,12 @@ class Iaspei(Importer):
         return entries
 
     def _check_magnitude_group(self, mag_group):
+        """
+        Check that for each magnitude in the sequence
+        Author, Type and Value have been defined.
+        """
         if len(mag_group) % 3 != 0:
-            raise RuntimeError(self.ERR_MAG_GROUP)
+            raise InvalidMagnitudeSeq(self.ERR_MAG_GROUP)
 
     def update_summary(self, item_key):
         self._summary[item_key] += 1
@@ -63,7 +69,7 @@ class Iaspei(Importer):
         into the catalogue db, a summary of entities stored is returned.
         """
 
-        entries =  self._parse_csv(header)
+        entries = self._parse_csv(header)
         for entry in entries:
 
             event_source, created = self._catalogue.get_or_create(
@@ -79,29 +85,29 @@ class Iaspei(Importer):
 
             self._check_magnitude_group(entry[self.MAG_GR_INDEX:])
 
-
             # Time String Creation
             microsec = int(float(entry[self.TIME_INDEX][8:]) * 10000)
             time = ''.join([entry[self.TIME_INDEX][:9], str(microsec)])
             date_time = '/'.join(
                 [entry[self.DATE_INDEX], time])
 
-            values={'time': datetime.strptime(
+            values = {'time': datetime.strptime(
                             date_time, '%Y-%m-%d/%H:%M:%S.%f'),
-                    'position': self._catalogue.position_from_latlng(
-                        entry[self.LAT_INDEX], entry[self.LON_INDEX]),
-                    'depth': float(entry[self.DEPTH_INDEX]),
-                    'eventsource': event_source,
-                    'source_key': entry[self.EVENTID_INDEX]}
+                        'position': self._catalogue.position_from_latlng(
+                            entry[self.LAT_INDEX], entry[self.LON_INDEX]),
+                        'depth': float(entry[self.DEPTH_INDEX]),
+                        'eventsource': event_source,
+                        'source_key': entry[self.EVENTID_INDEX]}
 
             magnitude_group = entry[self.MAG_GR_INDEX:]
 
             for mag_group_start in xrange(0, len(magnitude_group),
                 self.MAG_MEASURE_ITEMS):
 
-                agency, created = self._catalogue.get_or_create(catalogue.Agency,
-                                {'source_key': magnitude_group[mag_group_start],
-                                 'eventsource': event_source})
+                agency, created = self._catalogue.get_or_create(
+                    catalogue.Agency,
+                    {'source_key': magnitude_group[mag_group_start],
+                     'eventsource': event_source})
                 if created:
                     self.update_summary(Importer.AGENCY)
 
@@ -109,7 +115,7 @@ class Iaspei(Importer):
                     catalogue.Origin, values)
                 if created:
                     self.update_summary(Importer.ORIGIN)
-                mag_measure,  created = self._catalogue.get_or_create(
+                _,  created = self._catalogue.get_or_create(
                     catalogue.MagnitudeMeasure,
                     {'event': event,
                      'agency': agency,
@@ -120,5 +126,5 @@ class Iaspei(Importer):
                 if created:
                     self.update_summary(Importer.MEASURE)
 
-        self._catalogue.session.commit()
 
+        self._catalogue.session.commit()
