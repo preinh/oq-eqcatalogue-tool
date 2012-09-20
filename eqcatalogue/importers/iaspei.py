@@ -69,8 +69,7 @@ class Iaspei(Importer):
         into the catalogue db, a summary of entities stored is returned.
         """
 
-        entries = self._parse_csv(header)
-        for entry in entries:
+        for entry in self._parse_csv(header):
 
             event_source, created = self._catalogue.get_or_create(
                     catalogue.EventSource, {'name': 'IASPEI'})
@@ -125,6 +124,5 @@ class Iaspei(Importer):
                      })
                 if created:
                     self.update_summary(Importer.MEASURE)
-
 
         self._catalogue.session.commit()
