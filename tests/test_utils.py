@@ -16,9 +16,19 @@
 
 import os
 
+from eqcatalogue.importers import store_events, V1
+from eqcatalogue.models import CatalogueDatabase
+
 DATA_DIR = os.path.abspath(os.path.join(
     os.path.dirname(__file__), '../tests/data'))
 
 
 def in_data_dir(filename):
     return os.path.join(DATA_DIR, filename)
+
+
+def load_catalog():
+    cat = CatalogueDatabase(memory=True)
+    cat.recreate()
+    store_events(V1, file(in_data_dir('isc-query-small.html')), cat)
+    return cat
