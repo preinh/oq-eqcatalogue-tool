@@ -161,3 +161,31 @@ class ACriteriaShould(unittest.TestCase):
 
     def tearDown(self):
         self.session.commit()
+
+
+class TestCriteriaFactory(unittest.TestCase):
+    """
+    Test the Criteria factory
+    """
+    def setUp(self):
+        self.TESTS = [
+            ['before', filtering.Before, datetime.now()],
+            ['after', filtering.After, datetime.now()],
+            ['between', filtering.Between, [datetime.now(), datetime.now()]],
+            ['agency__in', filtering.WithAgencies, ["LEIC"]],
+            ['scale__in', filtering.WithMagnitudeScales, ["Mw"]],
+            ['scale', filtering.WithMagnitudeScale, "Mw"],
+            ['within_polygon', filtering.WithinPolygon,
+             'POLYGON((92 15, 95 15, 95 10, 92 10, 92 15))'],
+            ['within_distance_from_point', filtering.WithinDistanceFromPoint,
+             ['POINT(88.20 33.10)', 10.]],
+            ['magnitude__gt', filtering.WithMagnitudeGreater, 5.]]
+
+    def test_types(self):
+        """
+        Test that the criteria factory build the objects of the proper
+        types
+        """
+        for kwarg, criteria_class, value in self.TESTS:
+            criteria = filtering.C(**{kwarg: value})
+            self.assertEqual(criteria_class, criteria.__class__)

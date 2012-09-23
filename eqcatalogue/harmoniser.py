@@ -97,7 +97,7 @@ class Harmoniser(object):
             if formulas:
                 value = formulas[0].apply(m)
                 for formula in formulas[1:]:
-                    value = formula(value)
+                    value = formula.apply(value)
 
                 converted[m] = dict(
                     measure=value,
@@ -139,36 +139,30 @@ class Harmoniser(object):
         candidate_starting_formulas = self.applicable_formulas(measure)
         ret = []
 
-        print "starting conversion to %s with %s for %s" % (
-            self.target_scale, candidate_starting_formulas, measure)
-
         for starting_formula in candidate_starting_formulas:
-            print "initial ", starting_formula
-
             to_visit = [[starting_formula, 0, measure]]
             previous_depth = -1
             current_path = []
 
             while to_visit:
-                print "to_visit ", to_visit
                 formula, depth, original_measure = to_visit.pop()
-                print "extracted %s %s %s" % (formula, depth, original_measure)
                 next_measure = formula.apply(original_measure)
                 next_formulas = self.applicable_formulas(next_measure)
-                print "next formulas %s" % next_formulas
 
                 if depth > previous_depth:
                     current_path.append(formula)
                 else:
                     current_path.pop()
-                print "now current_path is %s" % current_path
 
-                print "next_measure will be %s" % next_measure
                 if next_measure.scale == self.target_scale:
                     ret.append(current_path[:])
 
                 for formula in next_formulas:
                     to_visit.append([formula, depth + 1, next_measure])
+
+        # if we have multiple solutions just return the first one
+        if len(ret):
+            return ret[0]
 
         return ret
 
@@ -199,7 +193,17 @@ class ConversionFormula(object):
         return measure in self.domain
 
     def __repr__(self):
-        return "Formula from %s to %s" % (self.domain, self.target_scale)
+        domain_len = len(self.domain)
+        domain_str = "%d measures" % domain_len
+        if domain_len:
+            domain_str += "(%s" % self.domain[0]
+            if domain_len > 1:
+                domain_str += " ..."
+            domain_str += ")"
+        else:
+            domain_str = str(self.domain)
+        return "Formula to %s (domain: %s)" % (
+            self.target_scale, domain_str)
 
     @classmethod
     def make_from_model(cls, model):

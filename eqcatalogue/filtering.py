@@ -96,6 +96,12 @@ class Criteria(object):
         """
         return CombinedCriteria(self, criteria)
 
+    def __getitem__(self, item):
+        """
+        Indexing protocol
+        """
+        return self.all()[item]
+
     def __or__(self, criteria):
         """
         Combines the criteria with another `criteria` by logical or
@@ -251,6 +257,15 @@ class WithMagnitudeScales(Criteria):
         return measure.scale in self.scales
 
 
+class WithMagnitudeScale(WithMagnitudeScales):
+    """
+    all the measures which have the specified magnitude
+    scale
+    """
+    def __init__(self, scale):
+        super(WithMagnitudeScale, self).__init__([scale])
+
+
 class WithMagnitudeGreater(Criteria):
     """
     all the measures which have one of the specified magnitude
@@ -312,6 +327,7 @@ CRITERIA_MAP = {
     'between': Between,
     'agency__in': WithAgencies,
     'scale__in': WithMagnitudeScales,
+    'scale': WithMagnitudeScale,
     'within_polygon': WithinPolygon,
     'within_distance_from_point': WithinDistanceFromPoint,
     'magnitude__gt': WithMagnitudeGreater
@@ -338,9 +354,12 @@ def C(**criteria_kwargs):
 
         current_criteria = criteria_class(criteria_value)
 
-        if not criteria:
+        if criteria is None:
             criteria = current_criteria
         else:
             criteria = criteria & current_criteria
 
-    return criteria or Criteria()
+    if criteria is None:
+        return Criteria()
+    else:
+        return criteria

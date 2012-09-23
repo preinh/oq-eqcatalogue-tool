@@ -54,7 +54,7 @@ class HarmoniserWithFixturesAbstractTestCase(unittest.TestCase):
                     standard_error=1, value=(i + 1) * mfactor))
 
     def assertConversion(self, converted, converted_count,
-                         unconverted, unconverted_count):
+                         unconverted, unconverted_count, formula_used_nr=1):
         self.assertEqual(converted_count, len(converted))
         self.assertEqual(unconverted_count, len(unconverted))
 
@@ -62,7 +62,8 @@ class HarmoniserWithFixturesAbstractTestCase(unittest.TestCase):
             if measure in converted:
                 converted_measure = converted[measure]
                 if measure.scale == self.a_native_scale:
-                    self.assertEqual(1, len(converted_measure['formulas']))
+                    self.assertEqual(formula_used_nr,
+                                     len(converted_measure['formulas']))
                     self.assertAlmostEqual(converted_measure['measure'].value,
                                            measure.value * 2)
                 elif measure.scale == self.target_scale:
@@ -70,7 +71,8 @@ class HarmoniserWithFixturesAbstractTestCase(unittest.TestCase):
                     self.assertAlmostEqual(converted_measure['measure'].value,
                                            measure.value)
                 elif measure.scale == self.ya_native_scale:
-                    self.assertEqual(1, len(converted_measure['formulas']))
+                    self.assertEqual(formula_used_nr,
+                                     len(converted_measure['formulas']))
                     self.assertAlmostEqual(converted_measure['measure'].value,
                                            measure.value / 1.5)
             else:
@@ -239,7 +241,7 @@ class HarmoniserWithFormulaAndCriteriaTestCase(
     """
     def setUp(self):
         super(HarmoniserWithFormulaAndCriteriaTestCase, self).setUp()
-        cat = CatalogueDatabase(engine="eqcatalogue.datastores.dummy")
+        cat = CatalogueDatabase()
         load_fixtures(cat.session)
         self.measures = C()
 
@@ -268,11 +270,37 @@ class HarmoniserWithDifferentTargetScales(
         h = Harmoniser(target_scale=self.target_scale)
 
         h.add_conversion_formula(formula=lambda x: x * 2.,
-                                 domain=self.measures,
+                                 domain=C(scale=self.a_native_scale),
                                  target_scale="M2")
-        h.add_conversion_formula(formula=lambda x: x * 2.,
-                                 domain=C(scale__in=["M2"]),
+
+        h.add_conversion_formula(formula=lambda x: x * 3.,
+                                 domain=C(scale=self.ya_native_scale),
+                                 target_scale="M3")
+        h.add_conversion_formula(formula=lambda x: x * 3.,
+                                 domain=C(scale="M3"),
+                                 target_scale="M2")
+        h.add_conversion_formula(formula=lambda x: x * 4.,
+                                 domain=C(scale="M2"),
                                  target_scale=self.target_scale)
         converted, unconverted = h.harmonise(self.measures)
-        self.assertConversion(converted, len(self.measures),
-                              unconverted, 0)
+
+        self.assertEqual(30, len(converted))
+        self.assertEqual(0, len(unconverted))
+
+        for measure in self.measures:
+            self.assertTrue(measure in converted)
+
+            converted_measure = converted[measure]
+            if measure.scale == self.a_native_scale:
+                self.assertEqual(2, len(converted_measure['formulas']))
+                self.assertAlmostEqual(converted_measure['measure'].value,
+                                       measure.value * 8)
+            elif measure.scale == self.target_scale:
+                self.assertEqual(converted_measure['formulas'], [])
+                self.assertAlmostEqual(converted_measure['measure'].value,
+                                       measure.value)
+            elif measure.scale == self.ya_native_scale:
+                self.assertEqual(3,
+                                 len(converted_measure['formulas']))
+                self.assertAlmostEqual(converted_measure['measure'].value,
+                                       measure.value * 36)
