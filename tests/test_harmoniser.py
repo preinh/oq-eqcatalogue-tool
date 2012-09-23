@@ -63,15 +63,15 @@ class HarmoniserWithFixturesAbstractTestCase(unittest.TestCase):
                 converted_measure = converted[measure]
                 if measure.scale == self.a_native_scale:
                     self.assertEqual(1, len(converted_measure['formulas']))
-                    self.assertAlmostEqual(converted_measure['value'],
+                    self.assertAlmostEqual(converted_measure['measure'].value,
                                            measure.value * 2)
                 elif measure.scale == self.target_scale:
                     self.assertEqual(converted_measure['formulas'], [])
-                    self.assertAlmostEqual(converted_measure['value'],
+                    self.assertAlmostEqual(converted_measure['measure'].value,
                                            measure.value)
                 elif measure.scale == self.ya_native_scale:
                     self.assertEqual(1, len(converted_measure['formulas']))
-                    self.assertAlmostEqual(converted_measure['value'],
+                    self.assertAlmostEqual(converted_measure['measure'].value,
                                            measure.value / 1.5)
             else:
                 self.assertTrue(measure in unconverted)
@@ -239,7 +239,7 @@ class HarmoniserWithFormulaAndCriteriaTestCase(
     """
     def setUp(self):
         super(HarmoniserWithFormulaAndCriteriaTestCase, self).setUp()
-        cat = CatalogueDatabase(memory=True, drop=True)
+        cat = CatalogueDatabase(engine="eqcatalogue.datastores.dummy")
         load_fixtures(cat.session)
         self.measures = C()
 
@@ -263,17 +263,6 @@ class HarmoniserWithDifferentTargetScales(
 
     def setUp(self):
         super(HarmoniserWithDifferentTargetScales, self).setUp()
-
-    def test_shortest_path(self):
-        """
-        Test the utility
-        """
-        ret = Harmoniser._shortest_path({1: {2: 1, 5: 7},
-                             2: {3: 1},
-                             3: {4: 1},
-                             4: {},
-                             5: {4: 1}}, 1, 4)
-        self.assertEqual([1, 2, 3, 4], ret)
 
     def test_conversion(self):
         h = Harmoniser(target_scale=self.target_scale)

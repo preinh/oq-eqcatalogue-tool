@@ -71,6 +71,12 @@ class Harmoniser(object):
         self._formulas[scale] = self._formulas.get(scale, [])
         self._formulas[scale].append(formula)
 
+    def all_formulas(self):
+        """
+        Return a list of all the registered formulas
+        """
+        return sum(self._formulas.values(), [])
+
     def harmonise(self, measures):
         """
         Harmonize an iterator of measures.
@@ -89,108 +95,82 @@ class Harmoniser(object):
         for m in measures:
             formulas = self._find_formulas_for(m)
             if formulas:
-
                 value = formulas[0].apply(m)
                 for formula in formulas[1:]:
                     value = formula(value)
 
                 converted[m] = dict(
-                    value=value,
+                    measure=value,
                     formulas=formulas)
             elif m.scale == self.target_scale:
                 converted[m] = dict(
-                    value=m.value,
+                    measure=m,
                     formulas=[])
             else:
                 unconverted.append(m)
         return converted, unconverted
+
+    def applicable_formulas(self, measure):
+        return [f for f in self.all_formulas()
+                if f.is_applicable_for(measure)]
 
     def _find_formulas_for(self, measure, target_scale=None):
         """
         Find a formula to convert `measure` to `target_scale`
         """
         target_scale = target_scale or self.target_scale
+
+        # if we do not have any formula to convert to the target
+        # scale, just return
         if target_scale not in self._formulas:
             return
+
+        # if we have a formula that can convert directly the measure
+        # to the target scale, we return it
         for formula in self._formulas[target_scale]:
             if formula.is_applicable_for(measure):
                 return [formula]
+
+        # otherwise we will do a BFV into a graph where the formula
+        # are the nodes and two formulas `foo` and `bar` are connected
+        # if the codomain of `foo`  belongs to the domain of `bar`.
+
         # get possible starting formulas
-        all_formulas = sum([f[1] for f in self._formulas.items()], [])
-        starting_formulas = [f for f in all_formulas
-                             if f.is_applicable_for(measure)]
-        # for each possible starting formula solve a shortest path
-        #for starting_formula in starting_formulas:
-        #    graph = 
-        # problem
-        return
+        candidate_starting_formulas = self.applicable_formulas(measure)
+        ret = []
 
-    @staticmethod
-    def _shortest_path(graph, start, end, neighbourhood_fn=None):
-        """
-        Classical Dijkstra's algorithm. Returns the shortest path from
-        node `start` to `end`
+        print "starting conversion to %s with %s for %s" % (
+            self.target_scale, candidate_starting_formulas, measure)
 
-        :param graph
-            A dictionary describing the graph (key -> vertices,
-            values -> dictionary of distances)
+        for starting_formula in candidate_starting_formulas:
+            print "initial ", starting_formula
 
-        :param start
-            Start vertex.
+            to_visit = [[starting_formula, 0, measure]]
+            previous_depth = -1
+            current_path = []
 
-        :param end
-            End vertex.
+            while to_visit:
+                print "to_visit ", to_visit
+                formula, depth, original_measure = to_visit.pop()
+                print "extracted %s %s %s" % (formula, depth, original_measure)
+                next_measure = formula.apply(original_measure)
+                next_formulas = self.applicable_formulas(next_measure)
+                print "next formulas %s" % next_formulas
 
-        :param neighbourhood_fn
-            A function that returns the neighbours of a node with
-            their distance from node
-        """
+                if depth > previous_depth:
+                    current_path.append(formula)
+                else:
+                    current_path.pop()
+                print "now current_path is %s" % current_path
 
-        # FIXME: change this algorithm to the more efficient version based
-        # on priority queues
+                print "next_measure will be %s" % next_measure
+                if next_measure.scale == self.target_scale:
+                    ret.append(current_path[:])
 
-        if not neighbourhood_fn:
-            neighbourhood_fn = lambda g, n: g[n].items()
+                for formula in next_formulas:
+                    to_visit.append([formula, depth + 1, next_measure])
 
-        # initialize graph
-        final_distances, predecessors = {}, {}
-        for node in graph:
-            final_distances[node], predecessors[node] = float('inf'), None
-
-        final_distances[start] = 0
-        unvisited = graph.keys()
-
-        while len(unvisited) > 0:
-            # extract min
-            shortest, node = None, None
-            for temp_node in unvisited:
-                if shortest is None:
-                    shortest = final_distances[temp_node]
-                    node = temp_node
-                elif final_distances[temp_node] < shortest:
-                    shortest = final_distances[temp_node]
-                    node = temp_node
-
-            unvisited.remove(node)
-
-            # relax edges
-            for child_node, child_value in neighbourhood_fn(graph, node):
-                if (final_distances[child_node] >
-                    final_distances[node] + child_value):
-                    final_distances[child_node] = (final_distances[node] +
-                        child_value)
-                    predecessors[child_node] = node
-
-        path = []
-        node = end
-
-        while not (node == start):
-            path.insert(0, node)
-            node = predecessors[node]
-
-        path.insert(0, start)
-        return path
-
+        return ret
 
 
 class ConversionFormula(object):
@@ -218,6 +198,9 @@ class ConversionFormula(object):
         """Returns true if the measure given in input can be converted"""
         return measure in self.domain
 
+    def __repr__(self):
+        return "Formula from %s to %s" % (self.domain, self.target_scale)
+
     @classmethod
     def make_from_model(cls, model):
         """
@@ -235,4 +218,5 @@ class ConversionFormula(object):
         if not self.is_applicable_for(measure):
             raise ValueError(
                 "You can not apply the conversion to this measure")
-        return self.formula(measure.value)
+        new_value = self.formula(measure.value)
+        return measure.convert(new_value, self)
