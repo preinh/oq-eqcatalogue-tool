@@ -283,6 +283,12 @@ class HarmoniserWithDifferentTargetScales(
         h.add_conversion_formula(formula=lambda x: x * 4.,
                                  domain=C(scale="M2"),
                                  target_scale=self.target_scale)
+        h.add_conversion_formula(formula=lambda x: x * 4.,
+                                 domain=C(scale="M2"),
+                                 target_scale="M4")
+        h.add_conversion_formula(formula=lambda x: x * 4.,
+                                 domain=C(scale="M2"),
+                                 target_scale="M5")
         converted, unconverted = h.harmonise(self.measures)
 
         self.assertEqual(30, len(converted))

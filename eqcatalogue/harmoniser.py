@@ -33,7 +33,6 @@ class Harmoniser(object):
     def __init__(self, target_scale):
         self.target_scale = target_scale
         self._formulas = {}
-        self._formula_graph = {}
 
     def add_conversion_formula(self, formula, domain, target_scale):
         """
@@ -67,6 +66,9 @@ class Harmoniser(object):
         self._add_formula(formula)
 
     def _add_formula(self, formula):
+        """
+        Add a conversion formula to the formula database
+        """
         scale = formula.target_scale
         self._formulas[scale] = self._formulas.get(scale, [])
         self._formulas[scale].append(formula)
@@ -111,6 +113,11 @@ class Harmoniser(object):
         return converted, unconverted
 
     def applicable_formulas(self, measure):
+        """
+        Return the list of formulas that can be applied to `measure`.
+        A formula can be applied to a measure if such measure belongs
+        to its domain
+        """
         return [f for f in self.all_formulas()
                 if f.is_applicable_for(measure)]
 
@@ -131,11 +138,10 @@ class Harmoniser(object):
             if formula.is_applicable_for(measure):
                 return [formula]
 
-        # otherwise we will do a BFV into a graph where the formula
-        # are the nodes and two formulas `foo` and `bar` are connected
-        # if the codomain of `foo`  belongs to the domain of `bar`.
+        # otherwise we will do a graph visiting where the formula are
+        # the nodes and two formulas `foo` and `bar` are connected if
+        # the codomain of `foo` is a subset of the domain of `bar`.
 
-        # get possible starting formulas
         candidate_starting_formulas = self.applicable_formulas(measure)
         ret = []
 

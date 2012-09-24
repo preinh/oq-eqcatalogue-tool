@@ -190,6 +190,10 @@ class MagnitudeMeasure(object):
                     for v in zip(values, sigmas)]
 
     def convert(self, new_value, formula):
+        """
+        Convert the measure to a ConvertedMeasure with `new_value`
+        through `formula`
+        """
         return ConvertedMeasure(self.agency, self.event, self.origin,
                    formula.target_scale, new_value, self.standard_error,
                    self, [formula])
@@ -219,6 +223,10 @@ class ConvertedMeasure(object):
             self.original_measure)
 
     def convert(self, new_value, formula):
+        """
+        Convert the measure to a ConvertedMeasure with `new_value`
+        through `formula`
+        """
         return self.__class__(
             self.agency, self.event, self.origin, formula.target_scale,
             new_value, self.standard_error, self.original_measure,
@@ -317,14 +325,14 @@ class MeasureMetadata(object):
 
 class Singleton(type):
     """Metaclass to implement the singleton pattern"""
-    def __init__(cls, name, bases, d):
-        super(Singleton, cls).__init__(name, bases, d)
-        cls.instance = None
+    def __init__(mcs, name, bases, der):
+        super(Singleton, mcs).__init__(name, bases, der)
+        mcs.instance = None
 
-    def __call__(cls, *args, **kw):
-        if cls.instance is None:
-            cls.instance = super(Singleton, cls).__call__(*args, **kw)
-        return cls.instance
+    def __call__(mcs, *args, **kw):
+        if mcs.instance is None:
+            mcs.instance = super(Singleton, mcs).__call__(*args, **kw)
+        return mcs.instance
 
 
 class CatalogueDatabase(object):
@@ -377,6 +385,9 @@ class CatalogueDatabase(object):
 
     @classmethod
     def get_engine(cls, module_name):
+        """
+        Return the Engine class that is defined into `module_name`
+        """
         module = __import__(module_name, fromlist=['Engine'])
         return module.Engine
 
@@ -389,6 +400,9 @@ class CatalogueDatabase(object):
 
     @property
     def session(self):
+        """
+        Return the current CatalogueDatabase session
+        """
         return self._engine.session
 
     def get_or_create(self, class_object, query_args, creation_args=None):
