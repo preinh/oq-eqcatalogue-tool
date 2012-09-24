@@ -123,7 +123,18 @@ class Harmoniser(object):
 
     def _find_formulas_for(self, measure, target_scale=None):
         """
-        Find a formula to convert `measure` to `target_scale`
+        Find formulas to convert `measure` to `target_scale` (default
+        to self.target_scale).
+
+        If the `measure` is already in the target scale it returns None.
+
+        If it exists a single formula to convert `measure`, it will
+        return a list with a single element (built in O(N) time).
+
+        If more formulas are needed to convert `measure` to
+        `target_scale` a O(N^3) algorithm is used to get a list of
+        formulas that should be sequentially applied to `measure` to
+        get the converted measure.
         """
         target_scale = target_scale or self.target_scale
 
