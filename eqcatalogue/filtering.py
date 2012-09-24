@@ -98,7 +98,7 @@ class Criteria(object):
 
     def __getitem__(self, item):
         """
-        Indexing protocol
+        Support for the index protocol
         """
         return self.all()[item]
 

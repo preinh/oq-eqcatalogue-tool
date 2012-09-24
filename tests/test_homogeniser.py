@@ -17,8 +17,7 @@
 import unittest
 from os import path
 from eqcatalogue.homogeniser import Homogeniser
-from tests.test_regression import _load_catalog
-from tests.test_utils import in_data_dir
+from tests.test_utils import in_data_dir, load_catalog
 from eqcatalogue.regression import LinearModel, PolynomialModel
 from eqcatalogue import selection, grouping, models
 from eqcatalogue.filtering import C
@@ -29,7 +28,7 @@ ACTUAL_OUTPUT = [in_data_dir("actual_homo%d.png" % i)
 
 class AnHomogeniserShould(unittest.TestCase):
     def setUp(self):
-        _load_catalog()
+        load_catalog()
         self.homogeniser = Homogeniser()
         self.homogeniser.set_scales(native="mb", target="MS")
         self.i = 0

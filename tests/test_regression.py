@@ -21,17 +21,10 @@ from numpy import allclose
 from eqcatalogue.regression import (EmpiricalMagnitudeScalingRelationship,
                                     LinearModel, PolynomialModel)
 from eqcatalogue import exceptions
-from eqcatalogue.importers import isf_bulletin
+from eqcatalogue.importers import store_events, isf_bulletin
 from eqcatalogue import models as catalogue
 
 
-def _load_catalog():
-    cat = catalogue.CatalogueDatabase(memory=True)
-    cat.recreate()
-    isf_bulletin.V1.import_events(
-        file(in_data_dir('isc-query-small.html')),
-        cat)
-    return cat
 
 
 class ShouldPerformRegression(unittest.TestCase):

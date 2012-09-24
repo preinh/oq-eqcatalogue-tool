@@ -16,13 +16,13 @@
 import unittest
 from eqcatalogue import filtering, grouping
 from eqcatalogue import selection, models
-from tests.test_regression import _load_catalog
+from tests.test_utils import load_catalog
 
 
 class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
 
     def setUp(self):
-        _load_catalog()
+        load_catalog()
         measures = filtering.C(agency__in=['ISC', 'IDC', 'GCMT'],
                                scale__in=['mb', 'MS', 'MW'])
         self.native_scale = 'mb'

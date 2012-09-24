@@ -38,3 +38,12 @@ class InvalidCriteria(BaseException):
     Invalid Criteria argument given to a factory
     """
     pass
+
+
+class InvalidMagnitudeSeq(BaseException):
+    """
+    Raised when in a sequence of magnitudes
+    each magnitude is defined by its Author,
+    Type and Value.
+    """
+    pass

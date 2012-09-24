@@ -241,7 +241,8 @@ class HarmoniserWithFormulaAndCriteriaTestCase(
     """
     def setUp(self):
         super(HarmoniserWithFormulaAndCriteriaTestCase, self).setUp()
-        cat = CatalogueDatabase()
+        cat = CatalogueDatabase(memory=True, drop=True)
+        cat.recreate()
         load_fixtures(cat.session)
         self.measures = C()
 

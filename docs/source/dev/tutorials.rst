@@ -12,7 +12,28 @@ with a simple regression plot to compare two different magnitude scales.
 
 Installation
 -------------------------------------
-(To be updated when new procedure is in place!)
+The following installation instructions apply to Ubuntu 12.04 and Ubuntu 11.x.
+
+You may need some development packages that you can install with apt:
+
+    sudo apt-get install git mercurial python-software-properties python-pip python-imaging python-numpy python-scipy python-matplotlib python-nose libspatialite-dev
+
+Get the code from github:
+
+    git clone http://github.com/gem/oq-eqcatalogue-tool/
+
+Then, install the remaining requirements
+
+    sudo pip install -r oq-eqcatalogue-tool/requirements.txt
+
+
+To check that the installation works properly you can issue the command
+    cd oq-eqcatalogue-tool
+    ./run_qa_tests
+
+
+(Optional) To install oq-eqcatalogue-tool system-wide, you can issue:
+    sudo python setup.py install
 
 
 Data format

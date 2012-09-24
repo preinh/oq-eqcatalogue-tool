@@ -15,6 +15,7 @@
 
 
 import unittest
+import random
 from datetime import datetime
 from geoalchemy import WKTSpatialElement
 
@@ -22,6 +23,7 @@ from tests.test_utils import in_data_dir
 
 from eqcatalogue.importers.csv1 import CsvEqCatalogueReader, Converter
 from eqcatalogue import models
+from eqcatalogue import exceptions
 from eqcatalogue import filtering
 
 
@@ -86,6 +88,19 @@ class ACriteriaShould(unittest.TestCase):
 
     def test_allows_filtering_of_all_measures(self):
         self.assertEqual(30, len(filtering.Criteria()))
+        self.assertEqual(30, len(filtering.Criteria().all()))
+
+    def test_behave_as_a_container(self):
+        measure = random.choice(filtering.Criteria())
+        self.assertTrue(measure in filtering.Criteria())
+
+    def test_return_events(self):
+        self.assertEqual(5, len(filtering.Criteria().events()))
+
+    def test_group_measures(self):
+        # we only test the presence of the interface as the proper
+        # behavior of this feature is tested in other test modules
+        self.assertTrue(filtering.Criteria().group_measures())
 
     def test_allows_filtering_measures_on_time_criteria(self):
         time = datetime.now()
@@ -96,12 +111,22 @@ class ACriteriaShould(unittest.TestCase):
         between_time = filtering.Between((time_lb, time_ub))
 
         self.assertEqual(30, before_time.count())
+
+        measure = random.choice(before_time)
+        self.assertTrue(before_time.predicate(measure))
+
         self.assertEqual(0, after_time.count())
+
         self.assertEqual(6, between_time.count())
+        measure = random.choice(between_time)
+        self.assertTrue(between_time.predicate(measure))
 
     def test_allows_filtering_of_measures_given_two_mag(self):
-        self.assertEqual(20, len(filtering.WithMagnitudeScales(
-            ('MS', 'mb'))))
+        result = filtering.WithMagnitudeScales(('MS', 'mb'))
+        self.assertEqual(20, len(result))
+
+        measure = random.choice(result)
+        self.assertTrue(result.predicate(measure))
 
         self.assertEqual(0, filtering.WithMagnitudeScales(
             'wtf').count())
@@ -128,6 +153,12 @@ class ACriteriaShould(unittest.TestCase):
         # Events inside second polygon: 1008567
         # with a sum for measures of 13.
         self.assertEqual(13, len(filtering.WithinPolygon(snd_polygon)))
+
+    def test_indexing(self):
+        measures = filtering.C()
+        for i in range(0, len(measures)):
+            self.assertTrue(measures[i] is not None)
+        self.assertRaises(IndexError, measures.__getitem__, len(measures))
 
     def test_allows_filtering_of_measures_given_distance_from_point(self):
         distance = 700000  # distance is expressed in meters using srid 4326
@@ -158,6 +189,42 @@ class ACriteriaShould(unittest.TestCase):
         self.assertEqual(5, len(measures2))
 
         self.assertEqual(11, len(measures1 | measures2))
+
+        measure = random.choice(random.choice([measures1, measures2]))
+        self.assertTrue((measures1 | measures2).predicate(measure))
+
+    def test_allows_and_combination(self):
+        agencies = ['BJI']
+        measures1 = filtering.WithAgencies(agencies)
+        value = 5
+        measures2 = filtering.WithMagnitudeGreater(value)
+
+        result = measures1 & measures2
+        self.assertEqual(2, len(result))
+        for m in result:
+            self.assertEqual('BJI', m.agency.source_key)
+            self.assertTrue(m.value > value)
+
+        measure = random.choice(result)
+        self.assertTrue(result.predicate(measure))
+
+    def test_default_predicate(self):
+        measure = random.choice(filtering.C())
+        self.assertTrue(filtering.C().predicate(measure))
+
+    def test_factory(self):
+        for criteria_arg, criteria_class in filtering.CRITERIA_MAP.items():
+            arguments = {criteria_arg: ['fake', 'arguments']}
+            criteria = filtering.C(**arguments)
+            self.assertEqual(criteria_class, type(criteria))
+
+        self.assertEqual(filtering.Criteria, type(filtering.C()))
+
+        self.assertEqual(filtering.CombinedCriteria, type(filtering.C(
+            agency__in=['ISC', 'NEIC'], magnitude__gt=5)))
+
+        self.assertRaises(exceptions.InvalidCriteria, filtering.C,
+                          kwargs={'wtf': 3})
 
     def tearDown(self):
         self.session.commit()
