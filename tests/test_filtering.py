@@ -131,6 +131,16 @@ class ACriteriaShould(unittest.TestCase):
         self.assertEqual(0, filtering.WithMagnitudeScales(
             'wtf').count())
 
+    def test_allows_filtering_of_measures_given_a_mag(self):
+        result = filtering.WithMagnitudeScale('MS')
+        self.assertEqual(4, len(result))
+
+        measure = random.choice(result)
+        self.assertTrue(result.predicate(measure))
+
+        self.assertEqual(0, filtering.WithMagnitudeScale(
+            'wtf').count())
+
     def test_allows_filtering_of_measures_on_agency_basis(self):
         agency = 'LDG'
         self.assertEqual(2, len(filtering.WithAgencies([agency])))
