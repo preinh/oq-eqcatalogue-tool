@@ -16,10 +16,12 @@
 
 import re
 import datetime
+from sqlalchemy.exc import IntegrityError
 
 from eqcatalogue import models as catalogue
 
 from eqcatalogue.importers import Importer
+from eqcatalogue.exceptions import ParsingFailure
 
 CATALOG_URL = 'http://www.isc.ac.uk/cgi-bin/web-db-v4'
 
@@ -54,6 +56,9 @@ EVENT_TYPES = {
     'sn': 'suspected nuclear explosion',
     'ls': 'landslide'
     }
+
+ERR_MSG = ('The line %s violates the format, please check the related format'
+           ' documentation at: http://www.isc.ac.uk/standards/isf/')
 
 
 class UnexpectedLine(BaseException):
@@ -451,7 +456,7 @@ class V1(Importer):
         into the catalogue db. If `allow_junk` is True, it allows
         unexpected line inputs at the beginning of the file
         """
-        for line in self._file_stream:
+        for line_num, line in enumerate(self._file_stream, start=1):
             line = line.strip()
 
             # line_type acts as "event" in the traditional fsm jargon.
@@ -467,8 +472,11 @@ class V1(Importer):
             try:
                 next_state = self._state.transition_rule(line_type)
                 self._transition(next_state)
-                state_output = next_state.process_line(line)
-                self.update_summary(state_output)
+                try:
+                    state_output = next_state.process_line(line)
+                    self.update_summary(state_output)
+                except IntegrityError:
+                    raise ParsingFailure(ERR_MSG % line_num)
             except UnexpectedLine as e:
                 current = self._state
                 if current.is_start() and line_type == 'junk' and allow_junk:
@@ -518,5 +526,3 @@ class V1(Importer):
     def update_summary(self, output):
         for object_type, nr in output.items():
             self._summary[object_type] = self._summary.get(object_type, 0) + nr
-
-

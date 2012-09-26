@@ -22,7 +22,7 @@ from eqcatalogue.importers import (CsvEqCatalogueReader, Converter, Importer,
 
 from eqcatalogue.importers.reader_utils import (STR_TRANSF, INT_TRANSF,
                                                 FLOAT_TRANSF)
-from eqcatalogue.exceptions import InvalidMagnitudeSeq
+from eqcatalogue.exceptions import InvalidMagnitudeSeq, ParsingFailure
 
 from eqcatalogue import models as catalogue
 
@@ -30,6 +30,7 @@ from tests.test_utils import in_data_dir
 
 
 DATAFILE_ISC = in_data_dir('isc-query-small.html')
+BROKEN_ISC = in_data_dir('broken_isc.txt')
 
 DATAFILE_IASPEI = in_data_dir('iaspei.csv')
 
@@ -38,11 +39,13 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
 
     def setUp(self):
         self.f = file(DATAFILE_ISC)
+        self.broken_isc = file(BROKEN_ISC)
         self.cat = catalogue.CatalogueDatabase(memory=True, drop=True)
         self.cat.recreate()
 
     def tearDown(self):
         self.f.close()
+        self.broken_isc.close()
 
     def test_detect_junk_lines(self):
         # Common Assess part in setUp method
@@ -80,6 +83,13 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
         self.assertEqual(events.count(),  18)
         self.assertEqual(origins.count(),  128)
         self.assertEqual(measures.count(),  334)
+
+    def test_raises_parsing_failure(self):
+        importer = V1(self.broken_isc, self.cat)
+        with self.assertRaises(ParsingFailure) as exp:
+            importer.store()
+
+            self.assertEqual(isf.ERR_MSG % 18, exp.message)
 
 
 class AIaspeiImporterShould(unittest.TestCase):
