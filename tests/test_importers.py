@@ -86,10 +86,11 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
 
     def test_raises_parsing_failure(self):
         importer = V1(self.broken_isc, self.cat)
+        BROKEN_LINE_NUM = 18
         with self.assertRaises(ParsingFailure) as exp:
             importer.store()
 
-            self.assertEqual(isf.ERR_MSG % 18, exp.message)
+            self.assertEqual(isf.ERR_MSG % BROKEN_LINE_NUM, exp.message)
 
 
 class AIaspeiImporterShould(unittest.TestCase):
