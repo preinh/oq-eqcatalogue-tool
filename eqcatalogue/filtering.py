@@ -248,6 +248,10 @@ class WithMagnitudeScales(Criteria):
         super(WithMagnitudeScales, self).__init__()
         self.scales = scales
 
+    @classmethod
+    def make_with_scale(cls, scale):
+        return cls([scale])
+
     def filter(self, queryset=None):
         queryset = queryset or self.default_queryset
         return queryset.filter(
@@ -255,15 +259,6 @@ class WithMagnitudeScales(Criteria):
 
     def predicate(self, measure):
         return measure.scale in self.scales
-
-
-class WithMagnitudeScale(WithMagnitudeScales):
-    """
-    all the measures which have the specified magnitude
-    scale
-    """
-    def __init__(self, scale):
-        super(WithMagnitudeScale, self).__init__([scale])
 
 
 class WithMagnitudeGreater(Criteria):
@@ -327,7 +322,7 @@ CRITERIA_MAP = {
     'between': Between,
     'agency__in': WithAgencies,
     'scale__in': WithMagnitudeScales,
-    'scale': WithMagnitudeScale,
+    'scale': WithMagnitudeScales.make_with_scale,
     'within_polygon': WithinPolygon,
     'within_distance_from_point': WithinDistanceFromPoint,
     'magnitude__gt': WithMagnitudeGreater

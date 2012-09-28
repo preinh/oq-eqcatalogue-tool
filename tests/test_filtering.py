@@ -132,13 +132,13 @@ class ACriteriaShould(unittest.TestCase):
             'wtf').count())
 
     def test_allows_filtering_of_measures_given_a_mag(self):
-        result = filtering.WithMagnitudeScale('MS')
+        result = filtering.WithMagnitudeScales.make_with_scale('MS')
         self.assertEqual(4, len(result))
 
         measure = random.choice(result)
         self.assertTrue(result.predicate(measure))
 
-        self.assertEqual(0, filtering.WithMagnitudeScale(
+        self.assertEqual(0, filtering.WithMagnitudeScales.make_with_scale(
             'wtf').count())
 
     def test_allows_filtering_of_measures_on_agency_basis(self):
@@ -222,20 +222,6 @@ class ACriteriaShould(unittest.TestCase):
         measure = random.choice(filtering.C())
         self.assertTrue(filtering.C().predicate(measure))
 
-    def test_factory(self):
-        for criteria_arg, criteria_class in filtering.CRITERIA_MAP.items():
-            arguments = {criteria_arg: ['fake', 'arguments']}
-            criteria = filtering.C(**arguments)
-            self.assertEqual(criteria_class, type(criteria))
-
-        self.assertEqual(filtering.Criteria, type(filtering.C()))
-
-        self.assertEqual(filtering.CombinedCriteria, type(filtering.C(
-            agency__in=['ISC', 'NEIC'], magnitude__gt=5)))
-
-        self.assertRaises(exceptions.InvalidCriteria, filtering.C,
-                          kwargs={'wtf': 3})
-
     def tearDown(self):
         self.session.commit()
 
@@ -251,7 +237,7 @@ class TestCriteriaFactory(unittest.TestCase):
             ['between', filtering.Between, [datetime.now(), datetime.now()]],
             ['agency__in', filtering.WithAgencies, ["LEIC"]],
             ['scale__in', filtering.WithMagnitudeScales, ["Mw"]],
-            ['scale', filtering.WithMagnitudeScale, "Mw"],
+            ['scale', filtering.WithMagnitudeScales, "Mw"],
             ['within_polygon', filtering.WithinPolygon,
              'POLYGON((92 15, 95 15, 95 10, 92 10, 92 15))'],
             ['within_distance_from_point', filtering.WithinDistanceFromPoint,
@@ -266,3 +252,12 @@ class TestCriteriaFactory(unittest.TestCase):
         for kwarg, criteria_class, value in self.TESTS:
             criteria = filtering.C(**{kwarg: value})
             self.assertEqual(criteria_class, criteria.__class__)
+
+    def test_factory(self):
+        self.assertEqual(filtering.Criteria, type(filtering.C()))
+
+        self.assertEqual(filtering.CombinedCriteria, type(filtering.C(
+            agency__in=['ISC', 'NEIC'], magnitude__gt=5)))
+
+        self.assertRaises(exceptions.InvalidCriteria, filtering.C,
+                          kwargs={'wtf': 3})
