@@ -19,98 +19,20 @@ of a set of measures to a single target scale
 """
 
 
-class Harmoniser(object):
+class FormulaPathFinder(object):
     """
-    This class is responsable to convert a set of measures into a
-    target scale by using a set of conversion formula
-
-    :attribute target_scale
-      The target scale considered
-
-    :attribute _formulas
-      The list of formulas used to convert measures
+    A path finder algorithm that compute the proper sequence of
+    formulas to be applied on a measure to convert to a target scale
     """
-    def __init__(self, target_scale):
-        self.target_scale = target_scale
-        self._formulas = {}
 
-    def add_conversion_formula(self, formula, domain, target_scale):
-        """
-        Create a conversion formula from a conversion formula and make
-        it available for the harmonizer
-
-        :param formula
-          A callable that requires in input the value to be converted
-
-        :param domain
-          The domain of measures mapped by conversion formula (an
-          object, e.g. a list/set that can be queried with the in
-          operator)
-
-        :param target_scale
-          The target scale
-        """
-
-        formula = ConversionFormula(formula, domain, target_scale)
-        self._add_formula(formula)
-
-    def add_conversion_formula_from_model(self, model):
-        """
-        Create a conversion formula from a regression model and make
-        it available for the harmonizer
-
-        :param model
-          A regression model
-        """
-        formula = ConversionFormula.make_from_model(model)
-        self._add_formula(formula)
-
-    def _add_formula(self, formula):
-        """
-        Add a conversion formula to the formula database
-        """
-        scale = formula.target_scale
-        self._formulas[scale] = self._formulas.get(scale, [])
-        self._formulas[scale].append(formula)
+    def __init__(self, formulas):
+        self._formulas = formulas
 
     def all_formulas(self):
         """
         Return a list of all the registered formulas
         """
         return sum(self._formulas.values(), [])
-
-    def harmonise(self, measures):
-        """
-        Harmonize an iterator of measures.
-
-        :param measures
-          the measures to be converted
-
-        :return the converted and the unconverted measures
-        :rtype a 2-tuple. The former is dictionary where the keys are
-        the converted measures and the value is a dictionary storing
-        the converted value and the formula used for the conversion.
-        The latter is a list of the unconverted measures
-        """
-        converted = {}
-        unconverted = []
-        for m in measures:
-            formulas = self._find_formulas_for(m)
-            if formulas:
-                value = formulas[0].apply(m)
-                for formula in formulas[1:]:
-                    value = formula.apply(value)
-
-                converted[m] = dict(
-                    measure=value,
-                    formulas=formulas)
-            elif m.scale == self.target_scale:
-                converted[m] = dict(
-                    measure=m,
-                    formulas=[])
-            else:
-                unconverted.append(m)
-        return converted, unconverted
 
     def applicable_formulas(self, measure):
         """
@@ -121,10 +43,9 @@ class Harmoniser(object):
         return [f for f in self.all_formulas()
                 if f.is_applicable_for(measure)]
 
-    def _find_formulas_for(self, measure, target_scale=None):
+    def find_formulas_for(self, measure, target_scale):
         """
-        Find formulas to convert `measure` to `target_scale` (default
-        to self.target_scale).
+        Find formulas to convert `measure` to `target_scale`
 
         If the `measure` is already in the target scale it returns None.
 
@@ -136,7 +57,6 @@ class Harmoniser(object):
         formulas that should be sequentially applied to `measure` to
         get the converted measure.
         """
-        target_scale = target_scale or self.target_scale
 
         # if we do not have any formula to convert to the target
         # scale, just return
@@ -171,7 +91,7 @@ class Harmoniser(object):
                 else:
                     current_path.pop()
 
-                if next_measure.scale == self.target_scale:
+                if next_measure.scale == target_scale:
                     ret.append(current_path[:])
 
                 for formula in next_formulas:
@@ -182,6 +102,102 @@ class Harmoniser(object):
             return ret[0]
 
         return ret
+
+
+class Harmoniser(object):
+    """
+    This class is responsible to convert a set of measures into a
+    target scale by using a set of conversion formula
+
+    :attribute target_scale
+      The target scale considered
+
+    :attribute _formulas
+      The list of formulas used to convert measures
+    """
+    def __init__(self, target_scale):
+        self.target_scale = target_scale
+        self._formulas = {}
+
+    def add_conversion_formula(self, function, domain, target_scale):
+        """
+        Create a conversion formula from a `function` and make
+        it available for the harmoniser.
+
+        E.g.
+        >>> an_harmoniser.add_conversion_formula(
+              lambda measure: measure * 1.2 + 0.1,
+              domain=C(scale="mb") & C(agency__in=["ISC"]),
+              target_scale="Mw")
+
+        :param function
+          A callable that requires in input the value to be converted
+
+        :param domain
+          The domain of measures mapped by conversion formula (an
+          object, e.g. a list/set that can be queried with the in
+          operator)
+
+        :param target_scale
+          The target scale
+        """
+
+        formula = ConversionFormula(function, domain, target_scale)
+        self._add_formula(formula)
+
+    def add_conversion_formula_from_model(self, model):
+        """
+        Create a conversion formula from a regression model and make
+        it available for the harmoniser
+
+        :param model
+          A regression model
+        """
+        formula = ConversionFormula.make_from_model(model)
+        self._add_formula(formula)
+
+    def _add_formula(self, formula):
+        """
+        Add a conversion formula to the formula database
+        """
+        scale = formula.target_scale
+        self._formulas[scale] = self._formulas.get(scale, [])
+        self._formulas[scale].append(formula)
+
+    def harmonise(self, measures, path_finder_cls=FormulaPathFinder):
+        """
+        Harmonise an iterator of measures.
+
+        :param measures
+          the measures to be converted
+
+        :return the converted and the unconverted measures
+        :rtype a 2-tuple. The former is dictionary where the keys are
+        the converted measures and the value is a dictionary storing
+        the converted value and the formula used for the conversion.
+        The latter is a list of the unconverted measures
+        """
+        converted = {}
+        unconverted = []
+        path_finder = path_finder_cls(self._formulas)
+
+        for m in measures:
+            formulas = path_finder.find_formulas_for(m, self.target_scale)
+            if formulas:
+                value = formulas[0].apply(m)
+                for formula in formulas[1:]:
+                    value = formula.apply(value)
+
+                converted[m] = dict(
+                    measure=value,
+                    formulas=formulas)
+            elif m.scale == self.target_scale:
+                converted[m] = dict(
+                    measure=m,
+                    formulas=[])
+            else:
+                unconverted.append(m)
+        return converted, unconverted
 
 
 class ConversionFormula(object):

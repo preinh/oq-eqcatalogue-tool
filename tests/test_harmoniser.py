@@ -167,10 +167,10 @@ class HarmoniserWithFormulaTestCase(HarmoniserWithFixturesAbstractTestCase):
         native_measures_2 = self.measures[
             self.number_of_measures / 3:2 * self.number_of_measures / 3]
 
-        self.a_conversion = {'formula': lambda x: x * 2.,
+        self.a_conversion = {'function': lambda x: x * 2.,
                              'domain': native_measures_1,
                              'target_scale': self.target_scale}
-        self.ya_conversion = {'formula': lambda x: x / 1.5,
+        self.ya_conversion = {'function': lambda x: x / 1.5,
                               'domain': native_measures_2,
                               'target_scale': self.target_scale}
 
@@ -249,7 +249,7 @@ class HarmoniserWithFormulaAndCriteriaTestCase(
     def test_conversion(self):
         h = Harmoniser(target_scale=self.target_scale)
 
-        h.add_conversion_formula(formula=lambda x: x * 2,
+        h.add_conversion_formula(function=lambda x: x * 2,
                                  domain=C(agency__in=['LDG', 'NEIC']),
                                  target_scale=self.target_scale)
         converted, unconverted = h.harmonise(self.measures)
@@ -270,23 +270,23 @@ class HarmoniserWithDifferentTargetScales(
     def test_conversion(self):
         h = Harmoniser(target_scale=self.target_scale)
 
-        h.add_conversion_formula(formula=lambda x: x * 2.,
+        h.add_conversion_formula(function=lambda x: x * 2.,
                                  domain=C(scale=self.a_native_scale),
                                  target_scale="M2")
 
-        h.add_conversion_formula(formula=lambda x: x * 3.,
+        h.add_conversion_formula(function=lambda x: x * 3.,
                                  domain=C(scale=self.ya_native_scale),
                                  target_scale="M3")
-        h.add_conversion_formula(formula=lambda x: x * 3.,
+        h.add_conversion_formula(function=lambda x: x * 3.,
                                  domain=C(scale="M3"),
                                  target_scale="M2")
-        h.add_conversion_formula(formula=lambda x: x * 4.,
+        h.add_conversion_formula(function=lambda x: x * 4.,
                                  domain=C(scale="M2"),
                                  target_scale=self.target_scale)
-        h.add_conversion_formula(formula=lambda x: x * 4.,
+        h.add_conversion_formula(function=lambda x: x * 4.,
                                  domain=C(scale="M2"),
                                  target_scale="M4")
-        h.add_conversion_formula(formula=lambda x: x * 4.,
+        h.add_conversion_formula(function=lambda x: x * 4.,
                                  domain=C(scale="M2"),
                                  target_scale="M5")
         converted, unconverted = h.harmonise(self.measures)
