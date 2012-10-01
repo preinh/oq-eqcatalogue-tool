@@ -15,6 +15,7 @@
 
 
 import unittest
+import mock
 import random
 from datetime import datetime
 from geoalchemy import WKTSpatialElement
@@ -166,8 +167,10 @@ class ACriteriaShould(unittest.TestCase):
 
     def test_indexing(self):
         measures = filtering.C()
-        for i in range(0, len(measures)):
-            self.assertTrue(measures[i] is not None)
+        measures.all = mock.Mock(return_value=[1, 2, 3])
+
+        self.assertEqual(1, measures[0])
+        self.assertEqual(3, measures[2])
         self.assertRaises(IndexError, measures.__getitem__, len(measures))
 
     def test_allows_filtering_of_measures_given_distance_from_point(self):
