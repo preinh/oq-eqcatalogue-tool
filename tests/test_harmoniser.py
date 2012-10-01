@@ -54,7 +54,7 @@ class HarmoniserWithFixturesAbstractTestCase(unittest.TestCase):
                     standard_error=1, value=(i + 1) * mfactor))
 
     def assertConversion(self, converted, converted_count,
-                         unconverted, unconverted_count):
+                         unconverted, unconverted_count, formula_used_nr=1):
         self.assertEqual(converted_count, len(converted))
         self.assertEqual(unconverted_count, len(unconverted))
 
@@ -62,16 +62,18 @@ class HarmoniserWithFixturesAbstractTestCase(unittest.TestCase):
             if measure in converted:
                 converted_measure = converted[measure]
                 if measure.scale == self.a_native_scale:
-                    self.assertEqual(1, len(converted_measure['formulas']))
-                    self.assertAlmostEqual(converted_measure['value'],
+                    self.assertEqual(formula_used_nr,
+                                     len(converted_measure['formulas']))
+                    self.assertAlmostEqual(converted_measure['measure'].value,
                                            measure.value * 2)
                 elif measure.scale == self.target_scale:
                     self.assertEqual(converted_measure['formulas'], [])
-                    self.assertAlmostEqual(converted_measure['value'],
+                    self.assertAlmostEqual(converted_measure['measure'].value,
                                            measure.value)
                 elif measure.scale == self.ya_native_scale:
-                    self.assertEqual(1, len(converted_measure['formulas']))
-                    self.assertAlmostEqual(converted_measure['value'],
+                    self.assertEqual(formula_used_nr,
+                                     len(converted_measure['formulas']))
+                    self.assertAlmostEqual(converted_measure['measure'].value,
                                            measure.value / 1.5)
             else:
                 self.assertTrue(measure in unconverted)
@@ -165,10 +167,10 @@ class HarmoniserWithFormulaTestCase(HarmoniserWithFixturesAbstractTestCase):
         native_measures_2 = self.measures[
             self.number_of_measures / 3:2 * self.number_of_measures / 3]
 
-        self.a_conversion = {'formula': lambda x: x * 2.,
+        self.a_conversion = {'function': lambda x: x * 2.,
                              'domain': native_measures_1,
                              'target_scale': self.target_scale}
-        self.ya_conversion = {'formula': lambda x: x / 1.5,
+        self.ya_conversion = {'function': lambda x: x / 1.5,
                               'domain': native_measures_2,
                               'target_scale': self.target_scale}
 
@@ -247,9 +249,65 @@ class HarmoniserWithFormulaAndCriteriaTestCase(
     def test_conversion(self):
         h = Harmoniser(target_scale=self.target_scale)
 
-        h.add_conversion_formula(formula=lambda x: x * 2,
+        h.add_conversion_formula(function=lambda x: x * 2,
                                  domain=C(agency__in=['LDG', 'NEIC']),
                                  target_scale=self.target_scale)
         converted, unconverted = h.harmonise(self.measures)
 
         self.assertConversion(converted, 6, unconverted, 24)
+
+
+class HarmoniserWithDifferentTargetScales(
+        HarmoniserWithFixturesAbstractTestCase):
+    """
+    Tests the usage of an harmoniser with formula that targets
+    different scales
+    """
+
+    def setUp(self):
+        super(HarmoniserWithDifferentTargetScales, self).setUp()
+
+    def test_conversion(self):
+        h = Harmoniser(target_scale=self.target_scale)
+
+        h.add_conversion_formula(function=lambda x: x * 2.,
+                                 domain=C(scale=self.a_native_scale),
+                                 target_scale="M2")
+
+        h.add_conversion_formula(function=lambda x: x * 3.,
+                                 domain=C(scale=self.ya_native_scale),
+                                 target_scale="M3")
+        h.add_conversion_formula(function=lambda x: x * 3.,
+                                 domain=C(scale="M3"),
+                                 target_scale="M2")
+        h.add_conversion_formula(function=lambda x: x * 4.,
+                                 domain=C(scale="M2"),
+                                 target_scale=self.target_scale)
+        h.add_conversion_formula(function=lambda x: x * 4.,
+                                 domain=C(scale="M2"),
+                                 target_scale="M4")
+        h.add_conversion_formula(function=lambda x: x * 4.,
+                                 domain=C(scale="M2"),
+                                 target_scale="M5")
+        converted, unconverted = h.harmonise(self.measures)
+
+        self.assertEqual(30, len(converted))
+        self.assertEqual(0, len(unconverted))
+
+        for measure in self.measures:
+            self.assertTrue(measure in converted)
+
+            converted_measure = converted[measure]
+            if measure.scale == self.a_native_scale:
+                self.assertEqual(2, len(converted_measure['formulas']))
+                self.assertAlmostEqual(converted_measure['measure'].value,
+                                       measure.value * 8)
+            elif measure.scale == self.target_scale:
+                self.assertEqual(converted_measure['formulas'], [])
+                self.assertAlmostEqual(converted_measure['measure'].value,
+                                       measure.value)
+            elif measure.scale == self.ya_native_scale:
+                self.assertEqual(3,
+                                 len(converted_measure['formulas']))
+                self.assertAlmostEqual(converted_measure['measure'].value,
+                                       measure.value * 36)

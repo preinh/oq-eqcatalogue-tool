@@ -172,8 +172,7 @@ class MagnitudeMeasure(object):
         self.origin = origin
         self.scale = scale
         self.value = value
-        if standard_error is not None:
-            self.standard_error = standard_error
+        self.standard_error = standard_error
 
     def __repr__(self):
         return "measure of %s at %s by %s: %s %s (sigma=%s)" % (
@@ -189,6 +188,49 @@ class MagnitudeMeasure(object):
         return [cls(agency=None, event=None, origin=None,
                     scale=scale, value=v[0], standard_error=v[1])
                     for v in zip(values, sigmas)]
+
+    def convert(self, new_value, formula):
+        """
+        Convert the measure to a ConvertedMeasure with `new_value`
+        through `formula`
+        """
+        return ConvertedMeasure(self.agency, self.event, self.origin,
+                   formula.target_scale, new_value, self.standard_error,
+                   self, [formula])
+
+
+class ConvertedMeasure(object):
+    """
+    A converted measure is measure that is the result of a conversion
+    """
+    def __init__(self, agency, event, origin, scale, value,
+                 standard_error=None, original_measure=None, formulas=None):
+        # we do not inherit by MagnitudeMeasure because it could be
+        # sqlalchemizable, and, consenquently it may have some magic
+        # in the constructor that we don't want here
+        self.agency = agency
+        self.event = event
+        self.origin = origin
+        self.scale = scale
+        self.value = value
+        self.standard_error = standard_error
+        self.original_measure = original_measure
+        self.formulas = formulas or []
+
+    def __repr__(self):
+        return "converted measure %s %s (sigma=%s) converted by %s from %s" % (
+            self.value, self.scale, self.standard_error, self.formulas,
+            self.original_measure)
+
+    def convert(self, new_value, formula):
+        """
+        Convert the measure to a ConvertedMeasure with `new_value`
+        through `formula`
+        """
+        return self.__class__(
+            self.agency, self.event, self.origin, formula.target_scale,
+            new_value, self.standard_error, self.original_measure,
+            self.formulas + [formula])
 
 
 class Origin(object):
@@ -283,14 +325,14 @@ class MeasureMetadata(object):
 
 class Singleton(type):
     """Metaclass to implement the singleton pattern"""
-    def __init__(cls, name, bases, d):
-        super(Singleton, cls).__init__(name, bases, d)
-        cls.instance = None
+    def __init__(mcs, name, bases, der):
+        super(Singleton, mcs).__init__(name, bases, der)
+        mcs.instance = None
 
-    def __call__(cls, *args, **kw):
-        if cls.instance is None:
-            cls.instance = super(Singleton, cls).__call__(*args, **kw)
-        return cls.instance
+    def __call__(mcs, *args, **kw):
+        if mcs.instance is None:
+            mcs.instance = super(Singleton, mcs).__call__(*args, **kw)
+        return mcs.instance
 
 
 class CatalogueDatabase(object):
@@ -323,8 +365,8 @@ class CatalogueDatabase(object):
 
     __metaclass__ = Singleton
 
-    def __init__(self, engine_class_module=DEFAULT_ENGINE, **engine_params):
-        self._engine_class = self.__class__.get_engine(engine_class_module)
+    def __init__(self, engine=DEFAULT_ENGINE, **engine_params):
+        self._engine_class = self.__class__.get_engine(engine)
         self._engine = self._engine_class(**engine_params)
 
     def recreate(self):
@@ -343,6 +385,9 @@ class CatalogueDatabase(object):
 
     @classmethod
     def get_engine(cls, module_name):
+        """
+        Return the Engine class that is defined into `module_name`
+        """
         module = __import__(module_name, fromlist=['Engine'])
         return module.Engine
 
@@ -355,6 +400,9 @@ class CatalogueDatabase(object):
 
     @property
     def session(self):
+        """
+        Return the current CatalogueDatabase session
+        """
         return self._engine.session
 
     def get_or_create(self, class_object, query_args, creation_args=None):

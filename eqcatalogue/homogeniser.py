@@ -88,7 +88,7 @@ class Homogeniser(object):
         self._selector = selector or selection.Random()
         self._mu_strategy = (missing_uncertainty_strategy or
                              selection.MUSDiscard())
-        self._serializer = mpl or serializer
+        self.serializer = mpl or serializer
 
         self._native_scale = native_scale
         self._target_scale = target_scale
@@ -187,9 +187,6 @@ class Homogeniser(object):
         """
         self._mu_strategy = mu_strategy_class(**mu_strategy_args)
 
-    def set_serializer(self, serializer):
-        self._serializer = serializer
-
     def set_criteria(self, criteria=None):
         """
         Set the criteria used to filters measures
@@ -275,7 +272,7 @@ class Homogeniser(object):
           and 'output' (with the output of the regression)
         """
         scipy_outputs = self._perform_regression()
-        self._serializer.plot(self._emsr,
+        self.serializer.plot(self._emsr,
                               *serializer_args,
                               **serializer_kwargs)
         return scipy_outputs

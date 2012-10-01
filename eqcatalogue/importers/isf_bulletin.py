@@ -518,5 +518,3 @@ class V1(Importer):
     def update_summary(self, output):
         for object_type, nr in output.items():
             self._summary[object_type] = self._summary.get(object_type, 0) + nr
-
-

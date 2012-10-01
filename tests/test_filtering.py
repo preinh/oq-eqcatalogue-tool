@@ -15,6 +15,7 @@
 
 
 import unittest
+import mock
 import random
 from datetime import datetime
 from geoalchemy import WKTSpatialElement
@@ -131,6 +132,16 @@ class ACriteriaShould(unittest.TestCase):
         self.assertEqual(0, filtering.WithMagnitudeScales(
             'wtf').count())
 
+    def test_allows_filtering_of_measures_given_a_mag(self):
+        result = filtering.WithMagnitudeScales.make_with_scale('MS')
+        self.assertEqual(4, len(result))
+
+        measure = random.choice(result)
+        self.assertTrue(result.predicate(measure))
+
+        self.assertEqual(0, filtering.WithMagnitudeScales.make_with_scale(
+            'wtf').count())
+
     def test_allows_filtering_of_measures_on_agency_basis(self):
         agency = 'LDG'
         self.assertEqual(2, len(filtering.WithAgencies([agency])))
@@ -153,6 +164,14 @@ class ACriteriaShould(unittest.TestCase):
         # Events inside second polygon: 1008567
         # with a sum for measures of 13.
         self.assertEqual(13, len(filtering.WithinPolygon(snd_polygon)))
+
+    def test_indexing(self):
+        measures = filtering.C()
+        measures.all = mock.Mock(return_value=[1, 2, 3])
+
+        self.assertEqual(1, measures[0])
+        self.assertEqual(3, measures[2])
+        self.assertRaises(IndexError, measures.__getitem__, len(measures))
 
     def test_allows_filtering_of_measures_given_distance_from_point(self):
         distance = 700000  # distance is expressed in meters using srid 4326
@@ -206,12 +225,38 @@ class ACriteriaShould(unittest.TestCase):
         measure = random.choice(filtering.C())
         self.assertTrue(filtering.C().predicate(measure))
 
-    def test_factory(self):
-        for criteria_arg, criteria_class in filtering.CRITERIA_MAP.items():
-            arguments = {criteria_arg: ['fake', 'arguments']}
-            criteria = filtering.C(**arguments)
-            self.assertEqual(criteria_class, type(criteria))
+    def tearDown(self):
+        self.session.commit()
 
+
+class TestCriteriaFactory(unittest.TestCase):
+    """
+    Test the Criteria factory
+    """
+    def setUp(self):
+        self.TESTS = [
+            ['before', filtering.Before, datetime.now()],
+            ['after', filtering.After, datetime.now()],
+            ['between', filtering.Between, [datetime.now(), datetime.now()]],
+            ['agency__in', filtering.WithAgencies, ["LEIC"]],
+            ['scale__in', filtering.WithMagnitudeScales, ["Mw"]],
+            ['scale', filtering.WithMagnitudeScales, "Mw"],
+            ['within_polygon', filtering.WithinPolygon,
+             'POLYGON((92 15, 95 15, 95 10, 92 10, 92 15))'],
+            ['within_distance_from_point', filtering.WithinDistanceFromPoint,
+             ['POINT(88.20 33.10)', 10.]],
+            ['magnitude__gt', filtering.WithMagnitudeGreater, 5.]]
+
+    def test_types(self):
+        """
+        Test that the criteria factory build the objects of the proper
+        types
+        """
+        for kwarg, criteria_class, value in self.TESTS:
+            criteria = filtering.C(**{kwarg: value})
+            self.assertEqual(criteria_class, criteria.__class__)
+
+    def test_factory(self):
         self.assertEqual(filtering.Criteria, type(filtering.C()))
 
         self.assertEqual(filtering.CombinedCriteria, type(filtering.C(
@@ -219,6 +264,3 @@ class ACriteriaShould(unittest.TestCase):
 
         self.assertRaises(exceptions.InvalidCriteria, filtering.C,
                           kwargs={'wtf': 3})
-
-    def tearDown(self):
-        self.session.commit()

@@ -19,9 +19,94 @@ of a set of measures to a single target scale
 """
 
 
+class FormulaPathFinder(object):
+    """
+    A path finder algorithm that compute the proper sequence of
+    formulas to be applied on a measure to convert to a target scale
+    """
+
+    def __init__(self, formulas):
+        self._formulas = formulas
+
+    def all_formulas(self):
+        """
+        Return a list of all the registered formulas
+        """
+        return sum(self._formulas.values(), [])
+
+    def applicable_formulas(self, measure):
+        """
+        Return the list of formulas that can be applied to `measure`.
+        A formula can be applied to a measure if such measure belongs
+        to its domain
+        """
+        return [f for f in self.all_formulas()
+                if f.is_applicable_for(measure)]
+
+    def find_formulas_for(self, measure, target_scale):
+        """
+        Find formulas to convert `measure` to `target_scale`
+
+        If the `measure` is already in the target scale it returns None.
+
+        If it exists a single formula to convert `measure`, it will
+        return a list with a single element (built in O(N) time).
+
+        If more formulas are needed to convert `measure` to
+        `target_scale` a O(N^3) algorithm is used to get a list of
+        formulas that should be sequentially applied to `measure` to
+        get the converted measure.
+        """
+
+        # if we do not have any formula to convert to the target
+        # scale, just return
+        if target_scale not in self._formulas:
+            return
+
+        # if we have a formula that can convert directly the measure
+        # to the target scale, we return it
+        for formula in self._formulas[target_scale]:
+            if formula.is_applicable_for(measure):
+                return [formula]
+
+        # otherwise we will do a graph visiting where the formula are
+        # the nodes and two formulas `foo` and `bar` are connected if
+        # the codomain of `foo` is a subset of the domain of `bar`.
+
+        candidate_starting_formulas = self.applicable_formulas(measure)
+        ret = []
+
+        for starting_formula in candidate_starting_formulas:
+            to_visit = [[starting_formula, 0, measure]]
+            previous_depth = -1
+            current_path = []
+
+            while to_visit:
+                formula, depth, original_measure = to_visit.pop()
+                next_measure = formula.apply(original_measure)
+                next_formulas = self.applicable_formulas(next_measure)
+
+                if depth > previous_depth:
+                    current_path.append(formula)
+                else:
+                    current_path.pop()
+
+                if next_measure.scale == target_scale:
+                    ret.append(current_path[:])
+
+                for formula in next_formulas:
+                    to_visit.append([formula, depth + 1, next_measure])
+
+        # if we have multiple solutions just return the first one
+        if len(ret):
+            return ret[0]
+
+        return ret
+
+
 class Harmoniser(object):
     """
-    This class is responsable to convert a set of measures into a
+    This class is responsible to convert a set of measures into a
     target scale by using a set of conversion formula
 
     :attribute target_scale
@@ -34,12 +119,18 @@ class Harmoniser(object):
         self.target_scale = target_scale
         self._formulas = {}
 
-    def add_conversion_formula(self, formula, domain, target_scale):
+    def add_conversion_formula(self, function, domain, target_scale):
         """
-        Create a conversion formula from a conversion formula and make
-        it available for the harmonizer
+        Create a conversion formula from a `function` and make
+        it available for the harmoniser.
 
-        :param formula
+        E.g.
+        >>> an_harmoniser.add_conversion_formula(
+              lambda measure: measure * 1.2 + 0.1,
+              domain=C(scale="mb") & C(agency__in=["ISC"]),
+              target_scale="Mw")
+
+        :param function
           A callable that requires in input the value to be converted
 
         :param domain
@@ -51,13 +142,13 @@ class Harmoniser(object):
           The target scale
         """
 
-        formula = ConversionFormula(formula, domain, target_scale)
+        formula = ConversionFormula(function, domain, target_scale)
         self._add_formula(formula)
 
     def add_conversion_formula_from_model(self, model):
         """
         Create a conversion formula from a regression model and make
-        it available for the harmonizer
+        it available for the harmoniser
 
         :param model
           A regression model
@@ -66,13 +157,16 @@ class Harmoniser(object):
         self._add_formula(formula)
 
     def _add_formula(self, formula):
+        """
+        Add a conversion formula to the formula database
+        """
         scale = formula.target_scale
         self._formulas[scale] = self._formulas.get(scale, [])
         self._formulas[scale].append(formula)
 
-    def harmonise(self, measures):
+    def harmonise(self, measures, path_finder_cls=FormulaPathFinder):
         """
-        Harmonize an iterator of measures.
+        Harmonise an iterator of measures.
 
         :param measures
           the measures to be converted
@@ -85,30 +179,25 @@ class Harmoniser(object):
         """
         converted = {}
         unconverted = []
+        path_finder = path_finder_cls(self._formulas)
+
         for m in measures:
-            formula = self._find_formula_for(m)
-            if formula:
+            formulas = path_finder.find_formulas_for(m, self.target_scale)
+            if formulas:
+                value = formulas[0].apply(m)
+                for formula in formulas[1:]:
+                    value = formula.apply(value)
+
                 converted[m] = dict(
-                    value=formula.apply(m),
-                    formulas=[formula])
+                    measure=value,
+                    formulas=formulas)
             elif m.scale == self.target_scale:
                 converted[m] = dict(
-                    value=m.value,
+                    measure=m,
                     formulas=[])
             else:
                 unconverted.append(m)
         return converted, unconverted
-
-    def _find_formula_for(self, measure, target_scale=None):
-        """
-        Find a formula to convert `measure` to `target_scale`
-        """
-        target_scale = target_scale or self.target_scale
-        if target_scale not in self._formulas:
-            return
-        for formula in self._formulas[target_scale]:
-            if formula.is_applicable_for(measure):
-                return formula
 
 
 class ConversionFormula(object):
@@ -136,6 +225,19 @@ class ConversionFormula(object):
         """Returns true if the measure given in input can be converted"""
         return measure in self.domain
 
+    def __repr__(self):
+        domain_len = len(self.domain)
+        domain_str = "%d measures" % domain_len
+        if domain_len:
+            domain_str += "(%s" % self.domain[0]
+            if domain_len > 1:
+                domain_str += " ..."
+            domain_str += ")"
+        else:
+            domain_str = str(self.domain)
+        return "Formula to %s (domain: %s)" % (
+            self.target_scale, domain_str)
+
     @classmethod
     def make_from_model(cls, model):
         """
@@ -153,4 +255,5 @@ class ConversionFormula(object):
         if not self.is_applicable_for(measure):
             raise ValueError(
                 "You can not apply the conversion to this measure")
-        return self.formula(measure.value)
+        new_value = self.formula(measure.value)
+        return measure.convert(new_value, self)
