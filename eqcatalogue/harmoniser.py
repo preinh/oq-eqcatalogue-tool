@@ -129,7 +129,7 @@ class Harmoniser(object):
         it available for the harmoniser.
 
         E.g.
-        >>> an_harmoniser.add_conversion_formula(
+        an_harmoniser.add_conversion_formula(
               lambda measure: measure * 1.2 + 0.1,
               0.2, domain=C(scale="mb") & C(agency__in=["ISC"]),
               target_scale="Mw")
