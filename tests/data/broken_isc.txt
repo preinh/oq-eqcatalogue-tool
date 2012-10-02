@@ -1,0 +1,17 @@
+DATA_TYPE EVENT IMS1.0
+ISC Bulletin
+Event   894327 Mozambique
+   Date       Time        Err   RMS Latitude Longitude  Smaj  Smin  Az Depth   Err Ndef Nsta Gap  mdist  Mdist Qual   Author      OrigID
+1951/05/10 09:18:25                 -21.0000   33.0000                                                             uk PDE        1932416
+1951/05/10 09:18:30                 -19.9000   33.8000                                                             uk ISS        1932417
+1951/05/10 09:18:30                 -19.8700   33.8000                                                             uk JOH        1932418
+1951/05/10 09:18:36                 -19.7000   34.0000                                                             uk BCIS       1932419
+1951/05/10 09:18:32                 -19.7500   34.0000                  35.0                                       uk GUTE       1932415
+ (#PRIME)
+
+Magnitude  Err Nsta Author      OrigID
+       6.0          PRA        1932416
+       6.0          PRA        1932418
+       6.0          PRA        1932419
+MS     6.0          PAS        1932415
+

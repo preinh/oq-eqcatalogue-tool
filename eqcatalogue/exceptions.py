@@ -47,3 +47,11 @@ class InvalidMagnitudeSeq(BaseException):
     Type and Value.
     """
     pass
+
+
+class ParsingFailure(BaseException):
+    """
+    Raised at parsing time when
+    a line doesn't conform to
+    the expected format.
+    """
