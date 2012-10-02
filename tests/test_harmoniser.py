@@ -325,20 +325,24 @@ class ConversionFormulaTestCase(unittest.TestCase):
 
     def setUp(self):
         self.measures = generate_measures()
-        self.conv_formula = ConversionFormula(formula=lambda x: x * x * 3.,
+        self.conv_l_formula = ConversionFormula(formula=lambda x: x + 3.,
+                                                module_error=0.2,
+                                                domain=self.measures,
+                                                target_scale="Mw")
+        self.conv_p_formula = ConversionFormula(formula=lambda x: x * x + 3.,
                                                 module_error=0.2,
                                                 domain=self.measures,
                                                 target_scale="Mw")
 
     def test_conversion_measures_with_defined_error(self):
         # Measure value = 1.0, Measure error = 0.2
-        fst_converted_measure = self.conv_formula.apply(self.measures[0])
-        self.assertAlmostEqual(0.52915, fst_converted_measure.standard_error,
+        fst_converted_measure = self.conv_l_formula.apply(self.measures[0])
+        self.assertAlmostEqual(0.28284, fst_converted_measure.standard_error,
             places=5)
 
         # Measure value = 18.0, Measure error = 0.2
-        snd_converted_measure = self.conv_formula.apply(self.measures[15])
-        self.assertAlmostEqual(2.08806, snd_converted_measure.standard_error,
+        snd_converted_measure = self.conv_p_formula.apply(self.measures[15])
+        self.assertAlmostEqual(7.20278, snd_converted_measure.standard_error,
             places=5)
 
     def test_conversion_measures_with_undefined_error(self):
@@ -346,7 +350,7 @@ class ConversionFormulaTestCase(unittest.TestCase):
         fst_measure = self.measures[0]
         fst_measure.standard_error = None
 
-        fst_converted_measure = self.conv_formula.apply(fst_measure)
+        fst_converted_measure = self.conv_l_formula.apply(fst_measure)
         self.assertAlmostEqual(0.2, fst_converted_measure.standard_error,
             places=5)
 
@@ -355,7 +359,7 @@ class ConversionFormulaTestCase(unittest.TestCase):
         fst_measure = self.measures[0]
         fst_measure.standard_error = None
 
-        fst_converted_measure = self.conv_formula.apply(fst_measure,
+        fst_converted_measure = self.conv_l_formula.apply(fst_measure,
             measure_uncertainty=0.4)
-        self.assertAlmostEqual(1, fst_converted_measure.standard_error,
+        self.assertAlmostEqual(0.44721, fst_converted_measure.standard_error,
             places=5)

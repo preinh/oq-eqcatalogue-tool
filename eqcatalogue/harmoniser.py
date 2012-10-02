@@ -282,7 +282,7 @@ class ConversionFormula(object):
 
         new_value = self.formula(measure.value)
         standard_error = math.sqrt(self.module_error ** 2
-            + (derivative(self.formula, measure.value))
+            + ((derivative(self.formula, measure.value)) ** 2)
             * (measure_error ** 2))
 
         return measure.convert(new_value, self, standard_error)
