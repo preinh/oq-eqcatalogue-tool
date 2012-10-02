@@ -28,6 +28,7 @@ def in_data_dir(filename):
 
 
 def load_catalog():
+    CatalogueDatabase.reset_singleton()
     cat = CatalogueDatabase(memory=True)
     cat.recreate()
     store_events(V1, file(in_data_dir('isc-query-small.html')), cat)
