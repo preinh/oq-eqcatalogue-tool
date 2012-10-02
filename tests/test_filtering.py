@@ -68,7 +68,7 @@ def load_fixtures(session):
 
         mag_measure = models.MagnitudeMeasure(agency=agency, event=event,
                 origin=origin, scale=entry['mag_type'],
-            value=entry['magnitude'])
+            value=entry['magnitude'], standard_error=0.2)
 
         measure_meta = models.MeasureMetadata(
                 metadata_type='stations', value=entry['stations'],

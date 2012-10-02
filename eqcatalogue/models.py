@@ -189,13 +189,13 @@ class MagnitudeMeasure(object):
                     scale=scale, value=v[0], standard_error=v[1])
                     for v in zip(values, sigmas)]
 
-    def convert(self, new_value, formula):
+    def convert(self, new_value, formula, standard_error):
         """
         Convert the measure to a ConvertedMeasure with `new_value`
         through `formula`
         """
         return ConvertedMeasure(self.agency, self.event, self.origin,
-                   formula.target_scale, new_value, self.standard_error,
+                   formula.target_scale, new_value, standard_error,
                    self, [formula])
 
 
@@ -222,14 +222,14 @@ class ConvertedMeasure(object):
             self.value, self.scale, self.standard_error, self.formulas,
             self.original_measure)
 
-    def convert(self, new_value, formula):
+    def convert(self, new_value, formula, standard_error):
         """
         Convert the measure to a ConvertedMeasure with `new_value`
-        through `formula`
+        and `standard_error` through `formula`.
         """
         return self.__class__(
             self.agency, self.event, self.origin, formula.target_scale,
-            new_value, self.standard_error, self.original_measure,
+            new_value, standard_error, self.original_measure,
             self.formulas + [formula])
 
 
