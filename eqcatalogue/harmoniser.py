@@ -18,6 +18,9 @@ This module provides the main class that handles the harmonisation
 of a set of measures to a single target scale
 """
 
+import math
+from scipy.misc import derivative
+
 
 class FormulaPathFinder(object):
     """
@@ -119,7 +122,8 @@ class Harmoniser(object):
         self.target_scale = target_scale
         self._formulas = {}
 
-    def add_conversion_formula(self, function, domain, target_scale):
+    def add_conversion_formula(self, formula, module_error,
+                               domain, target_scale):
         """
         Create a conversion formula from a `function` and make
         it available for the harmoniser.
@@ -127,22 +131,26 @@ class Harmoniser(object):
         E.g.
         >>> an_harmoniser.add_conversion_formula(
               lambda measure: measure * 1.2 + 0.1,
-              domain=C(scale="mb") & C(agency__in=["ISC"]),
+              0.2, domain=C(scale="mb") & C(agency__in=["ISC"]),
               target_scale="Mw")
 
-        :param function
+        :param formula:
           A callable that requires in input the value to be converted
 
-        :param domain
+        :param module_error:
+          The error associated with the formula.
+
+        :param domain:
           The domain of measures mapped by conversion formula (an
           object, e.g. a list/set that can be queried with the in
           operator)
 
-        :param target_scale
+        :param target_scale:
           The target scale
         """
 
-        formula = ConversionFormula(function, domain, target_scale)
+        formula = ConversionFormula(formula, module_error,
+            domain, target_scale)
         self._add_formula(formula)
 
     def add_conversion_formula_from_model(self, model):
@@ -164,15 +172,21 @@ class Harmoniser(object):
         self._formulas[scale] = self._formulas.get(scale, [])
         self._formulas[scale].append(formula)
 
-    def harmonise(self, measures, path_finder_cls=FormulaPathFinder):
+    def harmonise(self, measures, path_finder_cls=FormulaPathFinder,
+                    measure_uncertainty=0.0):
         """
         Harmonise an iterator of measures.
 
-        :param measures
+        :param measures:
           the measures to be converted
-
-        :return the converted and the unconverted measures
-        :rtype a 2-tuple. The former is dictionary where the keys are
+        :param path_finder_cls:
+          the class used to find the sequence of formulas
+          to apply to get a conversion.
+        :param measure_uncertainty:
+          default grade of uncertainty, error related to the measures
+          if no standard error for measures is no defined.
+        :returns: the converted and the unconverted measures
+        :rtype: a 2-tuple. The former is dictionary where the keys are
         the converted measures and the value is a dictionary storing
         the converted value and the formula used for the conversion.
         The latter is a list of the unconverted measures
@@ -184,9 +198,9 @@ class Harmoniser(object):
         for m in measures:
             formulas = path_finder.find_formulas_for(m, self.target_scale)
             if formulas:
-                value = formulas[0].apply(m)
+                value = formulas[0].apply(m, measure_uncertainty)
                 for formula in formulas[1:]:
-                    value = formula.apply(value)
+                    value = formula.apply(value, measure_uncertainty)
 
                 converted[m] = dict(
                     measure=value,
@@ -207,7 +221,10 @@ class ConversionFormula(object):
 
     :attribute formula:
       A callable that accepts one argument that holds the measure value
-      to be converted
+      to be converted.
+
+    :attribute module_error:
+      The error associated with the formula.
 
     :attribute domain:
       A list of measures that stores exhaustively the domain of the
@@ -216,8 +233,9 @@ class ConversionFormula(object):
     :attribute target_scale
       The target scale
     """
-    def __init__(self, formula, domain, target_scale):
+    def __init__(self, formula, module_error, domain, target_scale):
         self.formula = formula
+        self.module_error = module_error
         self.domain = domain
         self.target_scale = target_scale
 
@@ -243,17 +261,28 @@ class ConversionFormula(object):
         """
         Build a conversion model by a regression model
         """
-        return cls(formula=model.func, domain=model.native_measures,
-                   target_scale=model.target_scale)
+        return cls(formula=model.func,
+                    module_error=model.residual(),
+                    domain=model.native_measures,
+                    target_scale=model.target_scale)
 
-    def apply(self, measure):
+    def apply(self, measure, measure_uncertainty=0.0):
         """
         Apply the conversion to `measure`. Raise an error if the
         `measure` does not belong to the domain of the conversion
-        formula
+        formula. If the measure doesn't provide a standard error
+        the measure_uncertainty value is used instead.
         """
         if not self.is_applicable_for(measure):
             raise ValueError(
                 "You can not apply the conversion to this measure")
+        measure_error = (measure.standard_error
+                         if measure.standard_error is not None
+                         else measure_uncertainty)
+
         new_value = self.formula(measure.value)
-        return measure.convert(new_value, self)
+        standard_error = math.sqrt(self.module_error ** 2
+            + (derivative(self.formula, measure.value))
+            * (measure_error ** 2))
+
+        return measure.convert(new_value, self, standard_error)

@@ -16,7 +16,7 @@
 
 import unittest
 
-from eqcatalogue.harmoniser import Harmoniser
+from eqcatalogue.harmoniser import Harmoniser, ConversionFormula
 from eqcatalogue.regression import (LinearModel,
                                     EmpiricalMagnitudeScalingRelationship)
 from eqcatalogue.models import MagnitudeMeasure, Event, CatalogueDatabase
@@ -24,34 +24,41 @@ from tests.test_filtering import load_fixtures
 from eqcatalogue.filtering import C
 
 
+def generate_measures():
+    measures = []
+
+    def append_fixture_measures(events, scale, mfactor, count=10):
+        for i in range(0, count):
+            measures.append(
+                MagnitudeMeasure(
+                    agency=None, event=events[i], origin=None,
+                    scale=scale,
+                    value=(i + 1) * mfactor,
+                    standard_error=0.2))
+
+    events = [Event(source_key=i, eventsource=None,
+        name="test event %d" % i) for i in range(0, 10)]
+
+    append_fixture_measures(events, "mb", 1.0)
+    append_fixture_measures(events, "Ml", 3.0)
+    append_fixture_measures(events, "Mw", 2.0)
+
+    return measures
+
+
 class HarmoniserWithFixturesAbstractTestCase(unittest.TestCase):
     """
     Create an harmonizer and some basic fixtures
     """
+
     def setUp(self):
         self.target_scale = "Mw"
         self.a_native_scale = "mb"
         self.ya_native_scale = "Ml"
 
         # generate a set of measures
-        self.measures = []
-
-        events = [Event(source_key=i, eventsource=None,
-                  name="test event %d" % i) for i in range(0, 10)]
-
-        self._append_fixture_measures(events, self.a_native_scale, 1.0)
-        self._append_fixture_measures(events, self.ya_native_scale, 3.0)
-        self._append_fixture_measures(events, self.target_scale, 2.0)
-
+        self.measures = generate_measures()
         self.number_of_measures = len(self.measures)
-
-    def _append_fixture_measures(self, events, scale, mfactor, count=10):
-        for i in range(0, count):
-            self.measures.append(
-                MagnitudeMeasure(
-                    agency=None, event=events[i], origin=None,
-                    scale=scale,
-                    standard_error=1, value=(i + 1) * mfactor))
 
     def assertConversion(self, converted, converted_count,
                          unconverted, unconverted_count, formula_used_nr=1):
@@ -93,12 +100,14 @@ class HarmoniserWithModelTestCase(HarmoniserWithFixturesAbstractTestCase):
         emsr = EmpiricalMagnitudeScalingRelationship(
             native_measures=native_measures_1,
             target_measures=target_measures)
-        self.a_model, _ = emsr.apply_regression_model(LinearModel)
+        self.a_model, _ = emsr.apply_regression_model(
+            LinearModel)
 
         emsr = EmpiricalMagnitudeScalingRelationship(
             native_measures=native_measures_2,
             target_measures=target_measures)
-        self.ya_model, _ = emsr.apply_regression_model(LinearModel)
+        self.ya_model, _ = emsr.apply_regression_model(
+            LinearModel)
 
     def test_one_model(self):
         """
@@ -147,9 +156,6 @@ class HarmoniserWithModelTestCase(HarmoniserWithFixturesAbstractTestCase):
         self.assertEqual(self.number_of_measures, len(unconverted))
 
     def test_more_model(self):
-        """
-        Test with several models
-        """
         h = Harmoniser(target_scale=self.target_scale)
 
         h.add_conversion_formula_from_model(self.a_model)
@@ -167,12 +173,14 @@ class HarmoniserWithFormulaTestCase(HarmoniserWithFixturesAbstractTestCase):
         native_measures_2 = self.measures[
             self.number_of_measures / 3:2 * self.number_of_measures / 3]
 
-        self.a_conversion = {'function': lambda x: x * 2.,
+        self.a_conversion = {'formula': lambda x: x * 2.,
                              'domain': native_measures_1,
-                             'target_scale': self.target_scale}
-        self.ya_conversion = {'function': lambda x: x / 1.5,
+                             'target_scale': self.target_scale,
+                             'module_error': 0.1}
+        self.ya_conversion = {'formula': lambda x: x / 1.5,
                               'domain': native_measures_2,
-                              'target_scale': self.target_scale}
+                              'target_scale': self.target_scale,
+                              'module_error': 0.1}
 
     def test_one_conversion(self):
         """
@@ -249,7 +257,7 @@ class HarmoniserWithFormulaAndCriteriaTestCase(
     def test_conversion(self):
         h = Harmoniser(target_scale=self.target_scale)
 
-        h.add_conversion_formula(function=lambda x: x * 2,
+        h.add_conversion_formula(formula=lambda x: x * 2, module_error=0.2,
                                  domain=C(agency__in=['LDG', 'NEIC']),
                                  target_scale=self.target_scale)
         converted, unconverted = h.harmonise(self.measures)
@@ -270,23 +278,23 @@ class HarmoniserWithDifferentTargetScales(
     def test_conversion(self):
         h = Harmoniser(target_scale=self.target_scale)
 
-        h.add_conversion_formula(function=lambda x: x * 2.,
+        h.add_conversion_formula(formula=lambda x: x * 2., module_error=0.2,
                                  domain=C(scale=self.a_native_scale),
                                  target_scale="M2")
 
-        h.add_conversion_formula(function=lambda x: x * 3.,
+        h.add_conversion_formula(formula=lambda x: x * 3., module_error=0.1,
                                  domain=C(scale=self.ya_native_scale),
                                  target_scale="M3")
-        h.add_conversion_formula(function=lambda x: x * 3.,
+        h.add_conversion_formula(formula=lambda x: x * 3., module_error=0.2,
                                  domain=C(scale="M3"),
                                  target_scale="M2")
-        h.add_conversion_formula(function=lambda x: x * 4.,
+        h.add_conversion_formula(formula=lambda x: x * 4., module_error=0.3,
                                  domain=C(scale="M2"),
                                  target_scale=self.target_scale)
-        h.add_conversion_formula(function=lambda x: x * 4.,
+        h.add_conversion_formula(formula=lambda x: x * 4., module_error=0.4,
                                  domain=C(scale="M2"),
                                  target_scale="M4")
-        h.add_conversion_formula(function=lambda x: x * 4.,
+        h.add_conversion_formula(formula=lambda x: x * 4., module_error=0.2,
                                  domain=C(scale="M2"),
                                  target_scale="M5")
         converted, unconverted = h.harmonise(self.measures)
@@ -311,3 +319,43 @@ class HarmoniserWithDifferentTargetScales(
                                  len(converted_measure['formulas']))
                 self.assertAlmostEqual(converted_measure['measure'].value,
                                        measure.value * 36)
+
+
+class ConversionFormulaTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.measures = generate_measures()
+        self.conv_formula = ConversionFormula(formula=lambda x: x * x * 3.,
+                                                module_error=0.2,
+                                                domain=self.measures,
+                                                target_scale="Mw")
+
+    def test_conversion_measures_with_defined_error(self):
+        # Measure value = 1.0, Measure error = 0.2
+        fst_converted_measure = self.conv_formula.apply(self.measures[0])
+        self.assertAlmostEqual(0.52915, fst_converted_measure.standard_error,
+            places=5)
+
+        # Measure value = 18.0, Measure error = 0.2
+        snd_converted_measure = self.conv_formula.apply(self.measures[15])
+        self.assertAlmostEqual(2.08806, snd_converted_measure.standard_error,
+            places=5)
+
+    def test_conversion_measures_with_undefined_error(self):
+        # Measure value = 1.0, Measure error = 0.0
+        fst_measure = self.measures[0]
+        fst_measure.standard_error = None
+
+        fst_converted_measure = self.conv_formula.apply(fst_measure)
+        self.assertAlmostEqual(0.2, fst_converted_measure.standard_error,
+            places=5)
+
+    def test_user_can_define_a_default_measure_error(self):
+        # Measure value = 1.0, Measure error = 0.0
+        fst_measure = self.measures[0]
+        fst_measure.standard_error = None
+
+        fst_converted_measure = self.conv_formula.apply(fst_measure,
+            measure_uncertainty=0.4)
+        self.assertAlmostEqual(1, fst_converted_measure.standard_error,
+            places=5)
