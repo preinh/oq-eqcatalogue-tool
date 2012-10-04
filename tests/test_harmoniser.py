@@ -165,6 +165,27 @@ class HarmoniserWithModelTestCase(HarmoniserWithFixturesAbstractTestCase):
         self.assertConversion(converted, self.number_of_measures,
                               unconverted, 0)
 
+    def test_disallow_trivial_conversion(self):
+        h = Harmoniser(target_scale=self.target_scale)
+        h.add_conversion_formula_from_model(self.a_model)
+        h.add_conversion_formula_from_model(self.ya_model)
+        converted, unconverted = h.harmonise(self.measures,
+            allow_trivial_conversion=False)
+
+        self.assertConversion(converted, 20, unconverted, 10)
+
+    def test_conversion_not_trivial_same_native_and_target_scale(self):
+        h = Harmoniser(target_scale=self.target_scale)
+        my_measure = self.measures[20]
+        h.add_conversion_formula(
+            lambda x: x * 2, 0.1, domain=C(scale="Mw"),
+            target_scale="Mw")
+        converted, unconverted = h.harmonise([my_measure],
+            allow_trivial_conversion=False)
+
+        self.assertEqual(1, len(converted))
+        self.assertEqual(0, len(unconverted))
+
 
 class HarmoniserWithFormulaTestCase(HarmoniserWithFixturesAbstractTestCase):
     def setUp(self):
