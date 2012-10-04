@@ -185,6 +185,8 @@ class HarmoniserWithModelTestCase(HarmoniserWithFixturesAbstractTestCase):
 
         self.assertEqual(1, len(converted))
         self.assertEqual(0, len(unconverted))
+        self.assertAlmostEqual(my_measure.value * 2,
+            converted[my_measure]['measure'].value)
 
 
 class HarmoniserWithFormulaTestCase(HarmoniserWithFixturesAbstractTestCase):
