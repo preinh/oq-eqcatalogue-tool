@@ -283,7 +283,7 @@ class Origin(object):
       together with `source_key`
     """
     def __repr__(self):
-        return "Origin %s %s" % (self.id, self.source_key)
+        return "Origin %s" % (self.source_key)
 
     def __init__(self, position, time, eventsource, source_key,
                  **kwargs):

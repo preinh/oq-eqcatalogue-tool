@@ -259,7 +259,7 @@ class Engine(object):
     @staticmethod
     def position_from_latlng(latitude, longitude):
         position = geoalchemy.WKTSpatialElement(
-            'POINT(%s %s)' % (latitude, longitude))
+            'POINT(%s %s)' % (longitude, latitude))
         return position
 
 
