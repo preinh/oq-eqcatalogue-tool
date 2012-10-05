@@ -173,7 +173,7 @@ class Harmoniser(object):
         self._formulas[scale].append(formula)
 
     def harmonise(self, measures, path_finder_cls=FormulaPathFinder,
-                    measure_uncertainty=0.0):
+                    measure_uncertainty=0.0, allow_trivial_conversion=True):
         """
         Harmonise an iterator of measures.
 
@@ -201,16 +201,16 @@ class Harmoniser(object):
                 value = formulas[0].apply(m, measure_uncertainty)
                 for formula in formulas[1:]:
                     value = formula.apply(value, measure_uncertainty)
-
                 converted[m] = dict(
                     measure=value,
                     formulas=formulas)
-            elif m.scale == self.target_scale:
+            elif m.scale == self.target_scale and allow_trivial_conversion:
                 converted[m] = dict(
                     measure=m,
                     formulas=[])
             else:
                 unconverted.append(m)
+
         return converted, unconverted
 
 
