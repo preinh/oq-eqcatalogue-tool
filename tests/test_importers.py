@@ -55,7 +55,9 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
         importer = V1(self.f, self.cat)
 
         # Assert
-        self.assertRaises(ParsingFailure, importer.store, (False))
+        ret = importer.store(allow_junk=False)
+
+        self.assertTrue(len(ret[BaseImporter.ERRORS]) > 0)
 
     def test_parse_html_file(self):
         # Common Assess part in setUp method
@@ -103,6 +105,7 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
                     BaseImporter.EVENT: 1,
                     BaseImporter.ORIGIN: 5,
                     BaseImporter.MEASURE:  4,
+                    BaseImporter.ERRORS: []
                     })
 
 
@@ -145,6 +148,7 @@ class AIaspeiImporterShould(unittest.TestCase):
             BaseImporter.EVENT: 46,
             BaseImporter.ORIGIN: 46,
             BaseImporter.MEASURE:  61,
+            BaseImporter.ERRORS: []
         })
 
         importer = Iaspei(self.file, self.cat)

@@ -18,6 +18,7 @@ Engine for eqcatalogue tool using spatialite database and geoalchemy
 as ORM wrapper
 """
 
+import os
 from datetime import datetime
 from pysqlite2 import dbapi2 as sqlite
 import sqlalchemy
@@ -46,10 +47,14 @@ class Engine(object):
         `memory` is True
         """
 
+        to_be_initialized = False
         if memory:
             self._engine = sqlalchemy.create_engine('sqlite://', module=sqlite)
+            to_be_initialized = True
         else:
             filename = filename or self.DEFAULT_FILENAME
+            if not os.path.exists(filename):
+                to_be_initialized = True
             self._engine = sqlalchemy.create_engine(
                 'sqlite:///%s' % filename,
                 module=sqlite,
@@ -62,6 +67,8 @@ class Engine(object):
         self.session = orm.sessionmaker(bind=self._engine)()
         self._metadata = sqlalchemy.MetaData(self._engine)
         self._create_schema()
+        if to_be_initialized:
+            self.recreate()
 
     def recreate(self):
         self._metadata.drop_all()

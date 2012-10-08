@@ -21,5 +21,6 @@ the high level API
 from __future__ import absolute_import
 
 from .models import CatalogueDatabase
+from .filtering import C
 
-__all__ = [x.__name__ for x in (CatalogueDatabase,)]
+__all__ = [x.__name__ for x in (CatalogueDatabase, C)]

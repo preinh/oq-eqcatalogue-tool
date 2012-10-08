@@ -412,7 +412,7 @@ class MeasureUKScaleBlockState(MeasureBlockState):
     @classmethod
     def match(cls, line):
         pat = ('^(?P<val>-*[0-9]+\.[0-9]+)\s+(?P<error>[0-9]+\.[0-9]+)*\s+'
-               '(?P<stations>[0-9]+)*\s+(?P<agency>\w+)\s+(?P<origin>\w+)$')
+               '(?P<stations>[0-9]+)*\s+(?P<agency>[\w;]+)\s+(?P<origin>\w+)$')
         return re.compile(pat).match(line)
 
     def process_line(self, line):
@@ -455,8 +455,11 @@ class Importer(BaseImporter):
         :type cat: CatalogueDatabase
         """
         super(self.__class__, self).__init__(stream, cat)
+        # we save the initial state, because it also acts like a
+        # rollback state
+        self._initial = StartState()
         self._state = None
-        self._transition(StartState())
+        self._transition(self._initial)
 
     def store(self, allow_junk=True, on_line_read=None):
         """
@@ -484,12 +487,19 @@ class Importer(BaseImporter):
                 self._transition(next_state)
                 state_output = next_state.process_line(line)
                 self.update_summary(state_output)
-            except (UnexpectedLine, IntegrityError):
+            except IntegrityError:
+                # we can not skip an integrity error
+                raise self._parsing_error(line_num)
+            except (UnexpectedLine, ValueError):
                 current = self._state
                 if current.is_start() and line_type == 'junk' and allow_junk:
                     continue
                 else:
-                    raise self._parsing_error(line_num)
+                    err = ParsingFailure(ERR_MSG % line_num)
+                    print err
+                    self._summary[self.ERRORS].append(err)
+                    self._state = self._initial
+                    continue
         self._catalogue.session.commit()
         return self._summary
 
