@@ -154,7 +154,7 @@ class EventState(BaseState):
         """Return True if line match a proper regexp, that triggers an
         event that makes the fsm jump to an EventState"""
         event_regexp = re.compile(
-            '^Event (?P<source_event_id>\w{0,9}) (?P<name>.{0,65})$')
+            '^Event\s+(?P<source_event_id>\w{0,9}) (?P<name>.{0,65})$')
         return event_regexp.match(line)
 
     def process_line(self, line):
@@ -370,6 +370,7 @@ class MeasureBlockState(BaseState):
             stations = None
         agency_name = line[19:29].strip()
         origin_source_key = line[30:38].strip()
+
         created = self._save_measure(agency_name=agency_name,
                            origin_source_key=origin_source_key,
                            scale=scale,
@@ -389,6 +390,7 @@ class MeasureBlockState(BaseState):
               eventsource=self.event.eventsource,
               source_key=origin_source_key).first()
         self._catalogue.session.commit()
+
         _, created = self._catalogue.get_or_create(
             catalogue.MagnitudeMeasure,
             {'event': self.event, 'origin': origin,
@@ -480,12 +482,9 @@ class Importer(BaseImporter):
             try:
                 next_state = self._state.transition_rule(line_type)
                 self._transition(next_state)
-                try:
-                    state_output = next_state.process_line(line)
-                    self.update_summary(state_output)
-                except IntegrityError:
-                    raise self._parsing_error(line_num)
-            except UnexpectedLine:
+                state_output = next_state.process_line(line)
+                self.update_summary(state_output)
+            except (UnexpectedLine, IntegrityError):
                 current = self._state
                 if current.is_start() and line_type == 'junk' and allow_junk:
                     continue

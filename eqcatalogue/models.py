@@ -25,19 +25,6 @@ measure metadata).
 
 DEFAULT_ENGINE = 'eqcatalogue.datastores.spatialite'
 
-SCALES = ('mL', 'mb', 'Mb',
-          'Ms', 'md', 'MD',
-          'MS', 'mb1', 'mb1mx',
-          'ms1', 'ms1mx', 'ML',
-          'Ms1', 'mbtmp', 'Ms7',
-          'mB', 'Md', 'Ml', 'M',
-          'MG', 'ml', 'mpv',
-          'mbLg', 'MW', 'Mw',
-          'MLv', 'mbh', 'MN',
-          'ME',
-          'Muk'  # unknown magnitude (JMA)
-    )
-
 METADATA_TYPES = ('phases', 'stations',
                   'azimuth_gap', 'azimuth_error',
                   'min_distance', 'max_distance',

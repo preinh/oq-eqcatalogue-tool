@@ -25,8 +25,7 @@ from sqlalchemy import orm
 from sqlalchemy.events import event as sqlevent
 import geoalchemy
 from eqcatalogue.models import (EventSource, Event, MagnitudeMeasure, Agency,
-                                SCALES, Origin, MeasureMetadata, METADATA_TYPES
-    )
+                                Origin, MeasureMetadata, METADATA_TYPES)
 
 DLL_LIBRARY = "libspatialite.dll"
 DYLIB_LIBRARY = "libspatialite.dylib"
@@ -155,7 +154,7 @@ class Engine(object):
                               sqlalchemy.Integer,
                               sqlalchemy.ForeignKey('catalogue_origin.id'),
                               nullable=False),
-            sqlalchemy.Column('scale', sqlalchemy.Enum(*SCALES)),
+            sqlalchemy.Column('scale', sqlalchemy.String()),
             sqlalchemy.Column('value', sqlalchemy.Float()),
             sqlalchemy.Column('standard_error',
                               sqlalchemy.Float(),
