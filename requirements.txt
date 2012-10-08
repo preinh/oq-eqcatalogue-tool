@@ -2,6 +2,7 @@ hg+https://defmacro@code.google.com/r/defmacro-load-extension/#egg=pysqlite2
 geoalchemy
 numpy
 scipy
+shapely
 matplotlib
 PIL
 nose

@@ -22,6 +22,8 @@ stored into the db (eventsources, events, measures, origins and
 measure metadata).
 """
 
+from shapely import wkb
+
 
 DEFAULT_ENGINE = 'eqcatalogue.datastores.spatialite'
 
@@ -175,9 +177,8 @@ class MagnitudeMeasure(object):
         self.standard_error = standard_error
 
     def __repr__(self):
-        return "measure of %s at %s by %s: %s %s (sigma=%s)" % (
-            self.event, self.origin, self.agency, self.value, self.scale,
-            self.standard_error)
+        return "%s %s (sigma=%s) @ %s" % (
+            self.value, self.scale, self.standard_error, self.origin)
 
     @classmethod
     def make_from_lists(cls, scale, values, sigmas):
@@ -218,8 +219,8 @@ class ConvertedMeasure(object):
         self.formulas = formulas or []
 
     def __repr__(self):
-        return "converted measure %s %s (sigma=%s) converted by %s from %s" % (
-            self.value, self.scale, self.standard_error, self.formulas,
+        return "%s %s (sigma=%s) converted by %s" % (
+            self.value, self.scale, self.standard_error,
             self.original_measure)
 
     def convert(self, new_value, formula, standard_error):
@@ -283,16 +284,27 @@ class Origin(object):
       together with `source_key`
     """
     def __repr__(self):
-        return "Origin %s" % (self.source_key)
+        return "%s @ %s" % (str(self.source_key), self.time)
 
     def __init__(self, position, time, eventsource, source_key,
                  **kwargs):
+        """
+        :param position
+          spatial position of the origin. Given in wkt or wkb format
+        """
         self.time = time
         self.position = position
         self.eventsource = eventsource
         self.source_key = source_key
         for k, v in kwargs.items():
             setattr(self, k, v)
+
+    def position_as_tuple(self):
+        if hasattr(self.position, 'geom_wkb'):
+            geom = wkb.loads(str(self.position.geom_wkb))
+            return geom.x, geom.y
+        else:
+            return self.position.coords(0)
 
 
 class MeasureMetadata(object):
