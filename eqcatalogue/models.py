@@ -372,7 +372,7 @@ class CatalogueDatabase(object):
     def __init__(self, drop=False, engine=DEFAULT_ENGINE, **engine_params):
         self._engine_class = self.__class__.get_engine(engine)
         self._engine = self._engine_class(**engine_params)
-        if drop:
+        if drop or 'memory' in engine_params:
             self.recreate()
 
     def recreate(self):

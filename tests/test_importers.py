@@ -32,7 +32,7 @@ from tests.test_utils import in_data_dir
 
 DATAFILE_ISC = in_data_dir('isc-query-small.html')
 BROKEN_ISC = in_data_dir('broken_isc.txt')
-
+UK_SCALE_ISC = in_data_dir('isc_with_uk_scale.txt')
 DATAFILE_IASPEI = in_data_dir('iaspei.csv')
 
 
@@ -41,6 +41,7 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
     def setUp(self):
         self.f = file(DATAFILE_ISC)
         self.broken_isc = file(BROKEN_ISC)
+        self.uk_scale_isc = file(UK_SCALE_ISC)
         self.cat = catalogue.CatalogueDatabase(memory=True, drop=True)
         self.cat.recreate()
 
@@ -55,7 +56,7 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
         importer = V1(self.f, self.cat)
 
         # Assert
-        self.assertRaises(isf.UnexpectedLine, importer.store, (False))
+        self.assertRaises(ParsingFailure, importer.store, (False))
 
     def test_parse_html_file(self):
         # Common Assess part in setUp method
@@ -92,6 +93,18 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
             importer.store()
 
             self.assertEqual(isf.ERR_MSG % BROKEN_LINE_NUM, exp.message)
+
+    def test_import_with_uk_scale(self):
+        importer = V1(self.uk_scale_isc, self.cat)
+        importer.store()
+                # Assert
+        self.assertEqual(importer.summary, {
+                    BaseImporter.EVENT_SOURCE: 1,
+                    BaseImporter.AGENCY: 5,
+                    BaseImporter.EVENT: 1,
+                    BaseImporter.ORIGIN: 5,
+                    BaseImporter.MEASURE:  4,
+                    })
 
 
 class AIaspeiImporterShould(unittest.TestCase):

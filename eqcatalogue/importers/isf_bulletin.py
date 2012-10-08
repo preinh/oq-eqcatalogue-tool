@@ -87,6 +87,9 @@ class BaseState(object):
     def is_start(self):
         return False
 
+    def _get_next_state(self, line_type):
+        raise NotImplementedError
+
     def transition_rule(self, line_type):
         next_state = self._get_next_state(line_type)
         if not next_state:
@@ -263,7 +266,7 @@ class OriginBlockState(BaseState):
             depth_error = float(line[71:76])
 
         self.origin, origin_created = self._save_origin(
-            line[128:136],
+            line[128:136].strip(),
             time=time, time_error=time_error, time_rms=time_rms,
             position=position, semi_major_90error=semi_major_90error,
             semi_minor_90error=semi_minor_90error, depth=depth,
@@ -351,9 +354,12 @@ class MeasureBlockState(BaseState):
 
     def process_line(self, line):
         scale = line[0:5].strip()
+
+        # at the moment we do not support min/max indicator
         minmax_indicator = line[5].strip()
         assert(not minmax_indicator)
-        value = float(line[6:10])
+
+        value = float(line[6:11])
         if line[11:14].strip():
             standard_magnitude_error = float(line[11:14])
         else:
@@ -362,8 +368,8 @@ class MeasureBlockState(BaseState):
             stations = int(line[15:19])
         else:
             stations = None
-        agency_name = line[20:29].strip()
-        origin_source_key = line[30:38]
+        agency_name = line[19:29].strip()
+        origin_source_key = line[30:38].strip()
         created = self._save_measure(agency_name=agency_name,
                            origin_source_key=origin_source_key,
                            scale=scale,
@@ -476,15 +482,19 @@ class Importer(BaseImporter):
                     state_output = next_state.process_line(line)
                     self.update_summary(state_output)
                 except IntegrityError:
-                    raise ParsingFailure(ERR_MSG % line_num)
-            except UnexpectedLine as e:
+                    raise self._parsing_error(line_num)
+            except UnexpectedLine:
                 current = self._state
                 if current.is_start() and line_type == 'junk' and allow_junk:
                     continue
                 else:
-                    raise e
+                    raise self._parsing_error(line_num)
         self._catalogue.session.commit()
         return self._summary
+
+    def _parsing_error(self, line_num):
+        self._catalogue.session.rollback()
+        return ParsingFailure(ERR_MSG % line_num)
 
     def _detect_line_type(self, line):
         ORIGIN_FIELDS = ["Date", "Time", "Err", "RMS", "Latitude", "Longitude",

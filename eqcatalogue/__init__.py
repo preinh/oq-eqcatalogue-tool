@@ -14,5 +14,12 @@
 # along with eqcataloguetool. If not, see <http://www.gnu.org/licenses/>.
 
 """
-Earthquake Catalog Tool
+Earthquake Catalog Tool. This module provides some shortcuts towards
+the high level API
 """
+
+from __future__ import absolute_import
+
+from .models import CatalogueDatabase
+
+__all__ = [x.__name__ for x in (CatalogueDatabase,)]
