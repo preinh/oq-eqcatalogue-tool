@@ -43,7 +43,6 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
         self.broken_isc = file(BROKEN_ISC)
         self.uk_scale_isc = file(UK_SCALE_ISC)
         self.cat = catalogue.CatalogueDatabase(memory=True, drop=True)
-        self.cat.recreate()
 
     def tearDown(self):
         self.f.close()
@@ -112,7 +111,6 @@ class AIaspeiImporterShould(unittest.TestCase):
     def setUp(self):
         self.file = file(DATAFILE_IASPEI)
         self.cat = catalogue.CatalogueDatabase(memory=True, drop=True)
-        self.cat.recreate()
         self.csv_importer = Iaspei(self.file, self.cat)
 
     def tearDown(self):
