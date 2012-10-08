@@ -36,7 +36,7 @@ SO_LIBRARY = "libspatialite.so"
 class Engine(object):
     DEFAULT_FILENAME = "eqcatalogue.db"
 
-    def __init__(self, memory=False, filename=None, drop=False):
+    def __init__(self, memory=False, filename=None):
         """Setup a sqlalchemy connection to spatialite with the proper
         metadata.
 
@@ -45,9 +45,6 @@ class Engine(object):
 
         :param filename: the filename of the database used. Unused if
         `memory` is True
-
-        :param drop: if True, drop the catalogue and rebuild the
-        schema
         """
 
         if memory:
@@ -66,9 +63,6 @@ class Engine(object):
         self.session = orm.sessionmaker(bind=self._engine)()
         self._metadata = sqlalchemy.MetaData(self._engine)
         self._create_schema()
-        if drop:
-            self._metadata.drop_all()
-        self._metadata.create_all(self._engine)
 
     def recreate(self):
         self._metadata.drop_all()

@@ -20,7 +20,7 @@ from sqlalchemy.exc import IntegrityError
 
 from eqcatalogue import models as catalogue
 
-from eqcatalogue.importers import Importer
+from eqcatalogue.importers import BaseImporter
 from eqcatalogue.exceptions import ParsingFailure
 
 CATALOG_URL = 'http://www.isc.ac.uk/cgi-bin/web-db-v4'
@@ -420,7 +420,7 @@ class MeasureUKScaleBlockState(MeasureBlockState):
         return {Importer.MEASURE: 1 if created else 0}
 
 
-class V1(Importer):
+class Importer(BaseImporter):
     """
     Import data into a CatalogueDatabase from stream objects.
 
@@ -446,7 +446,7 @@ class V1(Importer):
           The catalogue database used to import the data
         :type cat: CatalogueDatabase
         """
-        super(V1, self).__init__(stream, cat)
+        super(self.__class__, self).__init__(stream, cat)
         self._state = None
         self._transition(StartState())
 

@@ -17,7 +17,8 @@ import unittest
 from StringIO import StringIO
 
 
-from eqcatalogue.importers import (CsvEqCatalogueReader, Converter, Importer,
+from eqcatalogue.importers import (
+    CsvEqCatalogueReader, Converter, BaseImporter,
     Iaspei, V1, isf_bulletin as isf)
 
 from eqcatalogue.importers.reader_utils import (STR_TRANSF, INT_TRANSF,
@@ -65,11 +66,11 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
 
         # Assert
         self.assertEqual(v1_importer.summary, {
-                    Importer.EVENT_SOURCE: 1,
-                    Importer.AGENCY: 17,
-                    Importer.EVENT: 18,
-                    Importer.ORIGIN: 128,
-                    Importer.MEASURE:  334,
+                    BaseImporter.EVENT_SOURCE: 1,
+                    BaseImporter.AGENCY: 17,
+                    BaseImporter.EVENT: 18,
+                    BaseImporter.ORIGIN: 128,
+                    BaseImporter.MEASURE:  334,
                     })
 
         sources = self.cat.session.query(catalogue.EventSource)
@@ -128,11 +129,11 @@ class AIaspeiImporterShould(unittest.TestCase):
         summary = self.csv_importer.summary
 
         self.assertEqual(summary, {
-            Importer.EVENT_SOURCE: 1,
-            Importer.AGENCY: 1,
-            Importer.EVENT: 46,
-            Importer.ORIGIN: 46,
-            Importer.MEASURE:  61,
+            BaseImporter.EVENT_SOURCE: 1,
+            BaseImporter.AGENCY: 1,
+            BaseImporter.EVENT: 46,
+            BaseImporter.ORIGIN: 46,
+            BaseImporter.MEASURE:  61,
         })
 
         importer = Iaspei(self.file, self.cat)
