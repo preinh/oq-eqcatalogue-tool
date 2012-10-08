@@ -456,13 +456,15 @@ class Importer(BaseImporter):
         self._state = None
         self._transition(StartState())
 
-    def store(self, allow_junk=True):
+    def store(self, allow_junk=True, on_line_read=None):
         """
         Read and parse from the input stream the data and insert them
         into the catalogue db. If `allow_junk` is True, it allows
         unexpected line inputs at the beginning of the file
         """
         for line_num, line in enumerate(self._file_stream, start=1):
+            if on_line_read:
+                on_line_read(self, line_num)
             line = line.strip()
 
             # line_type acts as "event" in the traditional fsm jargon.
