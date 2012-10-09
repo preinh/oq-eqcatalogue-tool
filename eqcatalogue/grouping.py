@@ -153,6 +153,11 @@ class GroupMeasuresBySequentialClustering(object):
             self.magnitude_distance_fn = MagnitudeMeasure.magnitude_distance
 
     def group_measures(self, measures):
+        """
+        Group `measures` by sequentially applying a grouping on
+        time, space and magnitude (optional) variables.
+        """
+
         groups = sum([
             self.group_measures_by_space(time_group)
             for time_group in self.group_measures_by_time(measures)],
@@ -166,18 +171,39 @@ class GroupMeasuresBySequentialClustering(object):
         return dict([(i, group) for i, group in enumerate(groups)])
 
     def group_measures_by_time(self, measures):
+        """
+        Group `measures` in time by using the time_window and the
+        time_distance_fn
+        """
         return self.group_measures_by_var(
             measures, self.time_distance_fn, self.time_window)
 
     def group_measures_by_magnitude_value(self, measures):
+        """
+        Group `measures` in magnitude by using the magnitude_window
+        and the magnitude_distance_fn. If no magnitude window is
+        given, an error is raised
+        """
+        if not self.magnitude_window:
+            raise RuntimeError("Please provide a magnitude window")
         return self.group_measures_by_var(
             measures, self.magnitude_distance_fn, self.magnitude_window)
 
     def group_measures_by_space(self, measures):
+        """
+        Group `measures` in space by using the space_window and the
+        space_distance_fn
+        """
         return self.group_measures_by_var(
             measures, self.space_distance_fn, self.space_window)
 
     def group_measures_by_var(self, measures, distance_fn, window):
+        """
+        Group measures. Two measures are linked if their distance
+        calculated by `distance_fn` is less than `window`. Then, the
+        groups are the result of applying recursively the transitive
+        property of the link.
+        """
         graph = self.__class__.build_graph(
             measures, distance_fn, window)
 
@@ -185,6 +211,10 @@ class GroupMeasuresBySequentialClustering(object):
 
     @staticmethod
     def build_graph(measures, fn, threshold):
+        """
+        Build a graph where the nodes represents measures and two
+        nodes n1 and n2 are linked iff fn(n1, n2) < threshold
+        """
         return dict([
             (m1,
              [m2
@@ -194,6 +224,11 @@ class GroupMeasuresBySequentialClustering(object):
 
     @staticmethod
     def find_connected_components(graph):
+        """
+        Find the connected components of graph. The algorithm is based
+        on multiple BFS search, so it is O(n^3) with n is the number
+        of nodes.
+        """
         connected_components = defaultdict(lambda: [])
 
         # find the connected components of graph. We loop through its
