@@ -101,7 +101,11 @@ Grouping (:mod:`eqcatalogue.grouping`)
 .. currentmodule:: eqcatalogue
 .. automodule:: eqcatalogue.grouping
 .. autoclass:: GroupMeasuresByEventSourceKey
+.. automethod:: GroupMeasuresByEventSourceKey.group_measures
 .. autoclass:: GroupMeasuresByHierarchicalClustering
+.. automethod:: GroupMeasuresByHierarchicalClustering.group_measures
+.. autoclass:: GroupMeasuresBySequentialClustering
+.. automethod:: GroupMeasuresBySequentialClustering.group_measures
 
 Regression (:mod:`eqcatalogue.regression`)
 ------------------------------------------------------------------------------
