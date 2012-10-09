@@ -51,6 +51,7 @@ class AMeasureGrouperShould(unittest.TestCase):
             # groups should be set-equal
             group = set(group)
             self.assertTrue(group in [set(g) for g in r1.values()])
+        self.assertEqual(len(r1.values()), len(r2.values()))
 
     def test_group_by_sequential_clustering(self):
         # Assess
@@ -67,6 +68,7 @@ class AMeasureGrouperShould(unittest.TestCase):
             # groups should be set-equal
             group = set(group)
             self.assertTrue(group in [set(g) for g in r1.values()])
+        self.assertEqual(len(r1.values()), len(r2.values()))
 
 
 class ASequentialMeasureGrouperShould(unittest.TestCase):
