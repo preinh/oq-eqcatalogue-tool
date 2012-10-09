@@ -3,7 +3,8 @@ import unittest
 from datetime import datetime
 
 from tests.test_utils import in_data_dir
-from eqcatalogue import CatalogueDatabase, GroupingBySequentialClustering, C
+from eqcatalogue import (
+    CatalogueDatabase, GroupMeasuresBySequentialClustering, C)
 
 
 class DuplicateFindingTestCase(unittest.TestCase):
@@ -25,8 +26,8 @@ class DuplicateFindingTestCase(unittest.TestCase):
         self.cat.load_file(in_data_dir(iaspei_filename), "iaspei")
 
     def test_match(self):
-        grouper = GroupingBySequentialClustering(
-            time_window=10, space_window=100)
+        grouper = GroupMeasuresBySequentialClustering(
+            time_window=10, space_window=200)
 
         groups = grouper.group_measures(C())
 
@@ -35,8 +36,8 @@ class DuplicateFindingTestCase(unittest.TestCase):
         group1, group2 = [set(measures)
                           for measures in sorted(groups.values())]
 
-        expected_group1 = set(C(before=datetime(1952)))
-        expected_group2 = set(C(after=datetime(1996)))
+        expected_group1 = set(C(after=datetime(1997, 1, 1)))
+        expected_group2 = set(C(before=datetime(1952, 1, 1)))
 
         self.assertEqual(expected_group1, group1)
         self.assertEqual(expected_group2, group2)

@@ -429,6 +429,14 @@ class CatalogueDatabase(object):
         return self._engine.session
 
     def load_file(self, filename, importer_module_name, **kwargs):
+        """
+        Load filename by using an Importer defined in
+        `importer_module_name`. Other kwargs are passed to the store
+        method of the importer
+        """
+        if not '.' in importer_module_name:
+            importer_module_name = (
+                'eqcatalogue.importers.' + importer_module_name)
         module = __import__(importer_module_name, fromlist=['Importer'])
         importer = module.Importer(file(filename), self)
         return importer.store(**kwargs)
