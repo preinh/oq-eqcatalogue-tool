@@ -90,11 +90,16 @@ class Importer(BaseImporter):
             date_time = '/'.join(
                 [entry[self.DATE_INDEX], time])
 
+            if entry[self.DEPTH_INDEX]:
+                depth = float(entry[self.DEPTH_INDEX])
+            else:
+                depth = None
+
             values = {'time': datetime.strptime(
                             date_time, '%Y-%m-%d/%H:%M:%S.%f'),
                         'position': self._catalogue.position_from_latlng(
                             entry[self.LAT_INDEX], entry[self.LON_INDEX]),
-                        'depth': float(entry[self.DEPTH_INDEX]),
+                        'depth': depth,
                         'eventsource': event_source,
                         'source_key': entry[self.EVENTID_INDEX]}
 
