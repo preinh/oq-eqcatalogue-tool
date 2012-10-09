@@ -22,5 +22,14 @@ from __future__ import absolute_import
 
 from .models import CatalogueDatabase
 from .filtering import C
+from .selection import (Precise, AgencyRanking,
+                       MUSSetDefault, MUSSetEventMaximum, MUSDiscard)
+from .homogeniser import Homogeniser
+from .harmoniser import Harmoniser
+from .regression import (LinearModel, PolynomialModel)
 
-__all__ = [x.__name__ for x in (CatalogueDatabase, C)]
+__all__ = [x.__name__ for x in (CatalogueDatabase, C,
+                                Precise, AgencyRanking,
+                                MUSSetDefault, MUSSetEventMaximum, MUSDiscard,
+                                Homogeniser, LinearModel, PolynomialModel,
+                                Harmoniser)]

@@ -34,6 +34,10 @@ SO_LIBRARY = "libspatialite.so"
 
 
 class Engine(object):
+    """
+    The engine object responsible to map models object to spatialite
+    database table.
+    """
     DEFAULT_FILENAME = "eqcatalogue.db"
 
     def __init__(self, memory=False, filename=None):
@@ -71,6 +75,9 @@ class Engine(object):
             self.recreate()
 
     def recreate(self):
+        """
+        Reset the database (both data and metadata)
+        """
         self._metadata.drop_all()
         self._metadata.create_all(self._engine)
 
@@ -258,6 +265,10 @@ class Engine(object):
 
     @staticmethod
     def position_from_latlng(latitude, longitude):
+        """
+        Given a `latitude` and a `longitude` returns a geoalchemy
+        object suitable to be saved as geometry value
+        """
         position = geoalchemy.WKTSpatialElement(
             'POINT(%s %s)' % (latitude, longitude))
         return position
