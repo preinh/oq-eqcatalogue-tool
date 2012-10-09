@@ -122,7 +122,7 @@ class Harmoniser(object):
         self.target_scale = target_scale
         self._formulas = {}
 
-    def add_conversion_formula(self, formula, module_error,
+    def add_conversion_formula(self, formula, model_error,
                                domain, target_scale):
         """
         Create a conversion formula from a `function` and make
@@ -137,7 +137,7 @@ class Harmoniser(object):
         :param formula:
           A callable that requires in input the value to be converted
 
-        :param module_error:
+        :param model_error:
           The error associated with the formula.
 
         :param domain:
@@ -149,11 +149,11 @@ class Harmoniser(object):
           The target scale
         """
 
-        formula = ConversionFormula(formula, module_error,
+        formula = ConversionFormula(formula, model_error,
             domain, target_scale)
         self._add_formula(formula)
 
-    def add_conversion_formula_from_model(self, model):
+    def add_conversion_formula_from_model(self, model, domain):
         """
         Create a conversion formula from a regression model and make
         it available for the harmoniser
@@ -161,7 +161,7 @@ class Harmoniser(object):
         :param model
           A regression model
         """
-        formula = ConversionFormula.make_from_model(model)
+        formula = ConversionFormula.make_from_model(model, domain)
         self._add_formula(formula)
 
     def _add_formula(self, formula):
@@ -223,7 +223,7 @@ class ConversionFormula(object):
       A callable that accepts one argument that holds the measure value
       to be converted.
 
-    :attribute module_error:
+    :attribute model_error:
       The error associated with the formula.
 
     :attribute domain:
@@ -233,9 +233,9 @@ class ConversionFormula(object):
     :attribute target_scale
       The target scale
     """
-    def __init__(self, formula, module_error, domain, target_scale):
+    def __init__(self, formula, model_error, domain, target_scale):
         self.formula = formula
-        self.module_error = module_error
+        self.model_error = model_error
         self.domain = domain
         self.target_scale = target_scale
 
@@ -257,13 +257,13 @@ class ConversionFormula(object):
             self.target_scale, domain_str)
 
     @classmethod
-    def make_from_model(cls, model):
+    def make_from_model(cls, model, domain):
         """
         Build a conversion model by a regression model
         """
         return cls(formula=model.func,
-                    module_error=model.residual(),
-                    domain=model.native_measures,
+                    model_error=model.residual(),
+                    domain=domain,
                     target_scale=model.target_scale)
 
     def apply(self, measure, measure_uncertainty=0.0):
@@ -281,7 +281,7 @@ class ConversionFormula(object):
                          else measure_uncertainty)
 
         new_value = self.formula(measure.value)
-        standard_error = math.sqrt(self.module_error ** 2
+        standard_error = math.sqrt(self.model_error ** 2
             + ((derivative(self.formula, measure.value)) ** 2)
             * (measure_error ** 2))
 
