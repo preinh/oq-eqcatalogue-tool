@@ -17,7 +17,7 @@ class DuplicateFindingTestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        self.cat = CatalogueDatabase(memory=True)
+        self.cat = CatalogueDatabase(memory=True, filename="eqcatalogue.db")
 
         isf_bulletin_filename = "isf_two_events.txt"
         iaspei_filename = "iaspei_from_isf.csv"
@@ -36,8 +36,8 @@ class DuplicateFindingTestCase(unittest.TestCase):
         group1, group2 = [set(measures)
                           for measures in sorted(groups.values())]
 
-        expected_group1 = set(C(after=datetime(1997, 1, 1)))
-        expected_group2 = set(C(before=datetime(1952, 1, 1)))
+        expected_group1 = set(C(before=datetime(1952, 1, 1)))
+        expected_group2 = set(C(after=datetime(1997, 1, 1)))
 
         self.assertEqual(expected_group1, group1)
         self.assertEqual(expected_group2, group2)
