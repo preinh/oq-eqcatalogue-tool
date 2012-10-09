@@ -23,7 +23,7 @@ Module :mod:`eqcatalogue.selection` defines
 
 import abc
 from random import choice
-from math import sqrt, pow
+import math
 from itertools import product
 import re
 
@@ -125,15 +125,24 @@ class MeasureSelection(object):
         :mus: a missing uncertainty strategy object used to handle the case
             when no standard error of a measure is provided.
         """
+        raise NotImplementedError
+
+
+class MeasureSelectionWithoutState(MeasureSelection):
+    """
+    A Base Class for MeasureSelection algorithm that does not hold a
+    state.
+    """
+    def select(self, grouped_measures, native_scale, target_scale, mus):
         return self.__class__.do_select(grouped_measures, native_scale,
-            target_scale, mus)
+                                        target_scale, mus)
 
     @classmethod
     def do_select(cls, grouped_measures, native_scale, target_scale, mus):
         raise NotImplementedError
 
 
-class Random(MeasureSelection):
+class Random(MeasureSelectionWithoutState):
     """
     Random apply the measure selection by
     choosing one random measure among the available ones.
@@ -163,7 +172,7 @@ class Random(MeasureSelection):
         return native_measures, target_measures
 
 
-class Precise(MeasureSelection):
+class Precise(MeasureSelectionWithoutState):
     """
     Precise apply the selection by
     choosing the best measure for precision
@@ -177,7 +186,8 @@ class Precise(MeasureSelection):
         :returns precision_score: measure score evaluation.
         """
 
-        precision_score = sqrt(pow(native_measure, 2) + pow(target_measure, 2))
+        precision_score = math.sqrt(
+            math.pow(native_measure, 2) + math.pow(target_measure, 2))
         return  precision_score
 
     @classmethod

@@ -82,7 +82,6 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
         self.assertEqual(len(t), 6)
 
     def test_minimum_sigma_selection(self):
-        print self.grouped_measures
         n, t = selection.Precise().select(
             self.grouped_measures,
             self.native_scale, self.target_scale, self.mus)
