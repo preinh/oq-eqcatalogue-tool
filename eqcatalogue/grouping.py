@@ -122,13 +122,13 @@ class GroupMeasuresBySequentialClustering(object):
                  magnitude_window=None, magnitude_distance_fn=None):
         """
         :param time_window
-          The mininum time window in second such that two measures are
+          The mininum time window in seconds such that two measures are
           in the same group
         :param space_window
           The mininum space window in km such that two measures are
           in the same group
         :param magnitude_window
-          The mininum magnitude window in second such that two
+          The mininum magnitude window in seconds such that two
           measures are in the same group. Be aware that default
           magnitude distance function does not take into account the
           magnitude scale
