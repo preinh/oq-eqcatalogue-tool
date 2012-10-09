@@ -65,6 +65,13 @@ class AMeasureGrouperShould(unittest.TestCase):
 
 class ASequentialMeasureGrouperShould(unittest.TestCase):
     def setUp(self):
+        """
+        We create three events, i.e. group of measures.
+
+        To challenge the grouper, the first event is near the second
+        one in time but not in space. Moreover, the third event is
+        near the second one in space but not in time.
+        """
         catalogue = models.CatalogueDatabase()
 
         # create 3 events. Event1 is near Event2 in time but not in
@@ -168,10 +175,10 @@ class ASequentialMeasureGrouperShould(unittest.TestCase):
 
         for measures in groups.values():
             self.assertEqual(self.m, len(measures))
-            event_group = measures[0].origin.source_key[0]
+            expected_group = measures[0].origin.source_key[0]
 
-            self.assertTrue(all([measure.origin.source_key[0] == event_group
-                                 for measure in measures]))
+            for measure in measures:
+                self.assertEqual(expected_group, measure.origin.source_key[0])
 
     def test_group_sequentially_with_magnitude(self):
         self.grouper = grouping.GroupMeasuresBySequentialClustering(
