@@ -16,11 +16,13 @@
 """
 Module :mod:`eqcatalogue.grouping` defines
 :class:`GroupMeasuresByEventSourceKey`,
-:class:`GroupMeasuresByHierarchicalClustering`.
+:class:`GroupMeasuresByHierarchicalClustering`,
+:class:`GroupMeasuresBySequentialClustering`.
 """
 
 import numpy as np
 from collections import defaultdict
+from eqcatalogue.models import MagnitudeMeasure
 
 
 # FIXME: Remove the unused import of matplotlib.
@@ -123,7 +125,7 @@ class GroupMeasuresBySequentialClustering(object):
           The mininum time window in second such that two measures are
           in the same group
         :param space_window
-          The mininum space window in second such that two measures are
+          The mininum space window in km such that two measures are
           in the same group
         :param magnitude_window
           The mininum magnitude window in second such that two
@@ -142,39 +144,13 @@ class GroupMeasuresBySequentialClustering(object):
         self.time_window = time_window
         self.space_window = space_window
         self.time_distance_fn = (time_distance_fn or
-                                 self.__class__.time_distance)
+                                 MagnitudeMeasure.time_distance)
         self.space_distance_fn = (space_distance_fn or
-                                 self.__class__.space_distance)
+                                 MagnitudeMeasure.space_distance)
         self.magnitude_window = magnitude_window
         self.magnitude_distance_fn = magnitude_distance_fn
-
-    @staticmethod
-    def time_distance(m1, m2):
-        return abs(m1.origin.time - m2.origin.time).total_seconds()
-
-    @staticmethod
-    def magnitude_distance(m1, m2):
-        return abs(m1.value - m2.value)
-
-    @staticmethod
-    def space_distance(m1, m2):
-        """
-        calculate geographical distance using the haversine formula.
-        """
-
-        earth_rad = 6371.227
-        coords = m1.origin.position_as_tuple() + m2.origin.position_as_tuple()
-
-        # convert to radians
-        lon1, lat1, lon2, lat2 = [c * np.pi / 180 for c in coords]
-
-        dlat, dlon = lat1 - lat2, lon1 - lon2
-        aval = (np.sin(dlat / 2.) ** 2. +
-                np.cos(lat1) * np.cos(lat2) * (np.sin(dlon / 2.) ** 2.))
-        distance = (2. * earth_rad *
-                    np.arctan2(np.sqrt(aval), np.sqrt(1 - aval)))
-
-        return distance
+        if self.magnitude_window and not self.magnitude_distance_fn:
+            self.magnitude_distance_fn = MagnitudeMeasure.magnitude_distance
 
     def group_measures(self, measures):
         groups = sum([
@@ -191,15 +167,15 @@ class GroupMeasuresBySequentialClustering(object):
 
     def group_measures_by_time(self, measures):
         return self.group_measures_by_var(
-            measures, self.time_distance, self.time_window)
+            measures, self.time_distance_fn, self.time_window)
 
     def group_measures_by_magnitude_value(self, measures):
         return self.group_measures_by_var(
-            measures, self.magnitude_distance, self.magnitude_window)
+            measures, self.magnitude_distance_fn, self.magnitude_window)
 
     def group_measures_by_space(self, measures):
         return self.group_measures_by_var(
-            measures, self.space_distance, self.space_window)
+            measures, self.space_distance_fn, self.space_window)
 
     def group_measures_by_var(self, measures, distance_fn, window):
         graph = self.__class__.build_graph(

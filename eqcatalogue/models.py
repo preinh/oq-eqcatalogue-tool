@@ -23,7 +23,7 @@ measure metadata).
 """
 
 from shapely import wkb
-
+import numpy as np
 
 DEFAULT_ENGINE = 'eqcatalogue.datastores.spatialite'
 
@@ -179,6 +179,32 @@ class MagnitudeMeasure(object):
     def __repr__(self):
         return "%s %s (sigma=%s) @ %s" % (
             self.value, self.scale, self.standard_error, self.origin)
+
+    def time_distance(self, measure):
+        return abs(self.origin.time - measure.origin.time).total_seconds()
+
+    def magnitude_distance(self, measure):
+        return abs(self.value - measure.value)
+
+    def space_distance(self, measure):
+        """
+        calculate geographical distance using the haversine formula.
+        """
+
+        earth_rad = 6371.227
+        coords = (self.origin.position_as_tuple() +
+                  measure.origin.position_as_tuple())
+
+        # convert to radians
+        lon1, lat1, lon2, lat2 = [c * np.pi / 180 for c in coords]
+
+        dlat, dlon = lat1 - lat2, lon1 - lon2
+        aval = (np.sin(dlat / 2.) ** 2. +
+                np.cos(lat1) * np.cos(lat2) * (np.sin(dlon / 2.) ** 2.))
+        distance = (2. * earth_rad *
+                    np.arctan2(np.sqrt(aval), np.sqrt(1 - aval)))
+
+        return distance
 
     @classmethod
     def make_from_lists(cls, scale, values, sigmas):

@@ -119,7 +119,7 @@ class ASequentialMeasureGrouperShould(unittest.TestCase):
     def test_build_graph(self):
         graph = grouping.GroupMeasuresBySequentialClustering.build_graph(
             self.measures,
-            grouping.GroupMeasuresBySequentialClustering.time_distance,
+            models.MagnitudeMeasure.time_distance,
             0.5)
 
         for m1, related in graph.items():
