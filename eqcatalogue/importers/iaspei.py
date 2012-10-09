@@ -18,10 +18,10 @@ from datetime import datetime
 from eqcatalogue import models as catalogue
 from eqcatalogue.exceptions import InvalidMagnitudeSeq
 
-from eqcatalogue.importers.base import Importer
+from eqcatalogue.importers.base import BaseImporter
 
 
-class Iaspei(Importer):
+class Importer(BaseImporter):
     """
     Implements the Importer for the Iaspei format.
     """
