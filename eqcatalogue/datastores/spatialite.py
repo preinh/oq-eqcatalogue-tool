@@ -270,7 +270,7 @@ class Engine(object):
         object suitable to be saved as geometry value
         """
         position = geoalchemy.WKTSpatialElement(
-            'POINT(%s %s)' % (latitude, longitude))
+            'POINT(%s %s)' % (longitude, latitude))
         return position
 
 

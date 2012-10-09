@@ -236,6 +236,10 @@ class WithAgencies(Criteria):
     def predicate(self, measure):
         return measure.agency.source_key in self.agencies
 
+    @classmethod
+    def make_with_agency(cls, agency):
+        return cls([agency])
+
 
 class WithMagnitudeScales(Criteria):
     """
@@ -321,6 +325,7 @@ CRITERIA_MAP = {
     'after': After,
     'between': Between,
     'agency__in': WithAgencies,
+    'agency': WithAgencies.make_with_agency,
     'scale__in': WithMagnitudeScales,
     'scale': WithMagnitudeScales.make_with_scale,
     'within_polygon': WithinPolygon,
@@ -333,7 +338,8 @@ CRITERIA_AVAILABLES = CRITERIA_MAP.keys()
 
 def C(**criteria_kwargs):
     """
-    A factory of criterias
+    A factory of criterias.
+    Example: C(scale="Mw") & C(magnitude__gt=5, agency="ISC")
     """
     criteria = None
 
