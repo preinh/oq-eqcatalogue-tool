@@ -121,7 +121,8 @@ class HarmoniserWithModelTestCase(HarmoniserWithFixturesAbstractTestCase):
         mismatches = self.number_of_measures / 3
 
         h = Harmoniser(target_scale=self.target_scale)
-        h.add_conversion_formula_from_model(self.a_model)
+        h.add_conversion_formula_from_model(self.a_model,
+                                            C(scale=self.a_native_scale))
         converted, unconverted = h.harmonise(self.measures)
 
         self.assertConversion(converted, self.number_of_measures - mismatches,
@@ -137,7 +138,8 @@ class HarmoniserWithModelTestCase(HarmoniserWithFixturesAbstractTestCase):
             measure.scale = "fake scale"
 
         h = Harmoniser(target_scale=self.target_scale)
-        h.add_conversion_formula_from_model(self.a_model)
+        h.add_conversion_formula_from_model(self.a_model,
+                                            C(scale=self.a_native_scale))
         converted, unconverted = h.harmonise(self.measures)
         self.assertEqual(0, len(converted))
         self.assertEqual(self.number_of_measures, len(unconverted))
@@ -150,7 +152,8 @@ class HarmoniserWithModelTestCase(HarmoniserWithFixturesAbstractTestCase):
 
         # no model matches the target scale
         h = Harmoniser(target_scale="wrong scale")
-        h.add_conversion_formula_from_model(self.a_model)
+        h.add_conversion_formula_from_model(self.a_model,
+                                            C(scale=self.a_native_scale))
         converted, unconverted = h.harmonise(self.measures)
         self.assertEqual(0, len(converted))
         self.assertEqual(self.number_of_measures, len(unconverted))
@@ -158,8 +161,10 @@ class HarmoniserWithModelTestCase(HarmoniserWithFixturesAbstractTestCase):
     def test_more_model(self):
         h = Harmoniser(target_scale=self.target_scale)
 
-        h.add_conversion_formula_from_model(self.a_model)
-        h.add_conversion_formula_from_model(self.ya_model)
+        h.add_conversion_formula_from_model(self.a_model,
+                                            C(scale=self.a_native_scale))
+        h.add_conversion_formula_from_model(self.ya_model,
+                                            C(scale=self.ya_native_scale))
         converted, unconverted = h.harmonise(self.measures)
 
         self.assertConversion(converted, self.number_of_measures,
@@ -167,8 +172,10 @@ class HarmoniserWithModelTestCase(HarmoniserWithFixturesAbstractTestCase):
 
     def test_disallow_trivial_conversion(self):
         h = Harmoniser(target_scale=self.target_scale)
-        h.add_conversion_formula_from_model(self.a_model)
-        h.add_conversion_formula_from_model(self.ya_model)
+        h.add_conversion_formula_from_model(self.a_model,
+                                            C(scale=self.a_native_scale))
+        h.add_conversion_formula_from_model(self.ya_model,
+                                            C(scale=self.ya_native_scale))
         converted, unconverted = h.harmonise(self.measures,
             allow_trivial_conversion=False)
 
@@ -199,11 +206,11 @@ class HarmoniserWithFormulaTestCase(HarmoniserWithFixturesAbstractTestCase):
         self.a_conversion = {'formula': lambda x: x * 2.,
                              'domain': native_measures_1,
                              'target_scale': self.target_scale,
-                             'module_error': 0.1}
+                             'model_error': 0.1}
         self.ya_conversion = {'formula': lambda x: x / 1.5,
                               'domain': native_measures_2,
                               'target_scale': self.target_scale,
-                              'module_error': 0.1}
+                              'model_error': 0.1}
 
     def test_one_conversion(self):
         """
@@ -273,14 +280,13 @@ class HarmoniserWithFormulaAndCriteriaTestCase(
     def setUp(self):
         super(HarmoniserWithFormulaAndCriteriaTestCase, self).setUp()
         cat = CatalogueDatabase(memory=True, drop=True)
-        cat.recreate()
         load_fixtures(cat.session)
         self.measures = C()
 
     def test_conversion(self):
         h = Harmoniser(target_scale=self.target_scale)
 
-        h.add_conversion_formula(formula=lambda x: x * 2, module_error=0.2,
+        h.add_conversion_formula(formula=lambda x: x * 2, model_error=0.2,
                                  domain=C(agency__in=['LDG', 'NEIC']),
                                  target_scale=self.target_scale)
         converted, unconverted = h.harmonise(self.measures)
@@ -301,23 +307,23 @@ class HarmoniserWithDifferentTargetScales(
     def test_conversion(self):
         h = Harmoniser(target_scale=self.target_scale)
 
-        h.add_conversion_formula(formula=lambda x: x * 2., module_error=0.2,
+        h.add_conversion_formula(formula=lambda x: x * 2., model_error=0.2,
                                  domain=C(scale=self.a_native_scale),
                                  target_scale="M2")
 
-        h.add_conversion_formula(formula=lambda x: x * 3., module_error=0.1,
+        h.add_conversion_formula(formula=lambda x: x * 3., model_error=0.1,
                                  domain=C(scale=self.ya_native_scale),
                                  target_scale="M3")
-        h.add_conversion_formula(formula=lambda x: x * 3., module_error=0.2,
+        h.add_conversion_formula(formula=lambda x: x * 3., model_error=0.2,
                                  domain=C(scale="M3"),
                                  target_scale="M2")
-        h.add_conversion_formula(formula=lambda x: x * 4., module_error=0.3,
+        h.add_conversion_formula(formula=lambda x: x * 4., model_error=0.3,
                                  domain=C(scale="M2"),
                                  target_scale=self.target_scale)
-        h.add_conversion_formula(formula=lambda x: x * 4., module_error=0.4,
+        h.add_conversion_formula(formula=lambda x: x * 4., model_error=0.4,
                                  domain=C(scale="M2"),
                                  target_scale="M4")
-        h.add_conversion_formula(formula=lambda x: x * 4., module_error=0.2,
+        h.add_conversion_formula(formula=lambda x: x * 4., model_error=0.2,
                                  domain=C(scale="M2"),
                                  target_scale="M5")
         converted, unconverted = h.harmonise(self.measures)
@@ -349,11 +355,11 @@ class ConversionFormulaTestCase(unittest.TestCase):
     def setUp(self):
         self.measures = generate_measures()
         self.conv_l_formula = ConversionFormula(formula=lambda x: x + 3.,
-                                                module_error=0.2,
+                                                model_error=0.2,
                                                 domain=self.measures,
                                                 target_scale="Mw")
         self.conv_p_formula = ConversionFormula(formula=lambda x: x * x + 3.,
-                                                module_error=0.2,
+                                                model_error=0.2,
                                                 domain=self.measures,
                                                 target_scale="Mw")
 

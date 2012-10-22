@@ -18,6 +18,7 @@ Engine for eqcatalogue tool using spatialite database and geoalchemy
 as ORM wrapper
 """
 
+import os
 from datetime import datetime
 from pysqlite2 import dbapi2 as sqlite
 import sqlalchemy
@@ -25,8 +26,7 @@ from sqlalchemy import orm
 from sqlalchemy.events import event as sqlevent
 import geoalchemy
 from eqcatalogue.models import (EventSource, Event, MagnitudeMeasure, Agency,
-                                SCALES, Origin, MeasureMetadata, METADATA_TYPES
-    )
+                                Origin, MeasureMetadata, METADATA_TYPES)
 
 DLL_LIBRARY = "libspatialite.dll"
 DYLIB_LIBRARY = "libspatialite.dylib"
@@ -34,9 +34,13 @@ SO_LIBRARY = "libspatialite.so"
 
 
 class Engine(object):
+    """
+    The engine object responsible to map models object to spatialite
+    database table.
+    """
     DEFAULT_FILENAME = "eqcatalogue.db"
 
-    def __init__(self, memory=False, filename=None, drop=False):
+    def __init__(self, memory=False, filename=None):
         """Setup a sqlalchemy connection to spatialite with the proper
         metadata.
 
@@ -45,15 +49,16 @@ class Engine(object):
 
         :param filename: the filename of the database used. Unused if
         `memory` is True
-
-        :param drop: if True, drop the catalogue and rebuild the
-        schema
         """
 
+        to_be_initialized = False
         if memory:
             self._engine = sqlalchemy.create_engine('sqlite://', module=sqlite)
+            to_be_initialized = True
         else:
             filename = filename or self.DEFAULT_FILENAME
+            if not os.path.exists(filename):
+                to_be_initialized = True
             self._engine = sqlalchemy.create_engine(
                 'sqlite:///%s' % filename,
                 module=sqlite,
@@ -66,11 +71,13 @@ class Engine(object):
         self.session = orm.sessionmaker(bind=self._engine)()
         self._metadata = sqlalchemy.MetaData(self._engine)
         self._create_schema()
-        if drop:
-            self._metadata.drop_all()
-        self._metadata.create_all(self._engine)
+        if to_be_initialized:
+            self.recreate()
 
     def recreate(self):
+        """
+        Reset the database (both data and metadata)
+        """
         self._metadata.drop_all()
         self._metadata.create_all(self._engine)
 
@@ -161,7 +168,7 @@ class Engine(object):
                               sqlalchemy.Integer,
                               sqlalchemy.ForeignKey('catalogue_origin.id'),
                               nullable=False),
-            sqlalchemy.Column('scale', sqlalchemy.Enum(*SCALES)),
+            sqlalchemy.Column('scale', sqlalchemy.String()),
             sqlalchemy.Column('value', sqlalchemy.Float()),
             sqlalchemy.Column('standard_error',
                               sqlalchemy.Float(),
@@ -258,6 +265,10 @@ class Engine(object):
 
     @staticmethod
     def position_from_latlng(latitude, longitude):
+        """
+        Given a `latitude` and a `longitude` returns a geoalchemy
+        object suitable to be saved as geometry value
+        """
         position = geoalchemy.WKTSpatialElement(
             'POINT(%s %s)' % (longitude, latitude))
         return position

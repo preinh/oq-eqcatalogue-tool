@@ -18,10 +18,10 @@ from datetime import datetime
 from eqcatalogue import models as catalogue
 from eqcatalogue.exceptions import InvalidMagnitudeSeq
 
-from eqcatalogue.importers.base import Importer
+from eqcatalogue.importers.base import BaseImporter
 
 
-class Iaspei(Importer):
+class Importer(BaseImporter):
     """
     Implements the Importer for the Iaspei format.
     """
@@ -90,11 +90,16 @@ class Iaspei(Importer):
             date_time = '/'.join(
                 [entry[self.DATE_INDEX], time])
 
+            if entry[self.DEPTH_INDEX]:
+                depth = float(entry[self.DEPTH_INDEX])
+            else:
+                depth = None
+
             values = {'time': datetime.strptime(
                             date_time, '%Y-%m-%d/%H:%M:%S.%f'),
                         'position': self._catalogue.position_from_latlng(
                             entry[self.LAT_INDEX], entry[self.LON_INDEX]),
-                        'depth': float(entry[self.DEPTH_INDEX]),
+                        'depth': depth,
                         'eventsource': event_source,
                         'source_key': entry[self.EVENTID_INDEX]}
 

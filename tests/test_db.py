@@ -23,16 +23,12 @@ from tests.test_utils import in_data_dir
 class ShouldCreateAlchemyTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.catalogue = catalogue.CatalogueDatabase(memory=True)
-        self.catalogue.recreate()
+        self.catalogue = catalogue.CatalogueDatabase(memory=True, drop=True)
         self.session = self.catalogue.session
 
     def test_drop(self):
-        catalogue.CatalogueDatabase.reset_singleton()
         self.catalogue = catalogue.CatalogueDatabase(
-            drop=True,
-            filename=in_data_dir("test_drop.db"))
-        catalogue.CatalogueDatabase.reset_singleton()
+            drop=True, filename=in_data_dir("test_drop.db"))
         self.catalogue = catalogue.CatalogueDatabase(memory=True, drop=True)
 
     def test_eventsource(self):

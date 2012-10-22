@@ -17,7 +17,8 @@ import unittest
 from StringIO import StringIO
 
 
-from eqcatalogue.importers import (CsvEqCatalogueReader, Converter, Importer,
+from eqcatalogue.importers import (
+    CsvEqCatalogueReader, Converter, BaseImporter,
     Iaspei, V1, isf_bulletin as isf)
 
 from eqcatalogue.importers.reader_utils import (STR_TRANSF, INT_TRANSF,
@@ -31,7 +32,7 @@ from tests.test_utils import in_data_dir
 
 DATAFILE_ISC = in_data_dir('isc-query-small.html')
 BROKEN_ISC = in_data_dir('broken_isc.txt')
-
+UK_SCALE_ISC = in_data_dir('isc_with_uk_scale.txt')
 DATAFILE_IASPEI = in_data_dir('iaspei.csv')
 
 
@@ -40,8 +41,8 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
     def setUp(self):
         self.f = file(DATAFILE_ISC)
         self.broken_isc = file(BROKEN_ISC)
+        self.uk_scale_isc = file(UK_SCALE_ISC)
         self.cat = catalogue.CatalogueDatabase(memory=True, drop=True)
-        self.cat.recreate()
 
     def tearDown(self):
         self.f.close()
@@ -54,7 +55,9 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
         importer = V1(self.f, self.cat)
 
         # Assert
-        self.assertRaises(isf.UnexpectedLine, importer.store, (False))
+        ret = importer.store(allow_junk=False)
+
+        self.assertTrue(len(ret[BaseImporter.ERRORS]) > 0)
 
     def test_parse_html_file(self):
         # Common Assess part in setUp method
@@ -65,11 +68,12 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
 
         # Assert
         self.assertEqual(v1_importer.summary, {
-                    Importer.EVENT_SOURCE: 1,
-                    Importer.AGENCY: 17,
-                    Importer.EVENT: 18,
-                    Importer.ORIGIN: 128,
-                    Importer.MEASURE:  334,
+                    BaseImporter.EVENT_SOURCE: 1,
+                    BaseImporter.AGENCY: 17,
+                    BaseImporter.EVENT: 18,
+                    BaseImporter.ORIGIN: 128,
+                    BaseImporter.MEASURE:  334,
+                    BaseImporter.ERRORS: []
                     })
 
         sources = self.cat.session.query(catalogue.EventSource)
@@ -86,11 +90,21 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
 
     def test_raises_parsing_failure(self):
         importer = V1(self.broken_isc, self.cat)
-        BROKEN_LINE_NUM = 18
-        with self.assertRaises(ParsingFailure) as exp:
-            importer.store()
+        ret = importer.store()
+        self.assertEqual(1, len(ret[BaseImporter.ERRORS]))
 
-            self.assertEqual(isf.ERR_MSG % BROKEN_LINE_NUM, exp.message)
+    def test_import_with_uk_scale(self):
+        importer = V1(self.uk_scale_isc, self.cat)
+        importer.store()
+                # Assert
+        self.assertEqual(importer.summary, {
+                    BaseImporter.EVENT_SOURCE: 1,
+                    BaseImporter.AGENCY: 5,
+                    BaseImporter.EVENT: 1,
+                    BaseImporter.ORIGIN: 5,
+                    BaseImporter.MEASURE:  4,
+                    BaseImporter.ERRORS: []
+                    })
 
 
 class AIaspeiImporterShould(unittest.TestCase):
@@ -98,7 +112,6 @@ class AIaspeiImporterShould(unittest.TestCase):
     def setUp(self):
         self.file = file(DATAFILE_IASPEI)
         self.cat = catalogue.CatalogueDatabase(memory=True, drop=True)
-        self.cat.recreate()
         self.csv_importer = Iaspei(self.file, self.cat)
 
     def tearDown(self):
@@ -128,11 +141,12 @@ class AIaspeiImporterShould(unittest.TestCase):
         summary = self.csv_importer.summary
 
         self.assertEqual(summary, {
-            Importer.EVENT_SOURCE: 1,
-            Importer.AGENCY: 1,
-            Importer.EVENT: 46,
-            Importer.ORIGIN: 46,
-            Importer.MEASURE:  61,
+            BaseImporter.EVENT_SOURCE: 1,
+            BaseImporter.AGENCY: 1,
+            BaseImporter.EVENT: 46,
+            BaseImporter.ORIGIN: 46,
+            BaseImporter.MEASURE:  61,
+            BaseImporter.ERRORS: []
         })
 
         importer = Iaspei(self.file, self.cat)
