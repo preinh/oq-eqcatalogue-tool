@@ -23,8 +23,10 @@ class TestPlugin:
         self.iface.addToolBarIcon(self.action)
         self.iface.addPluginToMenu("&Test plugins", self.action)
 
-        # connect to signal renderComplete which is emitted when canvas rendering is done
-        QObject.connect(self.iface.mapCanvas(), SIGNAL("renderComplete(QPainter *)"), self.renderTest)
+        # connect to signal renderComplete which is emitted when canvas 
+        # rendering is done
+        QObject.connect(self.iface.mapCanvas(), 
+                        SIGNAL("renderComplete(QPainter *)"), self.renderTest)
 
     def unload(self):
         # remove the plugin menu item and icon
@@ -32,7 +34,9 @@ class TestPlugin:
         self.iface.removeToolBarIcon(self.action)
 
         # disconnect form signal of the canvas
-        QObject.disconnect(self.iface.mapCanvas(), SIGNAL("renderComplete(QPainter *)"), self.renderTest)
+        QObject.disconnect(
+            self.iface.mapCanvas(), SIGNAL("renderComplete(QPainter *)"),
+            self.renderTest)
 
     def run(self):
         # create and show a configuration dialog or something similar
