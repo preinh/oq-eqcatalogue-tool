@@ -33,11 +33,10 @@ class DuplicateFindingTestCase(unittest.TestCase):
 
         self.assertEqual(2, len(groups.values()))
 
-        group1, group2 = [set(measures)
-                          for measures in sorted(groups.values())]
+        actual_groups = set([frozenset(measures)
+                             for measures in groups.values()])
 
-        expected_group1 = set(C(before=datetime(1952, 1, 1)))
-        expected_group2 = set(C(after=datetime(1997, 1, 1)))
+        expected_groups = set([frozenset(C(before=datetime(1952, 1, 1))),
+                               frozenset(C(after=datetime(1997, 1, 1)))])
 
-        self.assertEqual(expected_group1, group1)
-        self.assertEqual(expected_group2, group2)
+        self.assertEqual(expected_groups, actual_groups)
