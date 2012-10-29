@@ -46,7 +46,7 @@ class Criteria(object):
         in the catalogue are considered
         """
         queryset = queryset or self.default_queryset
-        return queryset.filter()
+        return queryset
 
     def all(self):
         """
