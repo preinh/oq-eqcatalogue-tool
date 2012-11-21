@@ -39,6 +39,16 @@ Homogeniser (:mod:`eqcatalogue.homogeniser`)
 .. automethod:: Homogeniser.serialize(filename)
 .. automethod:: Homogeniser.plot(filename)
 
+Harmoniser (:mod:`eqcatalogue.harmoniser`)
+------------------------------------------------------------------------------
+
+.. automodule:: eqcatalogue.harmoniser
+.. autoclass:: Harmoniser()
+.. automethod:: Harmoniser.__init__(target_scale)
+.. automethod:: Harmoniser.add_conversion_formula
+.. automethod:: Harmoniser.add_conversion_formula_from_model
+.. automethod:: Harmoniser.harmonise
+
 Models definition (:mod:`eqcatalogue.models`)
 ------------------------------------------------------------------------------
 
@@ -72,7 +82,7 @@ Importer (:mod:`eqcatalogue.importers.isf_bulletin`)
 Low-Level API modules
 ==============================================================================
 
-Filtering (:mod:`eqcatalogue.filgering`)
+Filtering (:mod:`eqcatalogue.filtering`)
 ------------------------------------------------------------------------------
 
 .. currentmodule:: eqcatalogue

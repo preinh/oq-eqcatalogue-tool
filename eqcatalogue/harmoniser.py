@@ -158,7 +158,7 @@ class Harmoniser(object):
         Create a conversion formula from a regression model and make
         it available for the harmoniser
 
-        :param model
+        :param model:
           A regression model
         """
         formula = ConversionFormula.make_from_model(model)
