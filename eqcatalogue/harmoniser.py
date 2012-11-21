@@ -110,15 +110,13 @@ class FormulaPathFinder(object):
 class Harmoniser(object):
     """
     This class is responsible to convert a set of measures into a
-    target scale by using a set of conversion formula
-
-    :attribute target_scale
-      The target scale considered
-
-    :attribute _formulas
-      The list of formulas used to convert measures
+    target scale by using a set of conversion formula.
     """
     def __init__(self, target_scale):
+        """
+        :param target_scale:
+            The target scale considered.
+        """
         self.target_scale = target_scale
         self._formulas = {}
 

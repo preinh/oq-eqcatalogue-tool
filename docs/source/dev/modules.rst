@@ -8,10 +8,11 @@ The High-Level API provides the tools to perform the following tasks:
 1. create and access a database with the earthquake events;
 2. import event data into a the database;
 3. perform the homogenisation of different magnitude scale values and plot the results.
+4. perform the harmonisation of measure by converting to the desired scales. 
 
-Task 1, 2, 3 are handled by :mod:`~eqcatalogue.models`,
+Task 1, 2, 3, 4 are handled by :mod:`~eqcatalogue.models`,
 :mod:`~eqcatalogue.importers.isf_bulletin` and
-:mod:`~eqcatalogue.homogeniser`, respectively.
+:mod:`~eqcatalogue.homogeniser`, :mod:`~eqcatalogue.harmoniser`, respectively.
 
 Homogeniser (:mod:`eqcatalogue.homogeniser`)
 ------------------------------------------------------------------------------
@@ -47,7 +48,7 @@ Harmoniser (:mod:`eqcatalogue.harmoniser`)
 .. automethod:: Harmoniser.__init__(target_scale)
 .. automethod:: Harmoniser.add_conversion_formula
 .. automethod:: Harmoniser.add_conversion_formula_from_model
-.. automethod:: Harmoniser.harmonise
+.. automethod:: Harmoniser.harmonise(measures, [path_finder_cls[, measure_uncertainty[, allow_trivial_conversion]]])
 
 Models definition (:mod:`eqcatalogue.models`)
 ------------------------------------------------------------------------------
