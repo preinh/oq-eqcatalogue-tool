@@ -15,4 +15,4 @@ Magnitude  Err Nsta Author      OrigID
        6.0          PRA        1932419
 MS     6.0          PAS        1932415
 
-just a line that make the importer fail
+STOP

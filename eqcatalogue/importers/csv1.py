@@ -16,6 +16,8 @@
 """
 Module :mod:`eq_catalogue_tool.reader` defines classes for reading
 different formats of earthquake catalogues.
+
+This module is obsolete
 """
 
 from csv import DictReader

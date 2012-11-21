@@ -15,4 +15,16 @@ Magnitude  Err Nsta Author      OrigID
        6.0          PRA        1932419
 MS     6.0          PAS        1932415
 
-just a line that make the importer fail
+Event  1015294 Western Arabian Peninsula
+   Date       Time        Err   RMS Latitude Longitude  Smaj  Smin  Az Depth   Err Ndef Nsta Gap  mdist  Mdist Qual   Author      OrigID
+1997/03/08 23:13:35.80               12.0350   43.3900                 141.1                                       uk DHMR       2199502
+1997/03/08 23:13:38.30               11.8670   43.3330                   2.0   1.0                                 uk ARO        2199503
+1997/03/08 23:13:33.91   0.82 0.770  12.0521   43.4292 12.31  10.4  90   2.0f        11   11 153   1.00   4.00 m i uk ISC        2199504
+ (#PRIME)
+
+Magnitude  Err Nsta Author      OrigID
+mL     4.1          DHMR       2199502
+mL     4.0          ARO        2199503
+
+
+STOP

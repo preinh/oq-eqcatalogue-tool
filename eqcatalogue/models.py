@@ -27,19 +27,6 @@ import numpy as np
 
 DEFAULT_ENGINE = 'eqcatalogue.datastores.spatialite'
 
-SCALES = ('mL', 'mb', 'Mb',
-          'Ms', 'md', 'MD',
-          'MS', 'mb1', 'mb1mx',
-          'ms1', 'ms1mx', 'ML',
-          'Ms1', 'mbtmp', 'Ms7',
-          'mB', 'Md', 'Ml', 'M',
-          'MG', 'ml', 'mpv',
-          'mbLg', 'MW', 'Mw',
-          'MLv', 'mbh', 'MN',
-          'ME',
-          'Muk'  # unknown magnitude (JMA)
-    )
-
 METADATA_TYPES = ('phases', 'stations',
                   'azimuth_gap', 'azimuth_error',
                   'min_distance', 'max_distance',
@@ -361,24 +348,30 @@ class MeasureMetadata(object):
         self.magnitudemeasure = magnitudemeasure
 
 
-class Singleton(type):
-    """Metaclass to implement the singleton pattern"""
+class Workspace(type):
+    """Metaclass to implement a modified singleton pattern. The
+    singleton instance is actually created the first time and whenever
+    at least an argument have been passed to the default constructor,
+    otherwise the current instance is returned."""
     def __init__(mcs, name, bases, der):
-        super(Singleton, mcs).__init__(name, bases, der)
+        super(Workspace, mcs).__init__(name, bases, der)
         mcs.instance = None
 
     def __call__(mcs, *args, **kw):
-        if mcs.instance is None:
-            mcs.instance = super(Singleton, mcs).__call__(*args, **kw)
+        if args or kw or not mcs.instance:
+            if mcs.instance:
+                mcs.instance.close()
+            mcs.instance = super(Workspace, mcs).__call__(*args, **kw)
         return mcs.instance
 
 
 class CatalogueDatabase(object):
     """
-    This is the main class used to access the database. It is a
-    singleton object, so you should instantiate it only once in your
-    application, before using any other eqcatalogue object that access
-    to the database.
+    This is the main class used to access the database of measures,
+    events, etc.
+
+    :keyword drop:
+      Drop and recreate the database after opening
 
     :param engine_class_module:
       A module that implements an engine protocol.
@@ -394,18 +387,18 @@ class CatalogueDatabase(object):
       Open a file database located at path `filename`. If not given, the
       default is `eqcatalogue.db`
     :type filename: string
-    :keyword drop:
-      Drop and recreate the database after opening
 
     e.g.::
       cat = CatalogueDatabase(filename="my-catalogue.db")
     """
 
-    __metaclass__ = Singleton
+    __metaclass__ = Workspace
 
-    def __init__(self, engine=DEFAULT_ENGINE, **engine_params):
+    def __init__(self, drop=False, engine=DEFAULT_ENGINE, **engine_params):
         self._engine_class = self.__class__.get_engine(engine)
         self._engine = self._engine_class(**engine_params)
+        if drop or 'memory' in engine_params:
+            self.recreate()
 
     def recreate(self):
         """
@@ -414,12 +407,11 @@ class CatalogueDatabase(object):
         """
         self._engine.recreate()
 
-    @classmethod
-    def reset_singleton(cls):
+    def close(self):
         """
         Reset the singleton, allowing to switch between different databases
         """
-        cls.instance = None
+        self.session.close()
 
     @classmethod
     def get_engine(cls, module_name):
@@ -429,13 +421,6 @@ class CatalogueDatabase(object):
         module = __import__(module_name, fromlist=['Engine'])
         return module.Engine
 
-    def position_from_latlng(self, latitude, longitude):
-        """
-        Utility function to create a POINT object suitable to be stored
-        into :class:`eqcatalogue.models.Origin.position`
-        """
-        return self._engine_class.position_from_latlng(latitude, longitude)
-
     @property
     def session(self):
         """
@@ -443,6 +428,27 @@ class CatalogueDatabase(object):
         """
         return self._engine.session
 
+    def load_file(self, filename, importer_module_name, **kwargs):
+        """
+        Load filename by using an Importer defined in
+        `importer_module_name`. Other kwargs are passed to the store
+        method of the importer
+        """
+        if not '.' in importer_module_name:
+            importer_module_name = (
+                'eqcatalogue.importers.' + importer_module_name)
+        module = __import__(importer_module_name, fromlist=['Importer'])
+        importer = module.Importer(file(filename), self)
+        return importer.store(**kwargs)
+
+    def position_from_latlng(self, latitude, longitude):
+        """
+        Utility function to create a POINT object suitable to be stored
+        into :class:`eqcatalogue.models.Origin.position`
+        """
+        return self._engine_class.position_from_latlng(latitude, longitude)
+
+    # FIXME: this method should go into the datastore implementation
     def get_or_create(self, class_object, query_args, creation_args=None):
         """Handy method to create an object of type `class_object`
         given the query conditions in `query_args`. If an object

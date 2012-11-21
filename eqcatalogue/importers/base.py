@@ -30,7 +30,7 @@ def store_events(cls, stream, cat, **kwargs):
     return importer.store(**kwargs)
 
 
-class Importer(object):
+class BaseImporter(object):
     """
     Base class for Importers.
     """
@@ -42,6 +42,7 @@ class Importer(object):
     EVENT = 'Events_Created'
     ORIGIN = 'Origins_Created'
     MEASURE = 'Measures_Created'
+    ERRORS = 'Errors'
 
     def __init__(self, file_stream, db_catalogue):
         self._file_stream = file_stream
@@ -50,10 +51,11 @@ class Importer(object):
                          self.AGENCY: 0,
                          self.EVENT: 0,
                          self.ORIGIN: 0,
-                         self.MEASURE: 0}
+                         self.MEASURE: 0,
+                         self.ERRORS: []}
 
     @abc.abstractmethod
-    def store(self):
+    def store(self, **kwargs):
         """
         Read the input stream data and insert them
         into the catalogue db, during the process,

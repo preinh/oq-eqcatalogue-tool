@@ -83,7 +83,6 @@ class ACriteriaShould(unittest.TestCase):
 
     def setUp(self):
         self.cat_db = models.CatalogueDatabase(memory=True, drop=True)
-        self.cat_db.recreate()
         self.session = self.cat_db.session
         load_fixtures(self.session)
 
