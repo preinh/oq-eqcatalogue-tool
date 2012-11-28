@@ -167,6 +167,15 @@ class MagnitudeMeasure(object):
         return "%s %s (sigma=%s) @ %s" % (
             self.value, self.scale, self.standard_error, self.origin)
 
+    def keys(self):
+        return ["id", "agency", "event", "origin",
+                "scale", "value", "standard_error"]
+
+    def values(self):
+        return [self.id, self.agency.source_key,
+                self.event.source_key, self.origin.source_key,
+                self.scale, self.value, self.standard_error]
+
     def time_distance(self, measure):
         return abs(self.origin.time - measure.origin.time).total_seconds()
 

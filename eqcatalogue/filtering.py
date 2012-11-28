@@ -20,6 +20,7 @@ Module :mod:`eqcatalogue.filtering` defines the abstract class
 
 import eqcatalogue.models as db
 from eqcatalogue import exceptions
+from eqcatalogue import serializers
 
 
 class Criteria(object):
@@ -121,6 +122,16 @@ class Criteria(object):
             from eqcatalogue.grouping import GroupMeasuresByEventSourceKey
             grouping_strategy = GroupMeasuresByEventSourceKey()
         return grouping_strategy.group_measures(self)
+
+    def export(self, fmt, **fmt_args):
+        """
+        Export the measures that satisfies to this criteria in the
+        format `fmt`. All the remaining arguments are passed to the
+        exporter. E.g.
+
+        C().export('csv', filename="test.csv")
+        """
+        serializers.get_measure_exporter(fmt)(**fmt_args)
 
 
 class CombinedCriteria(Criteria):
