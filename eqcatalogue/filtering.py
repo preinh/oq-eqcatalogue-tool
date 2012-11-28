@@ -131,7 +131,7 @@ class Criteria(object):
 
         C().export('csv', filename="test.csv")
         """
-        serializers.get_measure_exporter(fmt)(**fmt_args)
+        serializers.get_measure_exporter(fmt)(self, **fmt_args)
 
 
 class CombinedCriteria(Criteria):

@@ -19,11 +19,11 @@ This module defines a map to exporter functions
 """
 
 
-from eqcatalogue.serializers import csv
+from eqcatalogue.serializers import eqcsv
 
 
 MEASURES_EXPORTERS = {
-    'csv': csv.export_measures
+    'csv': eqcsv.export_measures
 }
 
 

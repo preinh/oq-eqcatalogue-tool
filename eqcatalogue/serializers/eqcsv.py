@@ -19,7 +19,6 @@ This module define several functions responsible to output to CSV
 format
 """
 
-# pylint: disable=W0406,E1101,W0403,I0011
 import csv
 
 
