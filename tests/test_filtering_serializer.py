@@ -60,7 +60,7 @@ class ShouldExportMeasures(unittest.TestCase):
     def test_measures_to_csv(self):
         csv_file = tempfile.NamedTemporaryFile()
         filtering.C(agency__in=['ISC'], scale="mb").export(
-            'csv', filename=csv_file.name, mode="a")
+            'csv', filename=csv_file.name)
         self.assertEqual(self.EXPECTED_CSV_2, csv_file.read())
         csv_file.close()
 
@@ -68,5 +68,5 @@ class ShouldExportMeasures(unittest.TestCase):
         csv_file = tempfile.NamedTemporaryFile()
         measures = filtering.C(agency__in=['ISC'])[0:9]
 
-        eqcsv.export_measures(measures, filename=csv_file.name, mode="a")
+        eqcsv.export_measures(measures, filename=csv_file.name)
         self.assertEqual(self.EXPECTED_CSV_1, csv_file.read())
