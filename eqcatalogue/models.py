@@ -245,6 +245,17 @@ class ConvertedMeasure(object):
             self.value, self.scale, self.standard_error,
             self.original_measure)
 
+    def keys(self):
+        return ["agency", "event", "origin",
+                "scale", "value", "standard_error",
+                "original_measure", "formulas"]
+
+    def values(self):
+        return [self.agency.source_key,
+                self.event.source_key, self.origin.source_key,
+                self.scale, self.value, self.standard_error,
+                self.original_measure, ".".join(f.name for f in self.formulas)]
+
     def convert(self, new_value, formula, standard_error):
         """
         Convert the measure to a ConvertedMeasure with `new_value`
@@ -253,7 +264,7 @@ class ConvertedMeasure(object):
         return self.__class__(
             self.agency, self.event, self.origin, formula.target_scale,
             new_value, standard_error, self.original_measure,
-            self.formulas + [formula])
+            self.formulas[:] + [formula])
 
 
 class Origin(object):

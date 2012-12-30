@@ -247,7 +247,15 @@ class Homogeniser(object):
         """
         return self._selected_measures()[1]
 
-    def _perform_regression(self):
+    def perform_regression(self):
+        """
+        Actually, perform the regression analysis.
+
+        :returns: a list of n regression outputs where n is the number
+        of models, and a regression output is a dictionary. In this
+        dictionary the keys model and output are mapped into a
+        considered output and its corresponding scipy output result
+        """
         self._emsr = EmpiricalMagnitudeScalingRelationship.make_from_measures(
             self._native_scale, self._target_scale,
             self.grouped_measures(), self._selector,
@@ -271,7 +279,7 @@ class Homogeniser(object):
           :class:`~eqcatalogue.regression.RegressionModel` instance)
           and 'output' (with the output of the regression)
         """
-        scipy_outputs = self._perform_regression()
+        scipy_outputs = self.perform_regression()
         self.serializer.plot(self._emsr,
                               *serializer_args,
                               **serializer_kwargs)

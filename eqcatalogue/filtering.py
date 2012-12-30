@@ -49,11 +49,12 @@ class Criteria(object):
         queryset = queryset or self.default_queryset
         return queryset
 
-    def all(self):
+    def all(self, order_field='catalogue_magnitudemeasure.id'):
         """
-        Returns all the measures that satisfies the criteria in a list.
+        Returns all the measures that satisfies the criteria in a list
+        ordered by `order_field`.
         """
-        return self.filter().all()
+        return self.filter().order_by(order_field).all()
 
     def __iter__(self):
         """
@@ -131,7 +132,7 @@ class Criteria(object):
 
         C().export('csv', filename="test.csv")
         """
-        serializers.get_measure_exporter(fmt)(self, **fmt_args)
+        serializers.get_measure_exporter(fmt)(self.all(), **fmt_args)
 
 
 class CombinedCriteria(Criteria):
@@ -150,6 +151,9 @@ class CombinedCriteria(Criteria):
     def predicate(self, measure):
         return (self.criteria1.predicate(measure) and
                 self.criteria2.predicate(measure))
+
+    def __repr__(self):
+        return "(%s AND %s)" % (self.criteria1, self.criteria2)
 
 
 class AlternativeCriteria(Criteria):
@@ -170,6 +174,9 @@ class AlternativeCriteria(Criteria):
         return (self.criteria1.predicate(measure) or
                 self.criteria2.predicate(measure))
 
+    def __repr__(self):
+        return "(%s OR %s)" % (self.criteria1, self.criteria2)
+
 
 class Before(Criteria):
     """
@@ -188,6 +195,9 @@ class Before(Criteria):
 
     def predicate(self, measure):
         return measure.origin.time < self.time
+
+    def __repr__(self):
+        return "<before %s>" % self.time
 
 
 class After(Criteria):
@@ -208,6 +218,9 @@ class After(Criteria):
     def predicate(self, measure):
         return measure.origin.time > self.time
 
+    def __repr__(self):
+        return "<after %s>" % self.time
+
 
 class Between(Criteria):
     """
@@ -226,6 +239,9 @@ class Between(Criteria):
 
     def predicate(self, measure):
         return self._comb.predicate(measure)
+
+    def __repr__(self):
+        return repr(self._comb)
 
 
 class WithAgencies(Criteria):
@@ -251,6 +267,9 @@ class WithAgencies(Criteria):
     def make_with_agency(cls, agency):
         return cls([agency])
 
+    def __repr__(self):
+        return "<agencies in %s>" % self.agency_name_list
+
 
 class WithMagnitudeScales(Criteria):
     """
@@ -275,6 +294,9 @@ class WithMagnitudeScales(Criteria):
     def predicate(self, measure):
         return measure.scale in self.scales
 
+    def __repr__(self):
+        return "<scale in %s>" % self.scales
+
 
 class WithMagnitudeGreater(Criteria):
     """
@@ -294,6 +316,9 @@ class WithMagnitudeGreater(Criteria):
     def predicate(self, measure):
         return measure.value > self.value
 
+    def __repr__(self):
+        return "<magnitude > %s>" % self.value
+
 
 class WithinPolygon(Criteria):
     """
@@ -310,6 +335,9 @@ class WithinPolygon(Criteria):
         queryset = queryset or self.default_queryset
         return queryset.filter(
             db.Origin.position.within(self.polygon))
+
+    def __repr__(self):
+        return "<within %s>" % self.polygon
 
 
 class WithinDistanceFromPoint(Criteria):
@@ -329,6 +357,9 @@ class WithinDistanceFromPoint(Criteria):
         return queryset.filter(
             "PtDistWithin(catalogue_origin.position, GeomFromText('%s', "
             "4326), %s)" % (self.point, self.distance))
+
+    def __repr__(self):
+        return "<within distance %s from %s>" % (self.distance, self.point)
 
 
 CRITERIA_MAP = {

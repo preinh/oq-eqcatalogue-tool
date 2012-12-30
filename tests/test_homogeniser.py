@@ -27,7 +27,10 @@ ACTUAL_OUTPUT = [in_data_dir("actual_homo%d.png" % i)
 
 
 class AnHomogeniserShould(unittest.TestCase):
+
     def setUp(self):
+        # we can not load the fixtures once, because the MUSSetDefault
+        # is not readonly
         load_catalog()
         self.homogeniser = Homogeniser()
         self.homogeniser.set_scales(native="mb", target="MS")
@@ -58,14 +61,14 @@ class AnHomogeniserShould(unittest.TestCase):
 
         self.assertEqual(7, len(self.homogeniser.measures()))
 
-        self.assertEqual([
+        self.assertEqual(set([
             "Event 14342120 from EventSource ISC Bulletin",
             "Event 17273456 from EventSource ISC Bulletin",
-            "Event 14357818 from EventSource ISC Bulletin"],
-            [str(e) for e in self.homogeniser.events()])
+            "Event 14357818 from EventSource ISC Bulletin"]),
+            set([str(e) for e in self.homogeniser.events()]))
 
-        self.assertEqual([u'17273456', u'14342120', u'14357818'],
-                         self.homogeniser.grouped_measures().keys())
+        self.assertEqual(set([u'17273456', u'14342120', u'14357818']),
+                         set(self.homogeniser.grouped_measures().keys()))
 
         self.homogeniser.set_criteria(C(scale__in=["Mw", "mb"]))
         self.assertEqual(17, len(self.homogeniser.events()))
@@ -82,7 +85,6 @@ class AnHomogeniserShould(unittest.TestCase):
 
         self.homogeniser.set_missing_uncertainty_strategy(
             selection.MUSSetDefault, default=1)
-
         self.assertEqual(18, len(self.homogeniser.events()))
         self.assertEqual(334, len(self.homogeniser.measures()))
         self.assertEqual(18, len(self.homogeniser.grouped_measures().keys()))
@@ -96,6 +98,8 @@ class AnHomogeniserShould(unittest.TestCase):
         self.assertEqual(14, len(self.homogeniser.grouped_measures().keys()))
 
     def test_select_differently(self):
+        self.homogeniser.set_selector(selection.AgencyRanking,
+                                      ranking={'mb': ['ISC']})
         self.assertEqual(14, len(self.homogeniser.selected_native_measures()))
         self.homogeniser.set_selector(selection.Precise)
         self.assertEqual(14, len(self.homogeniser.selected_native_measures()))

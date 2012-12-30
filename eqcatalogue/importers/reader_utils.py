@@ -33,18 +33,9 @@ def convert_to_int(str_value):
     return value
 
 
-def convert_to_float(str_value):
-    value = None
-    try:
-        value = float(str_value)
-    except ValueError:
-        pass
-    return value
-
-
 STR_TRANSF = [str.strip]
 INT_TRANSF = [convert_to_int]
-FLOAT_TRANSF = [convert_to_float]
+FLOAT_TRANSF = [float]
 
 TRANSF_MAP = {'eventKey': STR_TRANSF, 'solutionKey': STR_TRANSF,
                 'solutionDesc': STR_TRANSF, 'originID': STR_TRANSF,
