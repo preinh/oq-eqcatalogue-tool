@@ -23,6 +23,7 @@ Module :mod:`eqcatalogue.grouping` defines
 import numpy as np
 from collections import defaultdict
 from eqcatalogue.models import MagnitudeMeasure
+from eqcatalogue import log
 
 
 # FIXME: Remove the unused import of matplotlib.
@@ -55,6 +56,8 @@ class GroupMeasuresByEventSourceKey(object):
             if not key in groups:
                 groups[key] = []
             groups[key].append(m)
+        log.LOG.info(
+            "Measure grouper by source key returned %d groups" % len(groups))
         return groups
 
     def group_measures(self, measures):
@@ -106,6 +109,10 @@ class GroupMeasuresByHierarchicalClustering(object):
             current = grouped.get(cluster, [])
             current.append(measures[i])
             grouped[cluster] = current
+
+        log.LOG.info(
+            "Measure grouper by clustering on time returned %d groups" % len(
+                grouped))
         return grouped
 
 
@@ -168,6 +175,9 @@ class GroupMeasuresBySequentialClustering(object):
                 self.group_measures_by_magnitude_value(group)
                 for group in groups], [])
 
+        log.LOG.info(
+            "Measure grouper (sequential clustering) returned %d groups",
+            len(groups))
         return dict([(i, group) for i, group in enumerate(groups)])
 
     def group_measures_by_time(self, measures):
@@ -175,8 +185,11 @@ class GroupMeasuresBySequentialClustering(object):
         Group `measures` in time by using the time_window and the
         time_distance_fn
         """
-        return self.group_measures_by_var(
+        groups = self.group_measures_by_var(
             measures, self.time_distance_fn, self.time_window)
+
+        log.LOG.debug("grouping by time returned %d groups", len(groups))
+        return groups
 
     def group_measures_by_magnitude_value(self, measures):
         """
@@ -186,16 +199,24 @@ class GroupMeasuresBySequentialClustering(object):
         """
         if not self.magnitude_window:
             raise RuntimeError("Please provide a magnitude window")
-        return self.group_measures_by_var(
+        groups = self.group_measures_by_var(
             measures, self.magnitude_distance_fn, self.magnitude_window)
+
+        log.LOG.debug("grouping by magnitude value returned %d groups", len(groups))
+
+        return groups
 
     def group_measures_by_space(self, measures):
         """
         Group `measures` in space by using the space_window and the
         space_distance_fn
         """
-        return self.group_measures_by_var(
+        groups = self.group_measures_by_var(
             measures, self.space_distance_fn, self.space_window)
+
+        log.LOG.debug("grouping by space returned %d groups", len(groups))
+
+        return groups
 
     def group_measures_by_var(self, measures, distance_fn, window):
         """

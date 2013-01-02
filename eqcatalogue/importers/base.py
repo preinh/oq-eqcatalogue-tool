@@ -60,6 +60,8 @@ class BaseImporter(object):
         Read the input stream data and insert them
         into the catalogue db, during the process,
         a summary of inserted items is updated.
+
+        :returns: the summary of the inserted/updated catalogue data
         """
 
     @abc.abstractmethod

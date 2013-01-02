@@ -1,3 +1,4 @@
+*.log
 *.pyc
 *.idea
 *_config.png

@@ -20,6 +20,7 @@ format
 """
 
 import csv
+from eqcatalogue import log
 
 
 def export_measures(measures, filename,
@@ -43,4 +44,4 @@ def export_measures(measures, filename,
         for measure in measures:
             measure_writer.writerow(measure.values())
 
-    print "Exported %d measures to %s" % (len(measures), filename)
+    log.LOG.info("Exported %d measures to %s" % (len(measures), filename))

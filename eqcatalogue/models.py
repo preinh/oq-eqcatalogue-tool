@@ -25,6 +25,9 @@ measure metadata).
 from shapely import wkb
 import numpy as np
 
+from eqcatalogue import log
+
+
 DEFAULT_ENGINE = 'eqcatalogue.datastores.spatialite'
 
 METADATA_TYPES = ('phases', 'stations',
@@ -415,9 +418,12 @@ class CatalogueDatabase(object):
     __metaclass__ = Workspace
 
     def __init__(self, drop=False, engine=DEFAULT_ENGINE, **engine_params):
+        log.LOG.info("initializing Catalogue Database (engine=%s, params %s)",
+                     engine, engine_params)
         self._engine_class = self.__class__.get_engine(engine)
         self._engine = self._engine_class(**engine_params)
         if drop or 'memory' in engine_params:
+            log.LOG.info("reset catalogue data")
             self.recreate()
 
     def recreate(self):
@@ -459,7 +465,8 @@ class CatalogueDatabase(object):
                 'eqcatalogue.importers.' + importer_module_name)
         module = __import__(importer_module_name, fromlist=['Importer'])
         importer = module.Importer(file(filename), self)
-        return importer.store(**kwargs)
+        summary = importer.store(**kwargs)
+        log.LOG.info(summary)
 
     def position_from_latlng(self, latitude, longitude):
         """

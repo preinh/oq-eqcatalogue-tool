@@ -26,6 +26,7 @@ from random import choice
 import math
 from itertools import product
 import re
+from eqcatalogue import log
 
 
 class MissingUncertaintyStrategy(object):
@@ -134,8 +135,15 @@ class MeasureSelectionWithoutState(MeasureSelection):
     state.
     """
     def select(self, grouped_measures, native_scale, target_scale, mus):
-        return self.__class__.do_select(grouped_measures, native_scale,
-                                        target_scale, mus)
+        selected = self.__class__.do_select(grouped_measures, native_scale,
+                                            target_scale, mus)
+
+        log.LOG.debug(
+            "selected %d measures over %d groups on scales %s,%s (%s)",
+            len(selected[0]), len(grouped_measures),
+            native_scale, target_scale, mus)
+
+        return selected
 
     @classmethod
     def do_select(cls, grouped_measures, native_scale, target_scale, mus):
@@ -303,5 +311,10 @@ class AgencyRanking(MeasureSelection):
             if sorted_native_measures and sorted_target_measures:
                 native_measures.append(sorted_native_measures[0][1])
                 target_measures.append(sorted_target_measures[0][1])
+
+        log.LOG.debug(
+            "selected %d measures over %d groups on scales %s,%s (%s)",
+            len(native_measures), len(grouped_measures),
+            native_scale, target_scale, mus)
 
         return native_measures, target_measures

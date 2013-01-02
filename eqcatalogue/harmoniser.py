@@ -21,7 +21,7 @@ of a set of measures to a single target scale
 import math
 import random
 from scipy.misc import derivative
-from eqcatalogue import serializers
+from eqcatalogue import serializers, log
 
 
 class FormulaPathFinder(object):
@@ -242,6 +242,9 @@ class Harmoniser(object):
         path_finder = path_finder_cls(self._formulas)
         identity = ConversionFormula.make_identity(self.target_scale)
 
+        log.LOG.debug("Start harmonization of %d measures",
+                      len(measures))
+
         for m in measures:
             formulas = path_finder.find_formulas_for(m, self.target_scale)
             if formulas:
@@ -250,12 +253,20 @@ class Harmoniser(object):
                 for formula in formulas[1:]:
                     value = formula.apply(value, measure_uncertainty)
                 result.append(m, value)
+                log.LOG.debug("Measure %s harmonised with formulas %s",
+                              m, formulas)
+
             elif m.scale == self.target_scale and allow_trivial_conversion:
                 result.append(
                     m, m.convert(m.value, identity, m.standard_error))
+                log.LOG.debug(
+                    "Measure %s harmonised with trivial conversion", m)
             else:
                 result.append(m)
+                log.LOG.debug("Could not convert measure %s", m)
 
+        log.LOG.info("Harmonized %s measures. %s measures not converted",
+                     len(result.converted), len(result.unconverted))
         return result
 
 

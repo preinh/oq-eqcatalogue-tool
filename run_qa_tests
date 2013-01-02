@@ -4,4 +4,4 @@
 
 find . -name "*.pyc" -delete
 
-nosetests eqcatalogue/ $@ --with-doctest `find qa_tests/ -name 'test_*.py'`
+nosetests --nologcapture eqcatalogue/ $@ --with-doctest `find qa_tests/ -name 'test_*.py'`

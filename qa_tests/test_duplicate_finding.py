@@ -33,7 +33,7 @@ class DuplicateFindingTestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        self.cat = CatalogueDatabase(memory=True, filename="eqcatalogue.db")
+        self.cat = CatalogueDatabase(memory=True, drop=True)
 
         isf_bulletin_filename = "isf_two_events.txt"
         iaspei_filename = "iaspei_from_isf.csv"

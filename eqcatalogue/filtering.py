@@ -268,7 +268,7 @@ class WithAgencies(Criteria):
         return cls([agency])
 
     def __repr__(self):
-        return "<agencies in %s>" % self.agency_name_list
+        return "<agencies in %s>" % self.agencies
 
 
 class WithMagnitudeScales(Criteria):
