@@ -155,3 +155,11 @@ Selection (:mod:`eqcatalogue.selection`)
 .. autoclass:: Random
 .. autoclass:: Precise
 .. autoclass:: AgencyRanking
+
+Logging (:mod:`eqcatalogue.log`)
+------------------------------------------------------------------------------
+
+.. currentmodule:: eqcatalogue
+.. automodule:: eqcatalogue.log
+
+.. autofunction:: setup_logger
