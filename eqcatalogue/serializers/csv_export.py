@@ -22,18 +22,13 @@ format
 import csv
 
 
-def export_measures(measures, filename,
-                    header=True,
-                    mode="w", **kwargs):
+def measures(measures, filename, header=True, mode="w", **kwargs):
     """
     Export `measures` to `filename` by using the csv module from the
     standard python library. If `header` is true the first row of the
     csv will be an header. The remaining arguments of the function are
     passed as they are to the csv writer constructor.
     """
-    if not len(measures):
-        raise RuntimeError("You can not serialize an empty set of measures")
-
     with open(filename, mode) as csvfile:
         measure_writer = csv.writer(csvfile, **kwargs)
 

@@ -20,7 +20,6 @@ Module :mod:`eqcatalogue.filtering` defines the abstract class
 
 import eqcatalogue.models as db
 from eqcatalogue import exceptions
-from eqcatalogue import serializers
 
 
 class Criteria(object):
@@ -29,7 +28,8 @@ class Criteria(object):
     check if a criteria holds for a measure and to return all the
     measures stored in a catalogue database that statisfy the
     specified criteria. Criteria can be combined with logical
-    operators.
+    operators. Instances of Criteria (e.g. a set of measures) could be
+    exported.
 
     :param _cat: a Catalogue Database object.
     """
@@ -122,16 +122,6 @@ class Criteria(object):
             from eqcatalogue.grouping import GroupMeasuresByEventSourceKey
             grouping_strategy = GroupMeasuresByEventSourceKey()
         return grouping_strategy.group_measures(self)
-
-    def export(self, fmt, **fmt_args):
-        """
-        Export the measures that satisfies to this criteria in the
-        format `fmt`. All the remaining arguments are passed to the
-        exporter. E.g.
-
-        C().export('csv', filename="test.csv")
-        """
-        serializers.get_measure_exporter(fmt)(self, **fmt_args)
 
 
 class CombinedCriteria(Criteria):
