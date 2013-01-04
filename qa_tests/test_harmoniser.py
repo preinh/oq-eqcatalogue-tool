@@ -79,7 +79,7 @@ IDC,16248642,16660851,Mw,10.800000000000004,0.6082762530298205,4.0 mb1 (sigma=0.
                                  target_scale="Mw",
                                  name="f1")
 
-        h.harmonise(eqcatalogue.C()).export('csv', filename=csv_file.name)
+        h.harmonise(eqcatalogue.C()).export(filename=csv_file.name)
 
         self.assertEqual(self.EXPECTED_CSV_1, csv_file.read())
 
@@ -107,7 +107,7 @@ IDC,16248642,16660851,Mw,10.800000000000004,0.6082762530298205,4.0 mb1 (sigma=0.
 
         result = h.harmonise(eqcatalogue.C(), allow_trivial_conversion=False)
 
-        result.export('csv', filename=csv_file.name)
+        result.export(filename=csv_file.name)
 
         self.assertEqual(self.EXPECTED_CSV_2, csv_file.read())
 
@@ -137,6 +137,6 @@ IDC,16248642,16660851,Mw,10.800000000000004,0.6082762530298205,4.0 mb1 (sigma=0.
         h.harmonise(eqcatalogue.C(
             scale='mb1',
             within_distance_from_point=['POINT(28 80)', 1000000])).export(
-                'csv', filename=csv_file.name)
+                filename=csv_file.name)
 
         self.assertEqual(self.EXPECTED_CSV_3, csv_file.read())

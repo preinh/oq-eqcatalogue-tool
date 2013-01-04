@@ -21,7 +21,8 @@ of a set of measures to a single target scale
 import math
 import random
 from scipy.misc import derivative
-from eqcatalogue import serializers, log
+from eqcatalogue import log
+from eqcatalogue.serializers import csv_
 
 
 class FormulaPathFinder(object):
@@ -111,7 +112,8 @@ class FormulaPathFinder(object):
 
 class HarmoniserResult(object):
     """
-    This class models a result provided by an Harmoniser.
+    This class models a result provided by an Harmoniser. Moreover, it
+    has an handy shortcut to serialize the converted measures
 
     :attr converted: The converted measures
 
@@ -138,14 +140,18 @@ class HarmoniserResult(object):
         else:
             self.unconverted.append(measure)
 
-    def export(self, fmt, **fmt_args):
+    def export(self, serializer=csv_.export_measures, **fmt_args):
         """
-        Export the harmonisation result in the format `fmt`. All the
+        Export the harmonisation result using `serializer`. All the
         remaining arguments are passed to the exporter. E.g.
 
-        result.export('csv', filename="test.csv")
+        result.export(filename="test.csv")
+
+        :param serializer: A callable that can serialize a set of measures
+
+        :param **fmt_args: Any param to be passed to the serializer function
         """
-        serializers.get_measure_exporter(fmt)(
+        serializer(
             sorted(self.converted.values(), key=lambda x: x.origin.time),
             **fmt_args)
 
