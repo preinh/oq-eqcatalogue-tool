@@ -80,6 +80,14 @@ Importer (:mod:`eqcatalogue.importers.isf_bulletin`)
 .. automethod:: eqcatalogue.importers.isf_bulletin.V1.load
 .. automethod:: eqcatalogue.importers.isf_bulletin.V1.import_events
 
+
+CSV Serializers (:mod:`eqcatalogue.serializers.csv_`)
+------------------------------------------------------------------------------
+.. currentmodule:: eqcatalogue
+.. automodule:: eqcatalogue.serializers.csv_
+.. autofunction:: export_measures
+
+
 Low-Level API modules
 ==============================================================================
 
@@ -97,7 +105,6 @@ Filtering (:mod:`eqcatalogue.filtering`)
 .. automethod:: Criteria.filter
 .. automethod:: Criteria.predicate
 .. automethod:: Criteria.group_measures
-.. automethod:: Criteria.export
 .. autoclass:: Before
 .. autoclass:: After
 .. autoclass:: Between
@@ -106,12 +113,6 @@ Filtering (:mod:`eqcatalogue.filtering`)
 .. autoclass:: WithinPolygon
 .. autoclass:: WithinDistanceFromPoint
 
-
-CSV Serializers (:mod:`eqcatalogue.serializers.eqcsv`)
-------------------------------------------------------------------------------
-.. currentmodule:: eqcatalogue
-.. automodule:: eqcatalogue.serializers.csv
-.. autofunction:: export_measures
 
 Grouping (:mod:`eqcatalogue.grouping`)
 ------------------------------------------------------------------------------

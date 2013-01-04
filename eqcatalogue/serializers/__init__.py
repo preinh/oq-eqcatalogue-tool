@@ -15,20 +15,6 @@
 
 
 """
-This module defines a map to exporter functions
+In this package you can find several modules that deals with the
+export feature
 """
-
-
-from eqcatalogue.serializers import eqcsv
-
-
-MEASURES_EXPORTERS = {
-    'csv': eqcsv.export_measures
-}
-
-
-def get_measure_exporter(fmt):
-    """
-    Returns the measure exporter associated with the format `fmt`
-    """
-    return MEASURES_EXPORTERS[fmt]

@@ -28,10 +28,12 @@ from .selection import (Precise, AgencyRanking,
 from .homogeniser import Homogeniser
 from .harmoniser import Harmoniser
 from .regression import (LinearModel, PolynomialModel)
+from .serializers.csv_ import export_measures
+
 
 __all__ = [x.__name__ for x in (CatalogueDatabase, C,
                                 Precise, AgencyRanking,
                                 MUSSetDefault, MUSSetEventMaximum, MUSDiscard,
                                 Homogeniser, LinearModel, PolynomialModel,
                                 GroupMeasuresBySequentialClustering,
-                                Harmoniser)]
+                                Harmoniser, export_measures)]
