@@ -16,7 +16,7 @@
 import tempfile
 import unittest
 from eqcatalogue import filtering
-from eqcatalogue.serializers import csv_export
+from eqcatalogue.serializers import csv_
 
 from tests import test_utils
 
@@ -41,5 +41,5 @@ class ShouldExportMeasures(unittest.TestCase):
         csv_file = tempfile.NamedTemporaryFile()
         measures = filtering.C(agency__in=['ISC'])[0:9]
 
-        csv_export.measures(measures, filename=csv_file.name)
+        csv_.export_measures(measures, filename=csv_file.name)
         self.assertEqual(self.EXPECTED_CSV_1, csv_file.read())

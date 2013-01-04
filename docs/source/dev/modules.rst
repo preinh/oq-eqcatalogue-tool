@@ -97,7 +97,6 @@ Filtering (:mod:`eqcatalogue.filtering`)
 .. automethod:: Criteria.filter
 .. automethod:: Criteria.predicate
 .. automethod:: Criteria.group_measures
-.. automethod:: Criteria.export
 .. autoclass:: Before
 .. autoclass:: After
 .. autoclass:: Between
@@ -107,10 +106,10 @@ Filtering (:mod:`eqcatalogue.filtering`)
 .. autoclass:: WithinDistanceFromPoint
 
 
-CSV Serializers (:mod:`eqcatalogue.serializers.eqcsv`)
+CSV Serializers (:mod:`eqcatalogue.serializers.csv_`)
 ------------------------------------------------------------------------------
 .. currentmodule:: eqcatalogue
-.. automodule:: eqcatalogue.serializers.csv
+.. automodule:: eqcatalogue.serializers.csv_
 .. autofunction:: export_measures
 
 Grouping (:mod:`eqcatalogue.grouping`)

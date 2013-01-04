@@ -22,7 +22,7 @@ format
 import csv
 
 
-def measures(measures, filename, header=True, mode="w", **kwargs):
+def export_measures(measures, filename, header=True, mode="w", **kwargs):
     """
     Export `measures` to `filename` by using the csv module from the
     standard python library. If `header` is true the first row of the
