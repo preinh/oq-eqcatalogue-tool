@@ -34,8 +34,7 @@ class ShouldExportMeasures(unittest.TestCase):
 92,ISC,14342464,00198792,mb,5.3,0.2\r
 """
 
-    @classmethod
-    def setUp(cls):
+    def setUp(self):
         test_utils.load_catalog()
 
     def test_csv_serializers(self):
