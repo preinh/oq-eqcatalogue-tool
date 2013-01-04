@@ -106,6 +106,12 @@ Filtering (:mod:`eqcatalogue.filtering`)
 .. autoclass:: WithinDistanceFromPoint
 
 
+CSV Serializers (:mod:`eqcatalogue.serializers.csv_`)
+------------------------------------------------------------------------------
+.. currentmodule:: eqcatalogue
+.. automodule:: eqcatalogue.serializers.csv_
+.. autofunction:: export_measures
+
 Grouping (:mod:`eqcatalogue.grouping`)
 ------------------------------------------------------------------------------
 

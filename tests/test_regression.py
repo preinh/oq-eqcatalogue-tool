@@ -15,16 +15,12 @@
 
 import unittest
 import numpy as np
-from tests.test_utils import in_data_dir
 from numpy import allclose
 
 from eqcatalogue.regression import (EmpiricalMagnitudeScalingRelationship,
                                     LinearModel, PolynomialModel)
 from eqcatalogue import exceptions
-from eqcatalogue.importers import store_events, isf_bulletin
 from eqcatalogue import models as catalogue
-
-
 
 
 class ShouldPerformRegression(unittest.TestCase):

@@ -28,7 +28,8 @@ class Criteria(object):
     check if a criteria holds for a measure and to return all the
     measures stored in a catalogue database that statisfy the
     specified criteria. Criteria can be combined with logical
-    operators.
+    operators. Instances of Criteria (e.g. a set of measures) could be
+    exported.
 
     :param _cat: a Catalogue Database object.
     """
