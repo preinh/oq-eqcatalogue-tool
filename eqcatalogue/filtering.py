@@ -198,7 +198,7 @@ class After(Criteria):
         return measure.origin.time > self.time
 
 
-class Between(Criteria):
+class TimeBetween(Criteria):
     """
     all the measures within a time range
 
@@ -206,7 +206,7 @@ class Between(Criteria):
     :attribute time_ub: time range upper bound.
     """
     def __init__(self, bounds):
-        super(Between, self).__init__()
+        super(TimeBetween, self).__init__()
         self.time_lb, self.time_ub = bounds
         self._comb = Before(self.time_ub) & After(self.time_lb)
 
@@ -284,6 +284,83 @@ class WithMagnitudeGreater(Criteria):
         return measure.value > self.value
 
 
+class WithMagnitudeLower(Criteria):
+    """
+    all the measurs which have one of the specified magnitude
+    value lower than a value.
+
+    :attribute value: the value considered.
+    """
+    def __init__(self, value):
+        super(WithMagnitudeLower, self).__init__()
+        self.value = value
+
+    def filter(self, queryset=None):
+        queryset = queryset or self.default_queryset
+        return queryset.filter(db.MagnitudeMeasure.value < self.value)
+
+    def predicate(self, measure):
+        return measure.value < self.value
+
+
+class WithDepthGreater(Criteria):
+    """
+    all the measurs which have one of the specified depth
+    value greater than a value.
+
+    :attribute value: the value considered.
+    """
+    def __init__(self, value):
+        super(WithDepthGreater, self).__init__()
+        self.value = value
+
+    def filter(self, queryset=None):
+        queryset = queryset or self.default_queryset
+        return queryset.filter(db.Origin.depth > self.value)
+
+    def predicate(self, measure):
+        return measure.value > self.value
+
+
+class WithDepthLower(Criteria):
+    """
+    all the measurs which have one of the specified depth
+    value greater than a value.
+
+    :attribute value: the value considered.
+    """
+    def __init__(self, value):
+        super(WithDepthLower, self).__init__()
+        self.value = value
+
+    def filter(self, queryset=None):
+        queryset = queryset or self.default_queryset
+        return queryset.filter(db.Origin.depth < self.value)
+
+    def predicate(self, measure):
+        return measure.value < self.value
+
+
+class DepthBetween(Criteria):
+    """
+    all the measures within a depth range
+
+    :attribute depth_lb: depth range lower bound.
+    :attribute depth_ub: depth range upper bound.
+    """
+    def __init__(self, bounds):
+        super(DepthBetween, self).__init__()
+        self.depth_lb, self.depth_ub = bounds
+        self._comb = WithDepthLower(self.depth_ub) & (
+                WithDepthGreater(self.depth_lb))
+
+    def filter(self, queryset=None):
+        return self._comb.filter(queryset)
+
+    def predicate(self, measure):
+        return self._comb.predicate(measure)
+
+
 class WithinPolygon(Criteria):
     """
     all the measures within a specified polygon
@@ -323,14 +400,18 @@ class WithinDistanceFromPoint(Criteria):
 CRITERIA_MAP = {
     'before': Before,
     'after': After,
-    'between': Between,
+    'time_between': TimeBetween,
     'agency__in': WithAgencies,
     'agency': WithAgencies.make_with_agency,
     'scale__in': WithMagnitudeScales,
     'scale': WithMagnitudeScales.make_with_scale,
     'within_polygon': WithinPolygon,
     'within_distance_from_point': WithinDistanceFromPoint,
-    'magnitude__gt': WithMagnitudeGreater
+    'magnitude__gt': WithMagnitudeGreater,
+    'magnitude__lt': WithMagnitudeLower,
+    'depth__gt': WithDepthGreater,
+    'depth__lt': WithDepthLower,
+    'depth_between': DepthBetween
 }
 
 CRITERIA_AVAILABLES = CRITERIA_MAP.keys()
