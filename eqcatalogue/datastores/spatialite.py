@@ -30,7 +30,7 @@ from eqcatalogue.models import (EventSource, Event, MagnitudeMeasure, Agency,
 
 DLL_LIBRARY = "libspatialite.dll"
 DYLIB_LIBRARY = "libspatialite.dylib"
-SO_LIBRARY = "libspatialite.so"
+SO_LIBRARY = "libspatialite.so.3"
 
 
 class Engine(object):
