@@ -470,17 +470,17 @@ class CatalogueDatabase(object):
             self.session.add(obj)
             return obj, True
 
-    def get_available_measure_agencies(self):
+    def get_agencies(self):
         """
         Returns a set containing the measure agencies.
         """
 
-        available_agencies = [magnitude_measure.agency.name
-                                for magnitude_measure in
-                                self.session.query(MagnitudeMeasure).all()]
+        available_agencies = [agency.name
+                                for agency in
+                                self.session.query(Agency).all()]
         return set(available_agencies)
 
-    def get_available_measure_scales(self):
+    def get_measure_scales(self):
         """
         Returns a set containing the measure scales.
         """
@@ -497,6 +497,6 @@ class CatalogueDatabase(object):
         """
 
         return {self.__class__.MEASURE_AGENCIES:
-                    self.get_available_measure_agencies(),
+                    self.get_agencies(),
                 self.__class__.MEASURE_SCALES:
-                    self.get_available_measure_scales()}
+                    self.get_measure_scales()}

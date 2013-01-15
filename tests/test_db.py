@@ -147,24 +147,22 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
         self.session.add(measure_two)
 
     def test_available_measures_agencies(self):
-        # Created 2 measures with related Agencies Tatooine and Alderaan
-        # added another Agency with no linked measure DeathStar.
         self.create_test_fixture()
 
-        self.assertEqual(set(['Tatooine', 'Alderaan']),
-                    self.catalogue.get_available_measure_agencies())
+        self.assertEqual(set(['Tatooine', 'Alderaan', 'DeathStar']),
+                    self.catalogue.get_agencies())
 
     def test_available_measures_scales(self):
         self.create_test_fixture()
 
         self.assertEqual(set(['mL', 'mb']),
-                    self.catalogue.get_available_measure_scales())
+                    self.catalogue.get_measure_scales())
 
     def test_get_summary(self):
         self.create_test_fixture()
 
         self.assertEqual({catalogue.CatalogueDatabase.MEASURE_AGENCIES:
-                            set(['Tatooine', 'Alderaan']),
+                            set(['Tatooine', 'Alderaan', 'DeathStar']),
                           catalogue.CatalogueDatabase.MEASURE_SCALES:
                             set(['mL', 'mb'])},
                             self.catalogue.get_summary())
