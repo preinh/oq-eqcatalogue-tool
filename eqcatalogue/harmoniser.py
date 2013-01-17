@@ -248,7 +248,7 @@ class Harmoniser(object):
         path_finder = path_finder_cls(self._formulas)
         identity = ConversionFormula.make_identity(self.target_scale)
 
-        log.LOG.debug("Start harmonization of %d measures",
+        log.logger(__name__).debug("Start harmonization of %d measures",
                       len(measures))
 
         for m in measures:
@@ -259,19 +259,21 @@ class Harmoniser(object):
                 for formula in formulas[1:]:
                     value = formula.apply(value, measure_uncertainty)
                 result.append(m, value)
-                log.LOG.debug("Measure %s harmonised with formulas %s",
+                log.logger(__name__).debug(
+                    "Measure %s harmonised with formulas %s",
                               m, formulas)
 
             elif m.scale == self.target_scale and allow_trivial_conversion:
                 result.append(
                     m, m.convert(m.value, identity, m.standard_error))
-                log.LOG.debug(
+                log.logger(__name__).debug(
                     "Measure %s harmonised with trivial conversion", m)
             else:
                 result.append(m)
-                log.LOG.debug("Could not convert measure %s", m)
+                log.logger(__name__).debug("Could not convert measure %s", m)
 
-        log.LOG.info("Harmonized %s measures. %s measures not converted",
+        log.logger(__name__).info(
+            "Harmonized %s measures. %s measures not converted",
                      len(result.converted), len(result.unconverted))
         return result
 

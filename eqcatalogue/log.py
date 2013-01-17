@@ -34,9 +34,9 @@ def setup_logger(log_level=logging.DEBUG,
     :param debug_log_filename: the filename used for logging at DEBUG
     level
     """
-    logger = logging.getLogger('eqcatalogue')
+    root_logger = logging.getLogger('eqcatalogue')
 
-    logger.setLevel(log_level)
+    root_logger.setLevel(log_level)
 
     fh = logging.FileHandler(debug_log_filename)
     fh.setLevel(logging.DEBUG)
@@ -52,16 +52,25 @@ def setup_logger(log_level=logging.DEBUG,
     ch.setFormatter(formatter)
 
     # add the handlers to the logger
-    logger.addHandler(fh)
-    logger.addHandler(ch)
+    root_logger.addHandler(fh)
+    root_logger.addHandler(ch)
 
-    logger.debug("Setup logger with level %s and debug filename=%s",
-                 log_level, debug_log_filename)
+    root_logger.debug("Setup logger with level %s and debug filename=%s",
+                      log_level, debug_log_filename)
 
-    return logger
+    return root_logger
 
 
 if sys.argv[0].endswith("nosetests"):
-    LOG = setup_logger(logging.ERROR)
+    setup_logger(logging.ERROR)
 else:
-    LOG = setup_logger()
+    setup_logger()
+
+
+# By using this function, the client is pushed to import this module
+# such that the logging is configured properly.
+def logger(module_name):
+    """
+    Returns a logger for `module_name`.
+    """
+    return logging.getLogger(module_name)

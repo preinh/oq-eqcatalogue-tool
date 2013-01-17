@@ -149,7 +149,7 @@ class Homogeniser(object):
         """
         self._grouper = grouper_class(**grouper_args)
 
-        log.LOG.debug("Changed grouper to %s" % self._grouper)
+        log.logger(__name__).debug("Changed grouper to %s" % self._grouper)
         return self.grouped_measures()
 
     def set_selector(self, selector_class, **selector_args):
@@ -170,7 +170,7 @@ class Homogeniser(object):
         """
         self._selector = selector_class(**selector_args)
 
-        log.LOG.debug("Changed selector to %s" % self._selector)
+        log.logger(__name__).debug("Changed selector to %s" % self._selector)
         return self.selected_native_measures(), self.selected_target_measures()
 
     def set_missing_uncertainty_strategy(self, mu_strategy_class,
@@ -193,8 +193,8 @@ class Homogeniser(object):
         """
         self._mu_strategy = mu_strategy_class(**mu_strategy_args)
 
-        log.LOG.debug("Changed missing uncertainty strategy to %s",
-                      self._selector)
+        log.logger(__name__).debug(
+            "Changed missing uncertainty strategy to %s", self._selector)
         return self.selected_native_measures(), self.selected_target_measures()
 
     def set_criteria(self, criteria=None):
@@ -207,7 +207,7 @@ class Homogeniser(object):
         """
         self._criteria = criteria or Criteria()
 
-        log.LOG.debug("Changed criteria to %s", self._criteria)
+        log.logger(__name__).debug("Changed criteria to %s", self._criteria)
 
         return self.selected_native_measures(), self.selected_target_measures()
 

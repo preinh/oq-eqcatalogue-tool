@@ -39,4 +39,5 @@ def export_measures(measures, filename, header=True, mode="w", **kwargs):
         for measure in measures:
             measure_writer.writerow(measure.values())
 
-    log.LOG.info("Exported %d measures to %s" % (len(measures), filename))
+    log.logger(__name__).info(
+        "Exported %d measures to %s" % (len(measures), filename))

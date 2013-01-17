@@ -138,7 +138,7 @@ class MeasureSelectionWithoutState(MeasureSelection):
         selected = self.__class__.do_select(grouped_measures, native_scale,
                                             target_scale, mus)
 
-        log.LOG.debug(
+        log.logger(__name__).debug(
             "selected %d measures over %d groups on scales %s,%s (%s)",
             len(selected[0]), len(grouped_measures),
             native_scale, target_scale, mus)
@@ -312,7 +312,7 @@ class AgencyRanking(MeasureSelection):
                 native_measures.append(sorted_native_measures[0][1])
                 target_measures.append(sorted_target_measures[0][1])
 
-        log.LOG.debug(
+        log.logger(__name__).debug(
             "selected %d measures over %d groups on scales %s,%s (%s)",
             len(native_measures), len(grouped_measures),
             native_scale, target_scale, mus)

@@ -56,7 +56,7 @@ class GroupMeasuresByEventSourceKey(object):
             if not key in groups:
                 groups[key] = []
             groups[key].append(m)
-        log.LOG.info(
+        log.logger(__name__).info(
             "Measure grouper by source key returned %d groups" % len(groups))
         return groups
 
@@ -110,7 +110,7 @@ class GroupMeasuresByHierarchicalClustering(object):
             current.append(measures[i])
             grouped[cluster] = current
 
-        log.LOG.info(
+        log.logger(__name__).info(
             "Measure grouper by clustering on time returned %d groups" % len(
                 grouped))
         return grouped
@@ -175,7 +175,7 @@ class GroupMeasuresBySequentialClustering(object):
                 self.group_measures_by_magnitude_value(group)
                 for group in groups], [])
 
-        log.LOG.info(
+        log.logger(__name__).info(
             "Measure grouper (sequential clustering) returned %d groups",
             len(groups))
         return dict([(i, group) for i, group in enumerate(groups)])
@@ -188,7 +188,8 @@ class GroupMeasuresBySequentialClustering(object):
         groups = self.group_measures_by_var(
             measures, self.time_distance_fn, self.time_window)
 
-        log.LOG.debug("grouping by time returned %d groups", len(groups))
+        log.logger(__name__).debug(
+            "grouping by time returned %d groups", len(groups))
         return groups
 
     def group_measures_by_magnitude_value(self, measures):
@@ -202,7 +203,8 @@ class GroupMeasuresBySequentialClustering(object):
         groups = self.group_measures_by_var(
             measures, self.magnitude_distance_fn, self.magnitude_window)
 
-        log.LOG.debug("grouping by magnitude value returned %d groups", len(groups))
+        log.logger(__name__).debug(
+            "grouping by magnitude value returned %d groups", len(groups))
 
         return groups
 
@@ -214,7 +216,8 @@ class GroupMeasuresBySequentialClustering(object):
         groups = self.group_measures_by_var(
             measures, self.space_distance_fn, self.space_window)
 
-        log.LOG.debug("grouping by space returned %d groups", len(groups))
+        log.logger(__name__).debug(
+            "grouping by space returned %d groups", len(groups))
 
         return groups
 
