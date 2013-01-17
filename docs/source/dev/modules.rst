@@ -80,6 +80,14 @@ Importer (:mod:`eqcatalogue.importers.isf_bulletin`)
 .. automethod:: eqcatalogue.importers.isf_bulletin.V1.load
 .. automethod:: eqcatalogue.importers.isf_bulletin.V1.import_events
 
+
+CSV Serializers (:mod:`eqcatalogue.serializers.csv_`)
+------------------------------------------------------------------------------
+.. currentmodule:: eqcatalogue
+.. automodule:: eqcatalogue.serializers.csv_
+.. autofunction:: export_measures
+
+
 Low-Level API modules
 ==============================================================================
 
@@ -105,12 +113,6 @@ Filtering (:mod:`eqcatalogue.filtering`)
 .. autoclass:: WithinPolygon
 .. autoclass:: WithinDistanceFromPoint
 
-
-CSV Serializers (:mod:`eqcatalogue.serializers.csv_`)
-------------------------------------------------------------------------------
-.. currentmodule:: eqcatalogue
-.. automodule:: eqcatalogue.serializers.csv_
-.. autofunction:: export_measures
 
 Grouping (:mod:`eqcatalogue.grouping`)
 ------------------------------------------------------------------------------
@@ -154,3 +156,11 @@ Selection (:mod:`eqcatalogue.selection`)
 .. autoclass:: Random
 .. autoclass:: Precise
 .. autoclass:: AgencyRanking
+
+Logging (:mod:`eqcatalogue.log`)
+------------------------------------------------------------------------------
+
+.. currentmodule:: eqcatalogue
+.. automodule:: eqcatalogue.log
+
+.. autofunction:: setup_logger

@@ -21,8 +21,11 @@ from tests.test_utils import load_catalog
 
 class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         load_catalog()
+
+    def setUp(self):
         measures = filtering.C(agency__in=['ISC', 'IDC', 'GCMT'],
                                scale__in=['mb', 'MS', 'MW'])
         self.native_scale = 'mb'

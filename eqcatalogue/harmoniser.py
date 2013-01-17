@@ -19,7 +19,10 @@ of a set of measures to a single target scale
 """
 
 import math
+import random
 from scipy.misc import derivative
+from eqcatalogue import log
+from eqcatalogue.serializers import csv_
 
 
 class FormulaPathFinder(object):
@@ -107,6 +110,52 @@ class FormulaPathFinder(object):
         return ret
 
 
+class HarmoniserResult(object):
+    """
+    This class models a result provided by an Harmoniser. Moreover, it
+    has an handy shortcut to serialize the converted measures
+
+    :attr converted: The converted measures
+
+    :attr unconverted: The measures that has not been converted
+    """
+    def __init__(self):
+        self.converted = {}
+        self.unconverted = []
+
+    def append(self, measure, converted_measure=None):
+        """
+        Append an harmonised result.
+
+        :param measure: the Measure object to be converted
+        :param converted_measure:
+          the ConvertedMeasure object representing the converted
+          measure
+        """
+        if converted_measure:
+            if measure in self.converted:
+                raise RuntimeError("This measure has already been converted")
+
+            self.converted[measure] = converted_measure
+        else:
+            self.unconverted.append(measure)
+
+    def export(self, serializer=csv_.export_measures, **fmt_args):
+        """
+        Export the harmonisation result using `serializer`. All the
+        remaining arguments are passed to the exporter. E.g.
+
+        result.export(filename="test.csv")
+
+        :param serializer: A callable that can serialize a set of measures
+
+        :param **fmt_args: Any param to be passed to the serializer function
+        """
+        serializer(
+            sorted(self.converted.values(), key=lambda x: x.origin.time),
+            **fmt_args)
+
+
 class Harmoniser(object):
     """
     This class is responsible to convert a set of measures into a
@@ -121,7 +170,7 @@ class Harmoniser(object):
         self._formulas = {}
 
     def add_conversion_formula(self, formula, model_error,
-                               domain, target_scale):
+                               domain, target_scale, name=None):
         """
         Create a conversion formula from a `function` and make
         it available for the harmoniser.
@@ -145,21 +194,27 @@ class Harmoniser(object):
 
         :param target_scale:
           The target scale
+
+        :param name: the name of the formula (used during export)
         """
 
         formula = ConversionFormula(formula, model_error,
-            domain, target_scale)
+            domain, target_scale, name)
         self._add_formula(formula)
 
-    def add_conversion_formula_from_model(self, model, domain):
+    def add_conversion_formula_from_model(self, model, domain, name=None):
         """
         Create a conversion formula from a regression model and make
         it available for the harmoniser
 
         :param model:
           A regression model
+
+        :param domain: The domain of measures which the conversion
+          formula can be applied to
+        :param name: the name of the formula (used in export)
         """
-        formula = ConversionFormula.make_from_model(model, domain)
+        formula = ConversionFormula.make_from_model(model, domain, name=name)
         self._add_formula(formula)
 
     def _add_formula(self, formula):
@@ -189,27 +244,38 @@ class Harmoniser(object):
         the converted value and the formula used for the conversion.
         The latter is a list of the unconverted measures
         """
-        converted = {}
-        unconverted = []
+        result = HarmoniserResult()
         path_finder = path_finder_cls(self._formulas)
+        identity = ConversionFormula.make_identity(self.target_scale)
+
+        log.logger(__name__).debug("Start harmonization of %d measures",
+                      len(measures))
 
         for m in measures:
             formulas = path_finder.find_formulas_for(m, self.target_scale)
             if formulas:
                 value = formulas[0].apply(m, measure_uncertainty)
+
                 for formula in formulas[1:]:
                     value = formula.apply(value, measure_uncertainty)
-                converted[m] = dict(
-                    measure=value,
-                    formulas=formulas)
-            elif m.scale == self.target_scale and allow_trivial_conversion:
-                converted[m] = dict(
-                    measure=m,
-                    formulas=[])
-            else:
-                unconverted.append(m)
+                result.append(m, value)
+                log.logger(__name__).debug(
+                    "Measure %s harmonised with formulas %s",
+                              m, formulas)
 
-        return converted, unconverted
+            elif m.scale == self.target_scale and allow_trivial_conversion:
+                result.append(
+                    m, m.convert(m.value, identity, m.standard_error))
+                log.logger(__name__).debug(
+                    "Measure %s harmonised with trivial conversion", m)
+            else:
+                result.append(m)
+                log.logger(__name__).debug("Could not convert measure %s", m)
+
+        log.logger(__name__).info(
+            "Harmonized %s measures. %s measures not converted",
+                     len(result.converted), len(result.unconverted))
+        return result
 
 
 class ConversionFormula(object):
@@ -228,41 +294,44 @@ class ConversionFormula(object):
       A list of measures that stores exhaustively the domain of the
       formula
 
-    :attribute target_scale
-      The target scale
+    :attribute str target_scale: The target scale
+
+    :attribute str name: The name of formula (used in export)
     """
-    def __init__(self, formula, model_error, domain, target_scale):
+
+    def __init__(self, formula, model_error, domain, target_scale,
+                 name=None):
         self.formula = formula
         self.model_error = model_error
         self.domain = domain
         self.target_scale = target_scale
+        if not name:
+            name = "formula %d" % random.randint(0, 10000)
+        self.name = name
 
     def is_applicable_for(self, measure):
         """Returns true if the measure given in input can be converted"""
         return measure in self.domain
 
     def __repr__(self):
-        domain_len = len(self.domain)
-        domain_str = "%d measures" % domain_len
-        if domain_len:
-            domain_str += "(%s" % self.domain[0]
-            if domain_len > 1:
-                domain_str += " ..."
-            domain_str += ")"
-        else:
-            domain_str = str(self.domain)
-        return "Formula to %s (domain: %s)" % (
-            self.target_scale, domain_str)
+        return "Formula to %s (domain: %s)" % (self.target_scale, self.domain)
 
     @classmethod
-    def make_from_model(cls, model, domain):
+    def make_from_model(cls, model, domain, name=None):
         """
         Build a conversion model by a regression model
         """
         return cls(formula=model.func,
                     model_error=model.residual(),
                     domain=domain,
-                    target_scale=model.target_scale)
+                    target_scale=model.target_scale,
+                    name=name)
+
+    @classmethod
+    def make_identity(cls, target_scale):
+        return cls(formula=lambda x: x, model_error=0, domain=[],
+                   target_scale=target_scale,
+                   name="identity(%s)" % target_scale)
 
     def apply(self, measure, measure_uncertainty=0.0):
         """

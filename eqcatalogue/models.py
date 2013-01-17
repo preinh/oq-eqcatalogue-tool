@@ -25,6 +25,9 @@ measure metadata).
 from shapely import wkb
 import numpy as np
 
+from eqcatalogue import log
+
+
 DEFAULT_ENGINE = 'eqcatalogue.datastores.spatialite'
 
 METADATA_TYPES = ('phases', 'stations',
@@ -246,6 +249,17 @@ class ConvertedMeasure(object):
             self.value, self.scale, self.standard_error,
             self.original_measure)
 
+    def keys(self):
+        return ["agency", "event", "origin",
+                "scale", "value", "standard_error",
+                "original_measure", "formulas"]
+
+    def values(self):
+        return [self.agency.source_key,
+                self.event.source_key, self.origin.source_key,
+                self.scale, self.value, self.standard_error,
+                self.original_measure, ".".join(f.name for f in self.formulas)]
+
     def convert(self, new_value, formula, standard_error):
         """
         Convert the measure to a ConvertedMeasure with `new_value`
@@ -254,7 +268,7 @@ class ConvertedMeasure(object):
         return self.__class__(
             self.agency, self.event, self.origin, formula.target_scale,
             new_value, standard_error, self.original_measure,
-            self.formulas + [formula])
+            self.formulas[:] + [formula])
 
 
 class Origin(object):
@@ -407,9 +421,13 @@ class CatalogueDatabase(object):
     MEASURE_SCALES = 'available_measure_scales'
 
     def __init__(self, drop=False, engine=DEFAULT_ENGINE, **engine_params):
+        log.logger(__name__).info(
+            "initializing Catalogue Database (engine=%s, params %s)",
+                     engine, engine_params)
         self._engine_class = self.__class__.get_engine(engine)
         self._engine = self._engine_class(**engine_params)
         if drop or 'memory' in engine_params:
+            log.logger(__name__).info("reset catalogue data")
             self.recreate()
 
     def recreate(self):
@@ -451,7 +469,8 @@ class CatalogueDatabase(object):
                 'eqcatalogue.importers.' + importer_module_name)
         module = __import__(importer_module_name, fromlist=['Importer'])
         importer = module.Importer(file(filename), self)
-        return importer.store(**kwargs)
+        summary = importer.store(**kwargs)
+        log.logger(__name__).info(summary)
 
     def position_from_latlng(self, latitude, longitude):
         """

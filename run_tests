@@ -4,4 +4,4 @@
 
 find . -name "*.pyc" -delete
 
-nosetests eqcatalogue/ --with-doctest `find tests/ -name 'test_*.py'` --with-coverage --cover-package=eqcatalogue --with-xunit --xunit-file='nosetests.xml'
+nosetests eqcatalogue/ --with-doctest `find tests/ -name 'test_*.py'` --with-coverage --cover-package=eqcatalogue --with-xunit --xunit-file='nosetests.xml' --nologcapture

@@ -131,3 +131,5 @@ class Importer(BaseImporter):
                     self.update_summary(Importer.MEASURE)
 
         self._catalogue.session.commit()
+
+        return self.summary

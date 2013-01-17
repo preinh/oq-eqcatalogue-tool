@@ -19,7 +19,7 @@ between different magnitude scales value.
 """
 
 
-from eqcatalogue import selection, grouping
+from eqcatalogue import selection, grouping, log
 from eqcatalogue.regression import EmpiricalMagnitudeScalingRelationship
 from eqcatalogue.serializers import mpl
 from eqcatalogue.filtering import Criteria
@@ -88,7 +88,7 @@ class Homogeniser(object):
         self._selector = selector or selection.Random()
         self._mu_strategy = (missing_uncertainty_strategy or
                              selection.MUSDiscard())
-        self.serializer = mpl or serializer
+        self.serializer = serializer or mpl
 
         self._native_scale = native_scale
         self._target_scale = target_scale
@@ -149,6 +149,9 @@ class Homogeniser(object):
         """
         self._grouper = grouper_class(**grouper_args)
 
+        log.logger(__name__).debug("Changed grouper to %s" % self._grouper)
+        return self.grouped_measures()
+
     def set_selector(self, selector_class, **selector_args):
         """
         Set the algorithm used to select a measure among grouped
@@ -166,6 +169,9 @@ class Homogeniser(object):
           an_homogeniser.set_selector(Precise)
         """
         self._selector = selector_class(**selector_args)
+
+        log.logger(__name__).debug("Changed selector to %s" % self._selector)
+        return self.selected_native_measures(), self.selected_target_measures()
 
     def set_missing_uncertainty_strategy(self, mu_strategy_class,
                                          **mu_strategy_args):
@@ -187,6 +193,10 @@ class Homogeniser(object):
         """
         self._mu_strategy = mu_strategy_class(**mu_strategy_args)
 
+        log.logger(__name__).debug(
+            "Changed missing uncertainty strategy to %s", self._selector)
+        return self.selected_native_measures(), self.selected_target_measures()
+
     def set_criteria(self, criteria=None):
         """
         Set the criteria used to filters measures
@@ -196,6 +206,10 @@ class Homogeniser(object):
         homo.set_criteria(C(agency__in=a_list_agency) or C(magnitude__gt=4))
         """
         self._criteria = criteria or Criteria()
+
+        log.logger(__name__).debug("Changed criteria to %s", self._criteria)
+
+        return self.selected_native_measures(), self.selected_target_measures()
 
     def events(self):
         """
@@ -247,7 +261,15 @@ class Homogeniser(object):
         """
         return self._selected_measures()[1]
 
-    def _perform_regression(self):
+    def perform_regression(self):
+        """
+        Actually, perform the regression analysis.
+
+        :returns: a list of n regression outputs where n is the number
+        of models, and a regression output is a dictionary. In this
+        dictionary the keys model and output are mapped into a
+        considered output and its corresponding scipy output result
+        """
         self._emsr = EmpiricalMagnitudeScalingRelationship.make_from_measures(
             self._native_scale, self._target_scale,
             self.grouped_measures(), self._selector,
@@ -271,7 +293,7 @@ class Homogeniser(object):
           :class:`~eqcatalogue.regression.RegressionModel` instance)
           and 'output' (with the output of the regression)
         """
-        scipy_outputs = self._perform_regression()
+        scipy_outputs = self.perform_regression()
         self.serializer.plot(self._emsr,
                               *serializer_args,
                               **serializer_kwargs)

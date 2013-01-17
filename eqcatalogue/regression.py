@@ -351,7 +351,7 @@ class EmpiricalMagnitudeScalingRelationship(object):
             raise TypeError("Invalid Model type selected (%s). \
         It should be a subclass of RegressionModel" % model_type)
 
-        if len(self.native_measures) < 3:
+        if len(self.native_measures) < 2:
             raise exceptions.NotEnoughSamples(
                 "Not enough measures to perform regression. "
                 "Please relax your query or selection criteria")

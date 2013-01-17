@@ -109,7 +109,7 @@ class Engine(object):
             sqlalchemy.Column('created_at',
                               sqlalchemy.DateTime, default=datetime.now()),
             sqlalchemy.Column('source_key',
-                              sqlalchemy.String(), nullable=False),
+                              sqlalchemy.String(), nullable=False, index=True),
             sqlalchemy.Column('eventsource_id',
                               sqlalchemy.Integer,
                               sqlalchemy.ForeignKey(
@@ -133,7 +133,7 @@ class Engine(object):
             sqlalchemy.Column('created_at',
                               sqlalchemy.DateTime, default=datetime.now()),
             sqlalchemy.Column('source_key',
-                              sqlalchemy.String(), nullable=False),
+                              sqlalchemy.String(), nullable=False, index=True),
             sqlalchemy.Column('name',
                               sqlalchemy.String(), nullable=True),
             sqlalchemy.Column('eventsource_id', sqlalchemy.Integer,
@@ -169,7 +169,7 @@ class Engine(object):
                               sqlalchemy.ForeignKey('catalogue_origin.id'),
                               nullable=False),
             sqlalchemy.Column('scale', sqlalchemy.String()),
-            sqlalchemy.Column('value', sqlalchemy.Float()),
+            sqlalchemy.Column('value', sqlalchemy.Float(), index=True),
             sqlalchemy.Column('standard_error',
                               sqlalchemy.Float(),
                               nullable=True))
@@ -199,7 +199,8 @@ class Engine(object):
                               sqlalchemy.ForeignKey(
                     'catalogue_eventsource.id'),
                     nullable=False),
-            sqlalchemy.Column('time', sqlalchemy.DateTime, nullable=False),
+            sqlalchemy.Column('time', sqlalchemy.DateTime,
+                              nullable=False, index=True),
             sqlalchemy.Column('time_error', sqlalchemy.Float(), nullable=True),
             sqlalchemy.Column('time_rms', sqlalchemy.Float(), nullable=True),
             geoalchemy.GeometryExtensionColumn('position',

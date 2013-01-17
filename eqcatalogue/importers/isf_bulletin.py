@@ -590,12 +590,12 @@ class Importer(BaseImporter):
                          "Smaj", "Smin", "Az", "Depth", "Err", "Ndef",
                          "Nst[a]*", "Gap", "mdist", "Mdist", "Qual", "Author",
                          "OrigID"]
-        origin_regexp = re.compile('^%s$' % '\s+'.join(origin_fields))
+        origin_regexp = re.compile('^%s$' % r'\s+'.join(origin_fields))
 
         measure_fields = ["Magnitude", "Err", "Nsta", "Author", "OrigID"]
-        measure_regexp = re.compile('^%s$' % '\s+'.join(measure_fields))
+        measure_regexp = re.compile('^%s$' % r'\s+'.join(measure_fields))
 
-        comment_regexp = re.compile('^\([^\)].+\)')
+        comment_regexp = re.compile(r'^\([^\)].+\)')
 
         if line == 'ISC Bulletin':
             return "catalogue_header"
