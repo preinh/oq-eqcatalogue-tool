@@ -49,7 +49,7 @@ class HomogeniserAPI(unittest.TestCase):
         self._plot_and_assert(homo, 'second')
 
         homo.set_criteria(
-            C(between=(datetime(2010, 2, 28, 4, 11), datetime.now())) &
+            C(time_between=(datetime(2010, 2, 28, 4, 11), datetime.now())) &
             C(agency__in=["NIED", "IDC"]) & C(scale__in=["ML", "mb"]))
         homo.set_selector(Precise)
         homo.set_missing_uncertainty_strategy(MUSSetDefault,
