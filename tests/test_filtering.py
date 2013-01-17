@@ -28,6 +28,7 @@ from eqcatalogue import exceptions
 from eqcatalogue import filtering
 
 
+#FIX ME: Must be removed and replaced!
 def load_fixtures(session):
     # Allows to insert test entries in the earthquake db.
     csv_filename = in_data_dir('query_catalogue.csv')
@@ -63,8 +64,8 @@ def load_fixtures(session):
         entry_pos = 'POINT(%f %f)' % (entry['Longitude'], entry['Latitude'])
         origin = models.Origin(
             time=entry_time, position=WKTSpatialElement(entry_pos),
-            depth=entry['depth'], eventsource=event_source,
-            source_key=entry['eventKey'])
+            eventsource=event_source,
+            source_key=entry['eventKey'], depth=entry['depth'])
 
         mag_measure = models.MagnitudeMeasure(agency=agency, event=event,
                 origin=origin, scale=entry['mag_type'],
@@ -85,6 +86,9 @@ class ACriteriaShould(unittest.TestCase):
         self.cat_db = models.CatalogueDatabase(memory=True, drop=True)
         self.session = self.cat_db.session
         load_fixtures(self.session)
+
+    def tearDown(self):
+        self.session.commit()
 
     def test_allows_filtering_of_all_measures(self):
         self.assertEqual(30, len(filtering.Criteria()))
@@ -108,7 +112,7 @@ class ACriteriaShould(unittest.TestCase):
         after_time = filtering.After(time)
         time_lb = datetime(2001, 3, 2, 4, 11)
         time_ub = datetime(2001, 5, 2, 22, 34)
-        between_time = filtering.Between((time_lb, time_ub))
+        between_time = filtering.TimeBetween((time_lb, time_ub))
 
         self.assertEqual(30, before_time.count())
 
@@ -224,8 +228,30 @@ class ACriteriaShould(unittest.TestCase):
         measure = random.choice(filtering.C())
         self.assertTrue(filtering.C().predicate(measure))
 
-    def tearDown(self):
-        self.session.commit()
+    def test_allows_filtering_magnitudes_greater_than(self):
+        measures = filtering.WithMagnitudeGreater(5)
+
+        self.assertEqual(9, len(measures))
+
+    def test_allows_filtering_magnitudes_lower_than(self):
+        measures = filtering.WithMagnitudeLower(3)
+
+        self.assertEqual(1, len(measures))
+
+    def test_allows_filtering_depth_greater_than(self):
+        measures = filtering.WithDepthGreater(97)
+
+        self.assertEqual(4, len(measures))
+
+    def test_allows_filtering_depth_lower_than(self):
+        measures = filtering.WithDepthLower(30)
+
+        self.assertEqual(10, len(measures))
+
+    def test_allows_filtering_depth_between_range(self):
+        measures = filtering.DepthBetween((90, 93))
+
+        self.assertEqual(2, len(measures))
 
 
 class TestCriteriaFactory(unittest.TestCase):
@@ -236,7 +262,8 @@ class TestCriteriaFactory(unittest.TestCase):
         self.TESTS = [
             ['before', filtering.Before, datetime.now()],
             ['after', filtering.After, datetime.now()],
-            ['between', filtering.Between, [datetime.now(), datetime.now()]],
+            ['time_between', filtering.TimeBetween,
+                [datetime.now(), datetime.now()]],
             ['agency__in', filtering.WithAgencies, ["LEIC"]],
             ['scale__in', filtering.WithMagnitudeScales, ["Mw"]],
             ['scale', filtering.WithMagnitudeScales, "Mw"],
@@ -257,9 +284,8 @@ class TestCriteriaFactory(unittest.TestCase):
 
     def test_factory(self):
         self.assertEqual(filtering.Criteria, type(filtering.C()))
-
         self.assertEqual(filtering.CombinedCriteria, type(filtering.C(
             agency__in=['ISC', 'NEIC'], magnitude__gt=5)))
 
-        self.assertRaises(exceptions.InvalidCriteria, filtering.C,
-                          kwargs={'wtf': 3})
+        self.assertRaises(exceptions.InvalidCriteria,
+                filtering.C, kwargs={'wtf': 3})
