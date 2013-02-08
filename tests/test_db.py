@@ -119,12 +119,12 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
         self.session.add(first_event)
         self.session.add(second_event)
 
-        agency_one = catalogue.Agency(source_key="1st",
-                eventsource=eventsource, name='Tatooine')
-        agency_two = catalogue.Agency(source_key="2nd",
-                eventsource=eventsource, name='Alderaan')
-        agency_three = catalogue.Agency(source_key="3rd",
-                eventsource=eventsource, name='DeathStar')
+        agency_one = catalogue.Agency(source_key="Tatooine",
+                eventsource=eventsource)
+        agency_two = catalogue.Agency(source_key='Alderaan',
+                eventsource=eventsource)
+        agency_three = catalogue.Agency(source_key="DeathStar",
+                eventsource=eventsource)
         self.session.add(agency_one)
         self.session.add(agency_two)
         self.session.add(agency_three)

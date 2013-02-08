@@ -88,10 +88,9 @@ class Agency(object):
     def __repr__(self):
         return "Agency %s" % self.source_key
 
-    def __init__(self, source_key, eventsource, name=None):
+    def __init__(self, source_key, eventsource):
         self.source_key = source_key
         self.eventsource = eventsource
-        self.name = name
 
 
 class Event(object):
@@ -503,7 +502,7 @@ class CatalogueDatabase(object):
         Returns a set containing the measure agencies.
         """
 
-        available_agencies = [agency.name
+        available_agencies = [agency.source_key
                                 for agency in
                                 self.session.query(Agency).all()]
         return set(available_agencies)
