@@ -159,6 +159,7 @@ class MagnitudeMeasure(object):
 
     def __init__(self, agency, event, origin, scale, value,
                  standard_error=None):
+        self.id = None
         self.agency = agency
         self.event = event
         self.origin = origin
@@ -175,9 +176,14 @@ class MagnitudeMeasure(object):
                 "scale", "value", "standard_error"]
 
     def values(self):
+        if self.standard_error:
+            stderr = "%.4f" % self.standard_error
+        else:
+            stderr = ""
+
         return [self.id, self.agency.source_key,
                 self.event.source_key, self.origin.source_key,
-                self.scale, self.value, self.standard_error]
+                self.scale, "%.4f" % self.value, stderr]
 
     def time_distance(self, measure):
         return abs(self.origin.time - measure.origin.time).total_seconds()
@@ -212,8 +218,8 @@ class MagnitudeMeasure(object):
         standard errors
         """
         return [cls(agency=None, event=None, origin=None,
-                    scale=scale, value=v[0], standard_error=v[1])
-                    for v in zip(values, sigmas)]
+                scale=scale, value=v[0], standard_error=v[1])
+                for v in zip(values, sigmas)]
 
     def convert(self, new_value, formula, standard_error):
         """
@@ -221,8 +227,9 @@ class MagnitudeMeasure(object):
         through `formula`
         """
         return ConvertedMeasure(self.agency, self.event, self.origin,
-                   formula.target_scale, new_value, standard_error,
-                   self, [formula])
+                                formula.target_scale,
+                                new_value, standard_error,
+                                self, [formula])
 
 
 class ConvertedMeasure(object):
@@ -254,9 +261,13 @@ class ConvertedMeasure(object):
                 "original_measure", "formulas"]
 
     def values(self):
+        if self.standard_error:
+            stderr = "%.4f" % self.standard_error
+        else:
+            stderr = ""
         return [self.agency.source_key,
                 self.event.source_key, self.origin.source_key,
-                self.scale, self.value, self.standard_error,
+                self.scale, "%.4f" % self.value, stderr,
                 self.original_measure, ".".join(f.name for f in self.formulas)]
 
     def convert(self, new_value, formula, standard_error):
