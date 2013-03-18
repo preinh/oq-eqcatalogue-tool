@@ -9,11 +9,11 @@ from PyQt4.QtGui import *
 from qgis.core import *
 from qgis.gui import *
 
-from catalogue_events import Ui_CatalogueEvents
+from ui_dock import Ui_Dock
 from rangeFilter import DoubleRangeFilter, DateRangeFilter
 
 
-class GemDock(QDockWidget, Ui_CatalogueEvents):
+class GemDock(QDockWidget, Ui_Dock):
     def __init__(self, iface, parent=None):
         QDockWidget.__init__(self, parent)
         self.setupUi(self)

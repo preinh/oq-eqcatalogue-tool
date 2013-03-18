@@ -35,6 +35,7 @@ from qgis.core import *
 import resources_rc
 # Import the code for the dialog
 from dock import GemDock
+from importer_dialog import ImporterDialog
 
 from eqcatalogue import CatalogueDatabase, filtering
 from eqcatalogue.importers import V1, Iaspei, store_events
@@ -78,13 +79,9 @@ class EqCatalogue:
         self.show_catalogue_action.setCheckable(True)
         self.show_catalogue_action.setChecked(self.dockIsVisible)
 
-        self.import_isf_action = QAction(
+        self.import_action = QAction(
             QIcon(":/plugins/eqcatalogue/icon.png"),
             u"Import ISF file in db", self.iface.mainWindow())
-
-        self.import_iaspei_action = QAction(
-            QIcon(":/plugins/eqcatalogue/icon.png"),
-            u"Import IASPEI file in db", self.iface.mainWindow())
 
         self.show_pippo1_action = QAction(
             QIcon(":/plugins/eqcatalogue/icon.png"),
@@ -97,43 +94,33 @@ class EqCatalogue:
         # connect the action to the run method
         QObject.connect(self.show_catalogue_action, SIGNAL("triggered()"),
                         self.toggle_dock)
-        QObject.connect(self.import_isf_action, SIGNAL("triggered()"),
-                        lambda: self.import_catalogue("isf"))
-        QObject.connect(self.import_iaspei_action, SIGNAL("triggered()"),
-                        lambda: self.import_catalogue("iaspei"))
+
+        self.import_action.triggered.connect(self.show_import_dialog)
+        # Passing parameter using lambda exp
+        #QObject.connect(self.import_action, SIGNAL("triggered()"),
+        #                lambda: self.import_catalogue("isf"))
 
         QObject.connect(self.show_pippo1_action, SIGNAL("triggered()"), self.show_pippo1)
 
         QObject.connect(self.show_pippo2_action, SIGNAL("triggered()"), self.show_pippo2)
 
-	QObject.connect(self.dock.filterButton, SIGNAL("clicked()"), self.filter)
+        QObject.connect(self.dock.filterButton, SIGNAL("clicked()"), self.filter)
 
         # Add toolbar button and menu item
         self.iface.addToolBarIcon(self.show_catalogue_action)
         self.iface.addPluginToMenu(u"&eqcatalogue", self.show_catalogue_action)
-        self.iface.addPluginToMenu(u"&eqcatalogue", self.import_isf_action)
-        self.iface.addPluginToMenu(u"&eqcatalogue", self.import_iaspei_action)
+        self.iface.addPluginToMenu(u"&eqcatalogue", self.import_action)
         self.iface.addPluginToMenu(u"&eqcatalogue", self.show_pippo1_action)
         self.iface.addPluginToMenu(u"&eqcatalogue", self.show_pippo2_action)
 
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dock)
-
-	self.populate_agencies()
-
-    def populate_agencies(self):
-	dbfile = '/home/michele/pippo.db'
-        db = CatalogueDatabase(filename=dbfile)
-        agencies = [str(a) for a in db.get_agencies()]
-	self.dock.agenciesCombo.addItems(agencies)	
-
 
     def unload(self):
         # Remove the plugin menu item and icon
         self.iface.removeToolBarIcon(self.show_catalogue_action)
         self.iface.removePluginMenu(
             u"&eqcatalogue", self.show_catalogue_action)
-        self.iface.removePluginMenu(u"&eqcatalogue", self.import_isf_action)
-        self.iface.removePluginMenu(u"&eqcatalogue", self.import_iaspei_action)
+        self.iface.removePluginMenu(u"&eqcatalogue", self.import_action)
         self.iface.removePluginMenu(u"&eqcatalogue", self.show_pippo1_action)
         self.iface.removePluginMenu(u"&eqcatalogue", self.show_pippo2_action)
 
@@ -146,13 +133,13 @@ class EqCatalogue:
     def show_pippo1(self, agencies=None):
         dbfile = '/home/michele/pippo.db'
         db = CatalogueDatabase(filename=dbfile)
-	if agencies is None:
-		agencies = db.get_agencies()
-	data = filtering.WithAgencies(agencies)
-	uri = QgsDataSourceURI()
-	uri.setDatabase(dbfile)
-	schema = ''
-	table = 'catalogue_origin'
+        if agencies is None:
+            agencies = db.get_agencies()
+        data = filtering.WithAgencies(agencies)
+        uri = QgsDataSourceURI()
+        uri.setDatabase(dbfile)
+        schema = ''
+        table = 'catalogue_origin'
         geom_column = 'position'
         uri.setDataSource(schema, table, geom_column)
 
@@ -197,29 +184,18 @@ class EqCatalogue:
         provider.addFeatures(features)
         vlayer.commitChanges()
         vlayer.updateExtents()
-	self.iface.mapCanvas().setExtent(vlayer.extent())		
-	vlayer.triggerRepaint()
+        self.iface.mapCanvas().setExtent(vlayer.extent())
+        vlayer.triggerRepaint()
 
-    def import_catalogue(self, format):
-        if format == "isf":
-            file_type = 'Isf file (*.txt)'
-        elif format == "iaspei":
-            file_type = 'Iaspei file (*.csv)'
+    def show_import_dialog(self):
+        self.import_dialog = ImporterDialog(self.iface)
+        self.import_dialog.exec_()
 
-        self.import_file_path = unicode(QFileDialog.getOpenFileName(
-            self.iface.mainWindow(), 'Select Catalogue file', QDir.homePath(),
-            file_type))
-
-        self.save_file_path = unicode(QFileDialog.getSaveFileName(
-            self.iface.mainWindow(), 'Save Catalogue file into',
-            QDir.homePath(),
-            file_type))
-
-        self.cat_db = CatalogueDatabase(filename=self.save_file_path)
-        with open(self.import_file_path, 'rb') as cat_file:
-            store_events(FMT_MAP[format], cat_file, self.cat_db)
+        #self.cat_db = CatalogueDatabase(filename=self.save_file_path)
+        #with open(self.import_file_path, 'rb') as cat_file:
+        #    store_events(FMT_MAP[format], cat_file, self.cat_db)
 
     def filter(self):
-	selectedItems = self.dock.agenciesCombo.checkedItems()
-	print selectedItems
+        selectedItems = self.dock.agenciesCombo.checkedItems()
+        print selectedItems
         self.show_pippo1(map(str, selectedItems))
