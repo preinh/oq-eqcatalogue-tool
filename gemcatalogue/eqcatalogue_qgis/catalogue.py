@@ -81,7 +81,7 @@ class EqCatalogue:
 
         self.import_action = QAction(
             QIcon(":/plugins/eqcatalogue/icon.png"),
-            u"Import ISF file in db", self.iface.mainWindow())
+            u"Import catalogue file in db", self.iface.mainWindow())
 
         self.show_pippo1_action = QAction(
             QIcon(":/plugins/eqcatalogue/icon.png"),
@@ -189,7 +189,12 @@ class EqCatalogue:
 
     def show_import_dialog(self):
         self.import_dialog = ImporterDialog(self.iface)
-        self.import_dialog.exec_()
+        if self.import_dialog.exec_():
+            catalogue_filename = self.import_dialog.import_file_path
+            db_filename = self.import_dialog.save_file_path
+            print catalogue_filename, db_filename
+        else:
+            print 'ciccia'
 
         #self.cat_db = CatalogueDatabase(filename=self.save_file_path)
         #with open(self.import_file_path, 'rb') as cat_file:

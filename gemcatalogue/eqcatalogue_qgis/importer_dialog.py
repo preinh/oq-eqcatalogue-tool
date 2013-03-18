@@ -15,7 +15,38 @@ from ui_importer_dialog import Ui_ImporterDialog
 class ImporterDialog(QDialog, Ui_ImporterDialog):
     def __init__(self, iface, parent=None):
         QDialog.__init__(self)
+        self.iface = iface
         self.setupUi(self)
+        self.file_filter = 'Isf file (*.txt)' + ';; Iaspei file (*.csv)'
+        self.import_file_path = None
+        self.save_file_path = None
+        self.selectCatalogueLineEdit.textChanged.connect(self.toggle_import_btn)
+        self.selectDbLineEdit.textChanged.connect(self.toggle_import_btn)
+
+    @pyqtSlot()    
+    def on_cataloguefileSelBtn_clicked(self):
+        self.import_file_path = unicode(QFileDialog.getOpenFileName(
+            self.iface.mainWindow(), 'Select Catalogue file', QDir.homePath(),
+            self.file_filter))
+        self.selectCatalogueLineEdit.setText(self.import_file_path)
+
+    @pyqtSlot()
+    def on_dbNameBtn_clicked(self):
+        self.save_file_path = unicode(QFileDialog.getSaveFileName(
+            self.iface.mainWindow(), 'Save Catalogue file into',
+            QDir.homePath()))
+        self.selectDbLineEdit.setText(self.save_file_path)
+
+    def toggle_import_btn(self):
+        if (self.import_file_path is not None and
+            self.save_file_path is not None):
+            self.importBtn.setEnabled(True)
+        else:
+            self.importBtn.setEnabled(False)
+
+    def select_db(self):
+        pass
+        
 
     def closeEvent(self, event):
         self.emit( SIGNAL( "closed" ), self )

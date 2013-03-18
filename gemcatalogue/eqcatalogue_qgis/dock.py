@@ -10,7 +10,6 @@ from qgis.core import *
 from qgis.gui import *
 
 from ui_dock import Ui_Dock
-from rangeFilter import DoubleRangeFilter, DateRangeFilter
 
 
 class GemDock(QDockWidget, Ui_Dock):
@@ -26,11 +25,11 @@ class GemDock(QDockWidget, Ui_Dock):
     def add_range_sliders(self):
         self.mag_range.setOrientation(Qt.Horizontal)
         self.date_range.setOrientation(Qt.Horizontal)
-	self.mag_range.setMinimum(1)
-	self.mag_range.setMaximum(10)
-	self.mag_range.setLowValue(5)
-	self.mag_range.setHighValue(8)
+        self.mag_range.setMinimum(1)
+        self.mag_range.setMaximum(10)
+        self.mag_range.setLowValue(5)
+        self.mag_range.setHighValue(8)
 
     def on_filterButton_clicked(self):
-	selectedItems = self.agenciesCombo.checkedItems()
+        selectedItems = self.agenciesCombo.checkedItems()
 	
