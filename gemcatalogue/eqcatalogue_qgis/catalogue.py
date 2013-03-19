@@ -37,10 +37,11 @@ import resources_rc
 from dock import GemDock
 from importer_dialog import ImporterDialog
 
+import gemcatalogue
 from eqcatalogue import CatalogueDatabase, filtering
 from eqcatalogue.importers import V1, Iaspei, store_events
 
-FMT_MAP = {'isf': V1, 'iaspei': Iaspei}
+FMT_MAP = {'Isf file (*.txt *.html)': V1, ';; Iaspei file (*.csv)': Iaspei}
 
 
 class EqCatalogue:
@@ -70,6 +71,9 @@ class EqCatalogue:
 
         # Create the dialog (after translation) and keep reference
         self.dock = GemDock(self.iface)
+        # Dict of catalogue databases filename: cat_db
+        self.cat_dbs = {}
+        
 
     def initGui(self):
         # Create action that will start plugin configuration
@@ -187,19 +191,21 @@ class EqCatalogue:
         self.iface.mapCanvas().setExtent(vlayer.extent())
         vlayer.triggerRepaint()
 
+    def create_db(self, catalogue_filename, fmt, db_filename):
+        cat_db = CatalogueDatabase(filename=db_filename)
+        parser = FMT_MAP[fmt]
+        with open(catalogue_filename, 'rb') as cat_file:
+            store_events(parser, cat_file, cat_db)
+        self.cat_dbs[db_filename] = cat_db
+
     def show_import_dialog(self):
         self.import_dialog = ImporterDialog(self.iface)
         if self.import_dialog.exec_():
-            catalogue_filename = self.import_dialog.import_file_path
-            db_filename = self.import_dialog.save_file_path
-            print catalogue_filename, db_filename
-        else:
-            print 'ciccia'
-
-        #self.cat_db = CatalogueDatabase(filename=self.save_file_path)
-        #with open(self.import_file_path, 'rb') as cat_file:
-        #    store_events(FMT_MAP[format], cat_file, self.cat_db)
-
+            self.create_db(self.import_dialog.import_file_path,
+                            str(self.import_dialog.fmt),
+                            self.import_dialog.save_file_path)
+            self.dock.update_selectDbComboBox(self.import_dialog.save_file_path)
+                
     def filter(self):
         selectedItems = self.dock.agenciesCombo.checkedItems()
         print selectedItems

@@ -10,11 +10,13 @@ from qgis.core import *
 from qgis.gui import *
 
 from ui_dock import Ui_Dock
+from gemcatalogue import log_msg
 
 
 class GemDock(QDockWidget, Ui_Dock):
     def __init__(self, iface, parent=None):
         QDockWidget.__init__(self, parent)
+        self.iface = iface
         self.setupUi(self)
         self.add_range_sliders()
 
@@ -29,7 +31,35 @@ class GemDock(QDockWidget, Ui_Dock):
         self.mag_range.setMaximum(10)
         self.mag_range.setLowValue(5)
         self.mag_range.setHighValue(8)
-
+    
+    @pyqtSlot()
     def on_filterButton_clicked(self):
         selectedItems = self.agenciesCombo.checkedItems()
-	
+    
+    def update_selectDbComboBox(self, db_sel):
+        log_msg(db_sel)
+        if db_sel is not None and db_sel != '':
+            item_index = self.selectDbComboBox.findText(db_sel)
+            # Elem not in list.
+            self.selectDbComboBox.blockSignals(True)
+            if  item_index != -1:
+                self.selectDbComboBox.removeItem(item_index)
+            
+            self.selectDbComboBox.insertItem(0, db_sel)
+            self.selectDbComboBox.blockSignals(False)
+            self.selectDbComboBox.setCurrentIndex(0)
+            self.db_filename = db_sel
+    
+    @pyqtSlot()    
+    def on_addDbBtn_clicked(self):
+        db_sel = unicode(QFileDialog.getOpenFileName(
+            self.iface.mainWindow(), 'Choose db',
+            QDir.homePath()))
+        self.update_selectDbComboBox(db_sel)
+
+    @pyqtSlot(str)
+    def on_selectDbComboBox_currentIndexChanged(self, selectedDb):
+        self.db_filename = selectedDb
+        log_msg(self.db_filename)
+        
+        

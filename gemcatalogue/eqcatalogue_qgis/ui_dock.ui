@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>329</width>
-    <height>544</height>
+    <width>435</width>
+    <height>508</height>
    </rect>
   </property>
   <property name="windowIcon">
@@ -65,10 +65,10 @@
        <property name="verticalSpacing">
         <number>1</number>
        </property>
-       <item row="11" column="0">
+       <item row="15" column="0">
         <widget class="DateRangeFilter" name="date_range" native="true"/>
        </item>
-       <item row="8" column="0">
+       <item row="12" column="0">
         <widget class="QLabel" name="mrangeLabel">
          <property name="text">
           <string>Define magnitude range:</string>
@@ -78,22 +78,28 @@
          </property>
         </widget>
        </item>
-       <item row="7" column="0" colspan="2">
+       <item row="11" column="0" colspan="2">
         <widget class="MultiCheckComboBox" name="mscalesCombo">
          <property name="insertPolicy">
           <enum>QComboBox::InsertAlphabetically</enum>
          </property>
         </widget>
        </item>
-       <item row="4" column="0" colspan="2">
+       <item row="8" column="0" colspan="2">
         <widget class="MultiCheckComboBox" name="agenciesCombo">
          <property name="insertPolicy">
           <enum>QComboBox::InsertAlphabetically</enum>
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
+       <item row="7" column="0">
         <widget class="QLabel" name="agencyLabel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>Select one or more agencies:</string>
          </property>
@@ -102,7 +108,7 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="0">
+       <item row="9" column="0">
         <widget class="QLabel" name="mscalesLabel">
          <property name="text">
           <string>Select one or more magnitude scales:</string>
@@ -115,7 +121,7 @@
          </property>
         </widget>
        </item>
-       <item row="10" column="0">
+       <item row="14" column="0">
         <widget class="QLabel" name="drangeLabel">
          <property name="text">
           <string>Define date range:</string>
@@ -125,37 +131,42 @@
          </property>
         </widget>
        </item>
-       <item row="9" column="0">
+       <item row="13" column="0">
         <widget class="DoubleRangeFilter" name="mag_range" native="true"/>
        </item>
-       <item row="2" column="1">
-        <widget class="QToolButton" name="selectDbButton">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label">
          <property name="text">
-          <string>...</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="sdbLabel">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="text">
-          <string>Select one db:</string>
+          <string>Select one of the availables db:</string>
          </property>
          <property name="margin">
           <number>10</number>
          </property>
         </widget>
+       </item>
+       <item row="5" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <property name="topMargin">
+          <number>10</number>
+         </property>
+         <item>
+          <widget class="QComboBox" name="selectDbComboBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="addDbBtn">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>

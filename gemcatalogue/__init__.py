@@ -28,6 +28,8 @@
  This script initializes the plugin, making it known to QGIS.
 """
 
+from qgis.core import QgsMessageLog
+
 
 def name():
     return "eqcatalogue"
@@ -53,6 +55,9 @@ def author():
 
 def email():
     return "devops@openquake.org"
+
+def log_msg(msg):
+    QgsMessageLog.logMessage(msg, name())
 
 def classFactory(iface):
     # load EqCatalogue class from file EqCatalogue
