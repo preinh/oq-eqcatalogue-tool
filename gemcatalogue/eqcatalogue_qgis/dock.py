@@ -13,10 +13,12 @@ from ui_dock import Ui_Dock
 from gemcatalogue import log_msg
 
 
+
 class GemDock(QDockWidget, Ui_Dock):
-    def __init__(self, iface, parent=None):
+    def __init__(self, iface, parent=None, gemcatalogue=None):
         QDockWidget.__init__(self, parent)
         self.iface = iface
+        self.gemcatalogue = gemcatalogue
         self.setupUi(self)
         self.add_range_sliders()
 
@@ -38,8 +40,6 @@ class GemDock(QDockWidget, Ui_Dock):
     
     def update_selectDbComboBox(self, db_sel):
         if db_sel is not None and db_sel != '':
-            self.db_filename = db_sel
-
             if self.selectDbComboBox.count() == 0:
                self.selectDbComboBox.addItem(db_sel)
             else:
@@ -57,12 +57,20 @@ class GemDock(QDockWidget, Ui_Dock):
     def on_addDbBtn_clicked(self):
         db_sel = unicode(QFileDialog.getOpenFileName(
             self.iface.mainWindow(), 'Choose db',
-            QDir.homePath()))
+            QDir.homePath(), "Catalogue db file (*.db);;All files (*.*)"))
         self.update_selectDbComboBox(db_sel)
 
     @pyqtSlot(str)
     def on_selectDbComboBox_currentIndexChanged(self, selectedDb):
-        self.db_filename = selectedDb
-        log_msg(self.db_filename)
+        self.gemcatalogue.update_catalogue_db(selectedDb)
+
+    def set_agencies(self, agencies):
+        self.agenciesCombo.clear()
+        self.agenciesCombo.addItems(agencies)
+
+    def set_magnitude_scales(self, magnitude_scales):
+        self.mscalesCombo.clear()
+        self.mscalesCombo.addItems(magnitude_scales)
+        
         
         

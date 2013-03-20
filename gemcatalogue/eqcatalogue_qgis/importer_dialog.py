@@ -32,8 +32,8 @@ class ImporterDialog(QDialog, Ui_ImporterDialog):
         dialog.setAcceptMode(QFileDialog.AcceptOpen)
         if dialog.exec_():
             self.import_file_path = dialog.selectedFiles()[0]
-        self.selectCatalogueLineEdit.setText(self.import_file_path)
-        self.fmt = dialog.selectedNameFilter()
+            self.selectCatalogueLineEdit.setText(self.import_file_path)
+            self.fmt = dialog.selectedNameFilter()
 
     @pyqtSlot()
     def on_dbNameBtn_clicked(self):
@@ -48,10 +48,10 @@ class ImporterDialog(QDialog, Ui_ImporterDialog):
             self.importBtn.setEnabled(True)
         else:
             self.importBtn.setEnabled(False)
-
+    
+    # STUB adding more catalogues to the same db.
     def select_db(self):
         pass
-        
 
     def closeEvent(self, event):
         self.emit( SIGNAL( "closed" ), self )

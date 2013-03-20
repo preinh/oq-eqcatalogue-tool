@@ -70,9 +70,8 @@ class EqCatalogue:
                 QCoreApplication.installTranslator(self.translator)
 
         # Create the dialog (after translation) and keep reference
-        self.dock = GemDock(self.iface)
-        # Dict of catalogue databases filename: cat_db
-        self.cat_dbs = {}
+        self.dock = GemDock(self.iface, gemcatalogue=self)
+        self.catalogue_db = None
         
 
     def initGui(self):
@@ -132,6 +131,14 @@ class EqCatalogue:
         # show the dock
         self.dockIsVisible = not self.dockIsVisible
         self.dock.setVisible(self.dockIsVisible)
+
+    def update_catalogue_db(self, db_filename):
+        self.catalogue_db = CatalogueDatabase(filename=db_filename)
+        agencies = list(self.catalogue_db.get_agencies())
+        mscales = list(self.catalogue_db.get_measure_scales())
+        self.dock.set_agencies(agencies)
+        self.dock.set_magnitude_scales(mscales)
+
 
     ## this is an example of using the raw spatialite layer
     def show_pippo1(self, agencies=None):
@@ -196,7 +203,6 @@ class EqCatalogue:
         parser = FMT_MAP[fmt]
         with open(catalogue_filename, 'rb') as cat_file:
             store_events(parser, cat_file, cat_db)
-        self.cat_dbs[db_filename] = cat_db
 
     def show_import_dialog(self):
         self.import_dialog = ImporterDialog(self.iface)
