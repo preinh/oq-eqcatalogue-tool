@@ -36,10 +36,12 @@ import resources_rc
 # Import the code for the dialog
 from dock import GemDock
 from importer_dialog import ImporterDialog
+from datetime import datetime
 
 import gemcatalogue
 from eqcatalogue import CatalogueDatabase, filtering
 from eqcatalogue.importers import V1, Iaspei, store_events
+from eqcatalogue import filtering
 
 FMT_MAP = {'Isf file (*.txt *.html)': V1, ';; Iaspei file (*.csv)': Iaspei}
 
@@ -90,10 +92,6 @@ class EqCatalogue:
             QIcon(":/plugins/eqcatalogue/icon.png"),
             u"Display Sqlite Data", self.iface.mainWindow())
 
-        self.show_pippo2_action = QAction(
-            QIcon(":/plugins/eqcatalogue/icon.png"),
-            u"Display Sqlite Data", self.iface.mainWindow())
-
         # connect the action to the run method
         QObject.connect(self.show_catalogue_action, SIGNAL("triggered()"),
                         self.toggle_dock)
@@ -105,16 +103,11 @@ class EqCatalogue:
 
         QObject.connect(self.show_pippo1_action, SIGNAL("triggered()"), self.show_pippo1)
 
-        QObject.connect(self.show_pippo2_action, SIGNAL("triggered()"), self.show_pippo2)
-
-        QObject.connect(self.dock.filterButton, SIGNAL("clicked()"), self.filter)
-
         # Add toolbar button and menu item
         self.iface.addToolBarIcon(self.show_catalogue_action)
         self.iface.addPluginToMenu(u"&eqcatalogue", self.show_catalogue_action)
         self.iface.addPluginToMenu(u"&eqcatalogue", self.import_action)
         self.iface.addPluginToMenu(u"&eqcatalogue", self.show_pippo1_action)
-        self.iface.addPluginToMenu(u"&eqcatalogue", self.show_pippo2_action)
 
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dock)
 
@@ -125,7 +118,6 @@ class EqCatalogue:
             u"&eqcatalogue", self.show_catalogue_action)
         self.iface.removePluginMenu(u"&eqcatalogue", self.import_action)
         self.iface.removePluginMenu(u"&eqcatalogue", self.show_pippo1_action)
-        self.iface.removePluginMenu(u"&eqcatalogue", self.show_pippo2_action)
 
     def toggle_dock(self):
         # show the dock
@@ -161,43 +153,6 @@ class EqCatalogue:
         vlayer.setSubsetString('id in %s' % str(ids))
         vlayer.triggerRepaint()
 
-    ## this is an example of using an in-memory layer
-    def show_pippo2(self):
-        dbfile = '/home/michele/pippo.db'
-        db = CatalogueDatabase(filename=dbfile)
-        agencies = db.get_agencies()
-        one_agency = agencies.pop()  # example PRA
-        data = filtering.WithAgencies([one_agency])
-        uri = QgsDataSourceURI()
-
-        display_name = 'Origin'
-        uri = 'Point?crs=epsg:4326&index=yes&uuid=%s' % uuid.uuid4()
-        vlayer = QgsVectorLayer(uri, display_name, 'memory')
-        QgsMapLayerRegistry.instance().addMapLayer(vlayer)
-
-        provider = vlayer.dataProvider()
-        vlayer.startEditing()
-        provider.addAttributes([
-            QgsField('agency', QVariant.String),
-            QgsField('event_name', QVariant.String),
-            QgsField('event_measure', QVariant.String),
-        ])
-        features = []
-        for row in data:
-            feat = QgsFeature()
-            x, y = row.origin.position_as_tuple()
-            geom = QgsGeometry.fromPoint(QgsPoint(x, y))
-            feat.setGeometry(geom)
-            feat.setAttributes([QVariant(str(row.agency)),
-                                QVariant(row.event.name),
-                                QVariant(str(row.event.measures[0]))])
-            features.append(feat)
-        provider.addFeatures(features)
-        vlayer.commitChanges()
-        vlayer.updateExtents()
-        self.iface.mapCanvas().setExtent(vlayer.extent())
-        vlayer.triggerRepaint()
-
     def create_db(self, catalogue_filename, fmt, db_filename):
         cat_db = CatalogueDatabase(filename=db_filename)
         parser = FMT_MAP[fmt]
@@ -212,7 +167,46 @@ class EqCatalogue:
                             self.import_dialog.save_file_path)
             self.dock.update_selectDbComboBox(self.import_dialog.save_file_path)
                 
-    def filter(self):
-        selectedItems = self.dock.agenciesCombo.checkedItems()
-        print selectedItems
-        self.show_pippo1(map(str, selectedItems))
+    def update_map(self, agencies_selected, mscales_selected):
+        filter_agency = filtering.WithAgencies([str(x) for x in agencies_selected])
+        filter_mscales = filtering.WithMagnitudeScales([str(x) for x in mscales_selected])
+        results = filter_agency & filter_mscales
+        self.create_layer(results)
+        
+    def create_layer(self, data):
+        print 'HELLO'
+        display_name = 'Origin'
+        uri = 'Point?crs=epsg:4326&index=yes&uuid=%s' % uuid.uuid4()
+        vlayer = QgsVectorLayer(uri, display_name, 'memory')
+        QgsMapLayerRegistry.instance().addMapLayer(vlayer)
+
+        provider = vlayer.dataProvider()
+        vlayer.startEditing()
+        provider.addAttributes([
+            QgsField('agency', QVariant.String),
+            QgsField('event_name', QVariant.String),
+            QgsField('event_measure', QVariant.String),
+        ])
+        features = []
+        for i, row in enumerate(data):
+            print i            
+            #begin_time = datetime.now()
+            x, y = row.origin.position_as_tuple()
+            #end_time = datetime.now()
+            #print 'time after position as tuple %r' % (end_time - begin_time).microseconds
+            feat = QgsFeature()
+            #begin_time = datetime.now()
+            geom = QgsGeometry.fromPoint(QgsPoint(x, y))
+            #end_time = datetime.now()
+            #print 'time after from point %r' % (end_time - begin_time).microseconds
+            feat.setGeometry(geom)
+            feat.setAttributes([QVariant(str(row.agency)),
+                                QVariant(row.event.name),
+                                QVariant(str(row))])
+            features.append(feat)
+            #print 'time feature append %r' % (datetime.now() - end_time).microseconds
+        provider.addFeatures(features)
+        vlayer.commitChanges()
+        vlayer.updateExtents()
+        self.iface.mapCanvas().setExtent(vlayer.extent())
+        vlayer.triggerRepaint()

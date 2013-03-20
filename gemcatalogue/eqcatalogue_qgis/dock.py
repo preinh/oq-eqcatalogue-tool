@@ -35,7 +35,7 @@ class GemDock(QDockWidget, Ui_Dock):
         self.mag_range.setHighValue(8)
     
     @pyqtSlot()
-    def on_filterButton_clicked(self):
+    def on_filterBtn_clicked(self):
         selectedItems = self.agenciesCombo.checkedItems()
     
     def update_selectDbComboBox(self, db_sel):
@@ -60,17 +60,28 @@ class GemDock(QDockWidget, Ui_Dock):
             QDir.homePath(), "Catalogue db file (*.db);;All files (*.*)"))
         self.update_selectDbComboBox(db_sel)
 
+    @pyqtSlot()    
+    def on_filterBtn_clicked(self):
+        agencies_selected = self.agenciesComboBox.checkedItems()
+        mscales_selected = self.mscalesComboBox.checkedItems()
+        self.gemcatalogue.update_map(agencies_selected, mscales_selected)
+        
     @pyqtSlot(str)
     def on_selectDbComboBox_currentIndexChanged(self, selectedDb):
         self.gemcatalogue.update_catalogue_db(selectedDb)
 
     def set_agencies(self, agencies):
-        self.agenciesCombo.clear()
-        self.agenciesCombo.addItems(agencies)
+        self.agenciesComboBox.clear()
+        self.agenciesComboBox.addItems(agencies)
+        self.agenciesComboBox.checkAll(True)
 
     def set_magnitude_scales(self, magnitude_scales):
-        self.mscalesCombo.clear()
-        self.mscalesCombo.addItems(magnitude_scales)
-        
+        self.mscalesComboBox.clear()
+        self.mscalesComboBox.addItems(magnitude_scales)
+        self.mscalesComboBox.checkAll(True)
+
+    
+
+    
         
         

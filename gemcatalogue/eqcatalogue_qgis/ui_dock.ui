@@ -79,14 +79,14 @@
         </widget>
        </item>
        <item row="11" column="0" colspan="2">
-        <widget class="MultiCheckComboBox" name="mscalesCombo">
+        <widget class="MultiCheckComboBox" name="mscalesComboBox">
          <property name="insertPolicy">
           <enum>QComboBox::InsertAlphabetically</enum>
          </property>
         </widget>
        </item>
        <item row="8" column="0" colspan="2">
-        <widget class="MultiCheckComboBox" name="agenciesCombo">
+        <widget class="MultiCheckComboBox" name="agenciesComboBox">
          <property name="insertPolicy">
           <enum>QComboBox::InsertAlphabetically</enum>
          </property>
@@ -117,7 +117,7 @@
           <number>10</number>
          </property>
          <property name="buddy">
-          <cstring>mscalesCombo</cstring>
+          <cstring>mscalesComboBox</cstring>
          </property>
         </widget>
        </item>
@@ -172,7 +172,10 @@
      </widget>
     </item>
     <item row="4" column="0">
-     <widget class="QPushButton" name="filterButton">
+     <widget class="QPushButton" name="filterBtn">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="text">
        <string>Filter</string>
       </property>
@@ -201,7 +204,7 @@
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>mscalesCombo</tabstop>
+  <tabstop>mscalesComboBox</tabstop>
  </tabstops>
  <resources>
   <include location="resources.qrc"/>

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'eqcatalogue_qgis/ui_dock.ui'
 #
-# Created: Tue Mar 19 12:13:58 2013
+# Created: Wed Mar 20 14:43:21 2013
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -41,14 +41,14 @@ class Ui_Dock(object):
         self.mrangeLabel.setMargin(10)
         self.mrangeLabel.setObjectName(_fromUtf8("mrangeLabel"))
         self.gridLayout_3.addWidget(self.mrangeLabel, 12, 0, 1, 1)
-        self.mscalesCombo = MultiCheckComboBox(self.grpQuestion)
-        self.mscalesCombo.setInsertPolicy(QtGui.QComboBox.InsertAlphabetically)
-        self.mscalesCombo.setObjectName(_fromUtf8("mscalesCombo"))
-        self.gridLayout_3.addWidget(self.mscalesCombo, 11, 0, 1, 2)
-        self.agenciesCombo = MultiCheckComboBox(self.grpQuestion)
-        self.agenciesCombo.setInsertPolicy(QtGui.QComboBox.InsertAlphabetically)
-        self.agenciesCombo.setObjectName(_fromUtf8("agenciesCombo"))
-        self.gridLayout_3.addWidget(self.agenciesCombo, 8, 0, 1, 2)
+        self.mscalesComboBox = MultiCheckComboBox(self.grpQuestion)
+        self.mscalesComboBox.setInsertPolicy(QtGui.QComboBox.InsertAlphabetically)
+        self.mscalesComboBox.setObjectName(_fromUtf8("mscalesComboBox"))
+        self.gridLayout_3.addWidget(self.mscalesComboBox, 11, 0, 1, 2)
+        self.agenciesComboBox = MultiCheckComboBox(self.grpQuestion)
+        self.agenciesComboBox.setInsertPolicy(QtGui.QComboBox.InsertAlphabetically)
+        self.agenciesComboBox.setObjectName(_fromUtf8("agenciesComboBox"))
+        self.gridLayout_3.addWidget(self.agenciesComboBox, 8, 0, 1, 2)
         self.agencyLabel = QtGui.QLabel(self.grpQuestion)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
@@ -89,11 +89,12 @@ class Ui_Dock(object):
         self.horizontalLayout_3.addWidget(self.addDbBtn)
         self.gridLayout_3.addLayout(self.horizontalLayout_3, 5, 0, 1, 2)
         self.gridLayout.addWidget(self.grpQuestion, 0, 0, 1, 1)
-        self.filterButton = QtGui.QPushButton(self.dockWidgetContents)
-        self.filterButton.setObjectName(_fromUtf8("filterButton"))
-        self.gridLayout.addWidget(self.filterButton, 4, 0, 1, 1)
+        self.filterBtn = QtGui.QPushButton(self.dockWidgetContents)
+        self.filterBtn.setEnabled(True)
+        self.filterBtn.setObjectName(_fromUtf8("filterBtn"))
+        self.gridLayout.addWidget(self.filterBtn, 4, 0, 1, 1)
         Dock.setWidget(self.dockWidgetContents)
-        self.mscalesLabel.setBuddy(self.mscalesCombo)
+        self.mscalesLabel.setBuddy(self.mscalesComboBox)
 
         self.retranslateUi(Dock)
         QtCore.QMetaObject.connectSlotsByName(Dock)
@@ -107,7 +108,7 @@ class Ui_Dock(object):
         self.drangeLabel.setText(QtGui.QApplication.translate("Dock", "Define date range:", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("Dock", "Select one of the availables db:", None, QtGui.QApplication.UnicodeUTF8))
         self.addDbBtn.setText(QtGui.QApplication.translate("Dock", "...", None, QtGui.QApplication.UnicodeUTF8))
-        self.filterButton.setText(QtGui.QApplication.translate("Dock", "Filter", None, QtGui.QApplication.UnicodeUTF8))
+        self.filterBtn.setText(QtGui.QApplication.translate("Dock", "Filter", None, QtGui.QApplication.UnicodeUTF8))
 
 from MultiCheckComboBox import MultiCheckComboBox
 from rangeFilter import DoubleRangeFilter, DateRangeFilter
