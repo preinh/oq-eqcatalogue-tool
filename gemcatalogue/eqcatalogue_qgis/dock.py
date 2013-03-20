@@ -37,18 +37,21 @@ class GemDock(QDockWidget, Ui_Dock):
         selectedItems = self.agenciesCombo.checkedItems()
     
     def update_selectDbComboBox(self, db_sel):
-        log_msg(db_sel)
         if db_sel is not None and db_sel != '':
-            item_index = self.selectDbComboBox.findText(db_sel)
-            # Elem not in list.
-            self.selectDbComboBox.blockSignals(True)
-            if  item_index != -1:
-                self.selectDbComboBox.removeItem(item_index)
-            
-            self.selectDbComboBox.insertItem(0, db_sel)
-            self.selectDbComboBox.blockSignals(False)
-            self.selectDbComboBox.setCurrentIndex(0)
             self.db_filename = db_sel
+
+            if self.selectDbComboBox.count() == 0:
+               self.selectDbComboBox.addItem(db_sel)
+            else:
+                item_index = self.selectDbComboBox.findText(db_sel)                
+                self.selectDbComboBox.blockSignals(True)
+                # Elem not in list.
+                if item_index != -1:
+                    self.selectDbComboBox.removeItem(item_index)
+                
+                self.selectDbComboBox.insertItem(0, db_sel)
+                self.selectDbComboBox.blockSignals(False)
+                self.selectDbComboBox.setCurrentIndex(0)              
     
     @pyqtSlot()    
     def on_addDbBtn_clicked(self):
