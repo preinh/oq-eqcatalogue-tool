@@ -12,6 +12,7 @@ from qgis.gui import *
 from ui_dock import Ui_Dock
 from gemcatalogue import log_msg
 from collections import namedtuple
+from MapTools import PolygonDrawer
 
 Range = namedtuple('Range', 'low_value high_value')
 
@@ -24,6 +25,16 @@ class GemDock(QDockWidget, Ui_Dock):
         self.gemcatalogue = gemcatalogue
         self.setupUi(self)
         self.add_range_sliders()
+        self._prevMapTool = None
+        self.canvas = self.iface.mapCanvas()
+        
+        # Spatial filtering wdg.        
+        self.polygonDrawer = PolygonDrawer(self.canvas,
+            {'color':QColor("#666666"), 'enableSnap':False, 'keepAfterEnd':True})
+        self.polygonDrawer.setAction(self.drawBtn)
+        self.connect(self.polygonDrawer, SIGNAL("geometryEmitted"), self.polygonCreated)
+        self.connect(self.drawBtn, SIGNAL("clicked()"), self.drawPolygon)
+        self.connect(self.clearBtn, SIGNAL("clicked()"), self.clearPolygon)
 
     def closeEvent(self, event):
         self.emit( SIGNAL( "closed" ), self )
@@ -89,6 +100,70 @@ class GemDock(QDockWidget, Ui_Dock):
         self.mscalesComboBox.clear()
         self.mscalesComboBox.addItems(magnitude_scales)
         self.mscalesComboBox.checkAll(True)
+    
+    def storePrevMapTool(self):
+		prevMapTool = self.canvas.mapTool()
+		if prevMapTool not in (self.polygonDrawer,):
+			self._prevMapTool = prevMapTool
+
+    def restorePrevMapTool(self):
+		self.polygonDrawer.stopCapture()
+		if self._prevMapTool: 
+			self.canvas.setMapTool(self._prevMapTool)
+
+    def showRubberBands(self, show=True):
+		""" show/hide all the rubberbands """
+		if self.polygonDrawer.isEmittingPoints:
+			self.polygonDrawer.reset()
+		else:
+			self.polygonDrawer.rubberBand.show() if show else self.polygonDrawer.rubberBand.hide()
+
+    def showEvent(self, event):
+        self.showRubberBands(True)
+        QWidget.showEvent(self, event)
+
+    def hideEvent(self, event):
+		self.showRubberBands(False)
+		self.restorePrevMapTool()
+		QWidget.hideEvent(self, event)
+
+
+    def drawPolygon(self):
+		# store the previous maptool
+		self.storePrevMapTool()
+
+		# set the polygon drawer as current maptool
+		self.polygonDrawer.startCapture()
+
+    def clearPolygon(self):
+		# remove the displayed polygon
+		self.polygonDrawer.reset()
+
+    def polygonCreated(self, polygon):
+		# restore the previous maptool
+        self.restorePrevMapTool()
+        log_msg(polygon.exportToWkt())
+    
+    def deleteLater(self, *args):
+		#print "deleting", self
+        self.clearPolygon()
+
+		# restore the previous maptool
+        self.restorePrevMapTool()
+
+		# delete the polygon drawer maptool
+        self.polygonDrawer.deleteLater()
+        self.polygonDrawer = None
+
+        QWidget.deleteLater(self, *args)
+
+    
+    def showRubberBands(self, show=True):
+		""" show/hide all the rubberbands """
+		if self.polygonDrawer.isEmittingPoints:
+			self.polygonDrawer.reset()
+		else:
+			self.polygonDrawer.rubberBand.show() if show else self.polygonDrawer.rubberBand.hide()
 
     
 
