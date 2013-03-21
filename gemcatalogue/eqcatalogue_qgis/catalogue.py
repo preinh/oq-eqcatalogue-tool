@@ -42,6 +42,7 @@ import gemcatalogue
 from eqcatalogue import CatalogueDatabase, filtering
 from eqcatalogue.importers import V1, Iaspei, store_events
 from eqcatalogue import filtering
+import os
 
 FMT_MAP = {'Isf file (*.txt *.html)': V1, ';; Iaspei file (*.csv)': Iaspei}
 
@@ -74,6 +75,8 @@ class EqCatalogue:
         # Create the dialog (after translation) and keep reference
         self.dock = GemDock(self.iface, gemcatalogue=self)
         self.catalogue_db = None
+        self.basemap_dir = os.path.abspath(
+                os.path.join(os.path.dirname( __file__ ), '..', 'basemap'))
         
 
     def initGui(self):
@@ -167,15 +170,18 @@ class EqCatalogue:
                             self.import_dialog.save_file_path)
             self.dock.update_selectDbComboBox(self.import_dialog.save_file_path)
                 
-    def update_map(self, agencies_selected, mscales_selected):
+    def update_map(self, agencies_selected, mscales_selected, mag_range, date_range):
         filter_agency = filtering.WithAgencies([str(x) for x in agencies_selected])
         filter_mscales = filtering.WithMagnitudeScales([str(x) for x in mscales_selected])
-        results = filter_agency & filter_mscales
+        filter_mvalues = filtering.C(magnitude__gt=mag_range.low_value,
+                                     magnitude__lt=mag_range.high_value)
+        filter_dvalues = filtering.C(time_between=date_range)
+        
+        results = filter_agency & filter_mscales & filter_mvalues & filter_dvalues
         self.create_layer(results)
         
     def create_layer(self, data):
-        print 'HELLO'
-        display_name = 'Origin'
+        display_name = 'Events'
         uri = 'Point?crs=epsg:4326&index=yes&uuid=%s' % uuid.uuid4()
         vlayer = QgsVectorLayer(uri, display_name, 'memory')
         QgsMapLayerRegistry.instance().addMapLayer(vlayer)
@@ -189,24 +195,24 @@ class EqCatalogue:
         ])
         features = []
         for i, row in enumerate(data):
-            print i            
-            #begin_time = datetime.now()
             x, y = row.origin.position_as_tuple()
-            #end_time = datetime.now()
-            #print 'time after position as tuple %r' % (end_time - begin_time).microseconds
             feat = QgsFeature()
-            #begin_time = datetime.now()
             geom = QgsGeometry.fromPoint(QgsPoint(x, y))
-            #end_time = datetime.now()
-            #print 'time after from point %r' % (end_time - begin_time).microseconds
             feat.setGeometry(geom)
             feat.setAttributes([QVariant(str(row.agency)),
                                 QVariant(row.event.name),
                                 QVariant(str(row))])
             features.append(feat)
-            #print 'time feature append %r' % (datetime.now() - end_time).microseconds
         provider.addFeatures(features)
         vlayer.commitChanges()
         vlayer.updateExtents()
         self.iface.mapCanvas().setExtent(vlayer.extent())
         vlayer.triggerRepaint()
+
+    def load_basemap(self):
+        display_name = 'World Countries'
+        uri = os.path.join(self.basemap_dir, 'Countries.shp')
+        vlayer = QgsVectorLayer(uri, display_name, 'ogr')
+        vlayer.rendererV2().symbol().setColor(QColor("#FFFFFF"))
+        QgsMapLayerRegistry.instance().addMapLayer(vlayer)
+

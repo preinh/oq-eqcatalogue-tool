@@ -11,6 +11,9 @@ from qgis.gui import *
 
 from ui_dock import Ui_Dock
 from gemcatalogue import log_msg
+from collections import namedtuple
+
+Range = namedtuple('Range', 'low_value high_value')
 
 
 
@@ -42,6 +45,7 @@ class GemDock(QDockWidget, Ui_Dock):
         if db_sel is not None and db_sel != '':
             if self.selectDbComboBox.count() == 0:
                self.selectDbComboBox.addItem(db_sel)
+               self.gemcatalogue.load_basemap()
             else:
                 item_index = self.selectDbComboBox.findText(db_sel)                
                 self.selectDbComboBox.blockSignals(True)
@@ -64,7 +68,13 @@ class GemDock(QDockWidget, Ui_Dock):
     def on_filterBtn_clicked(self):
         agencies_selected = self.agenciesComboBox.checkedItems()
         mscales_selected = self.mscalesComboBox.checkedItems()
-        self.gemcatalogue.update_map(agencies_selected, mscales_selected)
+        mvalues_selected = Range(self.mag_range.lowValue(),
+                            self.mag_range.highValue())
+        dvalues_selected = ((self.date_range.lowValue()).toPyDateTime(),
+                            (self.date_range.highValue()).toPyDateTime())
+        
+        self.gemcatalogue.update_map(agencies_selected, mscales_selected,
+                                     mvalues_selected, dvalues_selected)
         
     @pyqtSlot(str)
     def on_selectDbComboBox_currentIndexChanged(self, selectedDb):

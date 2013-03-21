@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'eqcatalogue_qgis/ui_dock.ui'
 #
-# Created: Wed Mar 20 14:43:21 2013
+# Created: Thu Mar 21 11:07:53 2013
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,8 +26,6 @@ class Ui_Dock(object):
         self.gridLayout = QtGui.QGridLayout(self.dockWidgetContents)
         self.gridLayout.setContentsMargins(3, 0, 3, 3)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
-        spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
-        self.gridLayout.addItem(spacerItem, 5, 0, 1, 1)
         self.grpQuestion = QtGui.QGroupBox(self.dockWidgetContents)
         self.grpQuestion.setObjectName(_fromUtf8("grpQuestion"))
         self.gridLayout_3 = QtGui.QGridLayout(self.grpQuestion)
@@ -92,7 +90,19 @@ class Ui_Dock(object):
         self.filterBtn = QtGui.QPushButton(self.dockWidgetContents)
         self.filterBtn.setEnabled(True)
         self.filterBtn.setObjectName(_fromUtf8("filterBtn"))
-        self.gridLayout.addWidget(self.filterBtn, 4, 0, 1, 1)
+        self.gridLayout.addWidget(self.filterBtn, 5, 0, 1, 1)
+        spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.gridLayout.addItem(spacerItem, 6, 0, 1, 1)
+        self.horizontalLayout = QtGui.QHBoxLayout()
+        self.horizontalLayout.setContentsMargins(-1, 10, -1, -1)
+        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        self.drawBtn = QtGui.QPushButton(self.dockWidgetContents)
+        self.drawBtn.setObjectName(_fromUtf8("drawBtn"))
+        self.horizontalLayout.addWidget(self.drawBtn)
+        self.clearBtn = QtGui.QPushButton(self.dockWidgetContents)
+        self.clearBtn.setObjectName(_fromUtf8("clearBtn"))
+        self.horizontalLayout.addWidget(self.clearBtn)
+        self.gridLayout.addLayout(self.horizontalLayout, 4, 0, 1, 1)
         Dock.setWidget(self.dockWidgetContents)
         self.mscalesLabel.setBuddy(self.mscalesComboBox)
 
@@ -109,6 +119,8 @@ class Ui_Dock(object):
         self.label.setText(QtGui.QApplication.translate("Dock", "Select one of the availables db:", None, QtGui.QApplication.UnicodeUTF8))
         self.addDbBtn.setText(QtGui.QApplication.translate("Dock", "...", None, QtGui.QApplication.UnicodeUTF8))
         self.filterBtn.setText(QtGui.QApplication.translate("Dock", "Filter", None, QtGui.QApplication.UnicodeUTF8))
+        self.drawBtn.setText(QtGui.QApplication.translate("Dock", "Draw", None, QtGui.QApplication.UnicodeUTF8))
+        self.clearBtn.setText(QtGui.QApplication.translate("Dock", "Clear", None, QtGui.QApplication.UnicodeUTF8))
 
 from MultiCheckComboBox import MultiCheckComboBox
 from rangeFilter import DoubleRangeFilter, DateRangeFilter
