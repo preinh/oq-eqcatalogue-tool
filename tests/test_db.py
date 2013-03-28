@@ -129,21 +129,36 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
         self.session.add(agency_two)
         self.session.add(agency_three)
 
-        origin = catalogue.Origin(
+        origin_one = catalogue.Origin(
             source_key="test", eventsource=eventsource,
             position=geoalchemy.WKTSpatialElement('POINT(-81.40 38.08)'),
-            time=datetime.now(),
+            time=datetime(1950, 2, 19, 23, 14, 5),
             depth=1)
-        self.session.add(origin)
+
+        origin_two = catalogue.Origin(
+            source_key="test", eventsource=eventsource,
+            position=geoalchemy.WKTSpatialElement('POINT(-81.40 38.08)'),
+            time=datetime(1987, 2, 6, 9, 14, 15),
+            depth=1)
+
+        origin_three = catalogue.Origin(
+            source_key="test", eventsource=eventsource,
+            position=geoalchemy.WKTSpatialElement('POINT(-81.40 38.08)'),
+            time=datetime(1990, 7, 5, 5, 19, 45),
+            depth=1)
+
+        self.session.add(origin_one)
+        self.session.add(origin_two)
+        self.session.add(origin_three)
 
         measure_one = catalogue.MagnitudeMeasure(
             event=first_event, agency=agency_one,
-            origin=origin, scale='mL', value=5.0)
+            origin=origin_one, scale='mL', value=5.0)
         self.session.add(measure_one)
 
         measure_two = catalogue.MagnitudeMeasure(
            event=second_event, agency=agency_two,
-           origin=origin, scale='mb', value=6.0)
+           origin=origin_two, scale='mb', value=6.0)
         self.session.add(measure_two)
 
     def test_available_measures_agencies(self):
@@ -157,6 +172,15 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
 
         self.assertEqual(set(['mL', 'mb']),
                     self.catalogue.get_measure_scales())
+
+    def test_get_dates(self):
+        self.create_test_fixture()
+        exp_min_date = datetime(1950, 2, 19, 23, 14, 5)
+        exp_max_date = datetime(1990, 7, 5, 5, 19, 45)
+        dates = self.catalogue.get_dates()
+
+        self.assertEqual(exp_min_date, dates[0])
+        self.assertEqual(exp_max_date, dates[1])
 
     def test_get_summary(self):
         self.create_test_fixture()
