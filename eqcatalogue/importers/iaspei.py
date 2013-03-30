@@ -69,14 +69,14 @@ class Importer(BaseImporter):
         into the catalogue db, a summary of entities stored is returned.
         """
 
+        event_source, created = self._catalogue.get_or_create(
+            catalogue.EventSource, {'name': 'IASPEI'})
+        if created:
+            self.update_summary(Importer.EVENT_SOURCE)
+
         for entry in self._parse_csv(header):
-
-            event_source, created = self._catalogue.get_or_create(
-                    catalogue.EventSource, {'name': 'IASPEI'})
-            if created:
-                self.update_summary(Importer.EVENT_SOURCE)
-
-            event, created = self._catalogue.get_or_create(catalogue.Event,
+            event, created = self._catalogue.get_or_create(
+                catalogue.Event,
                 {'source_key': entry[self.EVENTID_INDEX],
                  'eventsource': event_source})
             if created:
@@ -96,18 +96,17 @@ class Importer(BaseImporter):
                 depth = None
 
             values = {'time': datetime.strptime(
-                            date_time, '%Y-%m-%d/%H:%M:%S.%f'),
-                        'position': self._catalogue.position_from_latlng(
-                            entry[self.LAT_INDEX], entry[self.LON_INDEX]),
-                        'depth': depth,
-                        'eventsource': event_source,
-                        'source_key': entry[self.EVENTID_INDEX]}
+                date_time, '%Y-%m-%d/%H:%M:%S.%f'),
+                'position': self._catalogue.position_from_latlng(
+                    entry[self.LAT_INDEX], entry[self.LON_INDEX]),
+                'depth': depth,
+                'eventsource': event_source,
+                'source_key': entry[self.EVENTID_INDEX]}
 
             magnitude_group = entry[self.MAG_GR_INDEX:]
 
-            for mag_group_start in xrange(0, len(magnitude_group),
-                self.MAG_MEASURE_ITEMS):
-
+            for mag_group_start in xrange(
+                    0, len(magnitude_group), self.MAG_MEASURE_ITEMS):
                 agency, created = self._catalogue.get_or_create(
                     catalogue.Agency,
                     {'source_key': magnitude_group[mag_group_start],

@@ -118,6 +118,7 @@ class Engine(object):
         orm.Mapper(Agency, agency, properties={
                 'eventsource': orm.relationship(
                     EventSource,
+                    lazy='noload',
                     backref=orm.backref('agencies'))
                 })
         geoalchemy.GeometryDDL(agency)
@@ -197,8 +198,8 @@ class Engine(object):
             sqlalchemy.Column('eventsource_id',
                               sqlalchemy.Integer,
                               sqlalchemy.ForeignKey(
-                    'catalogue_eventsource.id'),
-                    nullable=False),
+                                  'catalogue_eventsource.id'),
+                              nullable=False),
             sqlalchemy.Column('time', sqlalchemy.DateTime,
                               nullable=False, index=True),
             sqlalchemy.Column('time_error', sqlalchemy.Float(), nullable=True),
@@ -215,10 +216,11 @@ class Engine(object):
             sqlalchemy.Column('depth_error',
                               sqlalchemy.Float(), nullable=True))
         orm.Mapper(Origin, origin, properties={
-                'eventsource': orm.relationship(
-                    EventSource,
-                    backref=orm.backref('origins')),
-                'position': geoalchemy.GeometryColumn(origin.c.position)})
+            'eventsource': orm.relationship(
+                EventSource,
+                backref=orm.backref('origins')),
+            'position': geoalchemy.GeometryColumn(
+                origin.c.position)})
         geoalchemy.GeometryDDL(origin)
 
     def _create_schema_measuremetadata(self):
@@ -231,10 +233,11 @@ class Engine(object):
             sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True),
             sqlalchemy.Column('created_at', sqlalchemy.DateTime,
                               default=datetime.now()),
-            sqlalchemy.Column('magnitudemeasure_id', sqlalchemy.Integer,
-                              sqlalchemy.ForeignKey(
+            sqlalchemy.Column(
+                'magnitudemeasure_id', sqlalchemy.Integer,
+                sqlalchemy.ForeignKey(
                     'catalogue_magnitudemeasure.id'),
-                    nullable=False),
+                nullable=False),
             sqlalchemy.Column('name',
                               sqlalchemy.Enum(*METADATA_TYPES),
                               nullable=False),

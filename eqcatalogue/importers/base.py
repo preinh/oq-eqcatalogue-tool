@@ -19,6 +19,7 @@ kinds of :class:` earthquake catalogue readers <CatalogueReader>`.
 """
 
 import abc
+from eqcatalogue import models
 
 
 def store_events(cls, stream, cat, **kwargs):
@@ -47,6 +48,16 @@ class BaseImporter(object):
     def __init__(self, file_stream, db_catalogue):
         self._file_stream = file_stream
         self._catalogue = db_catalogue
+
+        self._catalogue.session.execute("PRAGMA synchronous=OFF")
+        self._catalogue.session.execute("PRAGMA count_changes=OFF")
+        self._catalogue.session.execute("PRAGMA journal_mode=OFF")
+        self._catalogue.session.execute("PRAGMA temp_store=OFF")
+        self._catalogue.session.autocommit = False
+        self._catalogue.session.autoflush = False
+
+        self._catalogue.session.query(models.EventSource).all()
+
         self._summary = {self.EVENT_SOURCE: 0,
                          self.AGENCY: 0,
                          self.EVENT: 0,

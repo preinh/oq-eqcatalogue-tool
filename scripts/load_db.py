@@ -29,49 +29,54 @@ fmt_map = {'isf': V1, 'iaspei': Iaspei}
 def build_cmd_parser():
     """Create a parser for cmdline arguments"""
 
-    parser = argparse.ArgumentParser(prog='LoadCatalogueDB')
+    p = argparse.ArgumentParser(prog='LoadCatalogueDB')
 
-    parser.add_argument('-i', '--input-file',
-                        nargs=1,
-                        type=str,
-                        metavar='input catalogue file',
-                        dest='input_file',
-                        help=('Specify the input file containing earthquake'
-                                'events supported formats are ISF and IASPEI'))
+    p.add_argument('-i', '--input-file',
+                   nargs=1,
+                   type=str,
+                   metavar='input catalogue file',
+                   dest='input_file',
+                   help=('Specify the input file containing earthquake'
+                         'events supported formats are ISF and IASPEI'))
 
-    parser.add_argument('-f', '--format-type',
-                        nargs=1,
-                        type=str,
-                        help=('Specify the earthquake catalogue format,'
-                              'valid formats are: isf, iaspei'),
-                        metavar='format type',
-                        dest='format_type')
+    p.add_argument('-f', '--format-type',
+                   nargs=1,
+                   type=str,
+                   help=('Specify the earthquake catalogue format,'
+                         'valid formats are: isf, iaspei'),
+                   metavar='format type',
+                   dest='format_type')
 
-    parser.add_argument('-db', '--db-name',
-                        nargs=1,
-                        type=str,
-                        default='eqcatalogue.db',
-                        help='Specify db filename',
-                        metavar='db filename',
-                        dest='db_filename')
-    return parser
+    p.add_argument('-d', '--drop-database',
+                   action='store_true',
+                   help=('Drop the database if present'),
+                   dest='drop_database')
+
+    p.add_argument('-db', '--db-name',
+                   nargs=1,
+                   type=str,
+                   default='eqcatalogue.db',
+                   help='Specify db filename',
+                   metavar='db filename',
+                   dest='db_filename')
+    return p
 
 
-def check_args(args):
-    input_file = args.input_file[0]
-    fmt_file = args.format_type[0]
-    filename = (os.path.abspath(input_file)
-            if os.path.exists(input_file) else None)
-    cat_format = (fmt_file.lower()
-            if fmt_file.lower() in ['isf', 'iaspei']
-            else None)
-    if filename is None:
+def check_args(arguments):
+    input_file = arguments.input_file[0]
+    fmt_file = arguments.format_type[0]
+    fname = (os.path.abspath(input_file)
+             if os.path.exists(input_file) else None)
+    cat_fmt = (fmt_file.lower()
+               if fmt_file.lower() in ['isf', 'iaspei']
+               else None)
+    if fname is None:
         print 'Can\'t find the provided input file'
         sys.exit(-1)
-    if cat_format is None:
+    if cat_fmt is None:
         print 'Format %s is not supported' % fmt_file
         sys.exit(-1)
-    return filename, cat_format
+    return fname, cat_fmt
 
 
 if __name__ == '__main__':
@@ -84,6 +89,7 @@ if __name__ == '__main__':
         cat_dbname = (args.db_filename[0] if isinstance(args.db_filename, list)
                       else args.db_filename)
         with open(filename, 'r') as cat_file:
-            cat_db = CatalogueDatabase(filename=cat_dbname)
+            cat_db = CatalogueDatabase(filename=cat_dbname,
+                                       drop=args.drop_database)
             store_events(fmt_map[cat_format], cat_file, cat_db)
         sys.exit(0)
