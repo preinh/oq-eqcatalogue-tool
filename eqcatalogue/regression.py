@@ -26,7 +26,7 @@ from eqcatalogue import selection
 from eqcatalogue import exceptions
 
 
-REGRESSOR_DEFAULT_MAX_ITERATIONS = 10000
+REGRESSOR_DEFAULT_MAX_ITERATIONS = 1000
 PL_DEFAULT_INITIAL_VALUE_ORDER = 2
 
 
@@ -156,8 +156,8 @@ class RegressionModel(object):
 
         self.output = self._regressor.run()
 
-        if not 'Sum of squares convergence' in self.output.stopreason\
-            and not 'Parameter convergence' in self.output.stopreason:
+        if (not 'Sum of squares convergence' in self.output.stopreason
+            and not 'Parameter convergence' in self.output.stopreason):
             # ODR Failed
             raise exceptions.RegressionFailedException(
                 "Regression failed: %s" % self.output.stopreason)
