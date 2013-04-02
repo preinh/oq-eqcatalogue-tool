@@ -22,6 +22,7 @@ stored into the db (eventsources, events, measures, origins and
 measure metadata).
 """
 
+import collections
 from shapely import wkb
 import numpy as np
 
@@ -434,12 +435,13 @@ class CatalogueDatabase(object):
     def __init__(self, drop=False, engine=DEFAULT_ENGINE, **engine_params):
         log.logger(__name__).info(
             "initializing Catalogue Database (engine=%s, params %s)",
-                     engine, engine_params)
+            engine, engine_params)
         self._engine_class = self.__class__.get_engine(engine)
         self._engine = self._engine_class(**engine_params)
         if drop or 'memory' in engine_params:
             log.logger(__name__).info("reset catalogue data")
             self.recreate()
+        self._cache = collections.defaultdict(dict)
 
     def recreate(self):
         """
@@ -496,18 +498,21 @@ class CatalogueDatabase(object):
         given the query conditions in `query_args`. If an object
         already exists it returns it, otherwise it creates the object
         with params given by `creation_args`"""
-        query = self.session.query(class_object)
-        queryset = query.filter_by(**query_args)
-        if queryset.count():
-            return queryset[0], False
+
+        class_cache = self._cache[class_object]
+
+        if tuple(query_args.values()) in class_cache:
+            return class_cache[tuple(query_args.values())], False
+
+        if not creation_args:
+            creation_args = query_args
         else:
-            if not creation_args:
-                creation_args = query_args
-            else:
-                creation_args.update(query_args)
-            obj = class_object(**creation_args)
-            self.session.add(obj)
-            return obj, True
+            creation_args.update(query_args)
+        obj = class_object(**creation_args)
+        self.session.add(obj)
+
+        class_cache[tuple(query_args.values())] = obj
+        return obj, True
 
     def get_agencies(self):
         """
@@ -515,8 +520,8 @@ class CatalogueDatabase(object):
         """
 
         available_agencies = [agency.source_key
-                                for agency in
-                                self.session.query(Agency).all()]
+                              for agency in
+                              self.session.query(Agency).all()]
         return set(available_agencies)
 
     def get_measure_scales(self):
@@ -545,6 +550,6 @@ class CatalogueDatabase(object):
         """
 
         return {self.__class__.MEASURE_AGENCIES:
-                    self.get_agencies(),
+                self.get_agencies(),
                 self.__class__.MEASURE_SCALES:
-                    self.get_measure_scales()}
+                self.get_measure_scales()}

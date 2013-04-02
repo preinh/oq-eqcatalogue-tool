@@ -99,32 +99,23 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
         self.assertEqual(
             self.session.query(catalogue.MagnitudeMeasure).count(), 1)
 
-    def test_get_or_add(self):
-        event_source1, created = self.catalogue.get_or_create(
-            catalogue.EventSource, {'name': "test_5"})
-        self.assertTrue(created)
-        event_source2, created = self.catalogue.get_or_create(
-            catalogue.EventSource, {'name': "test_5"})
-        self.assertFalse(created)
-        self.assertEqual(event_source1, event_source2)
-
     def create_test_fixture(self):
         eventsource = catalogue.EventSource(name="AnEventSource")
         self.session.add(eventsource)
 
         first_event = catalogue.Event(source_key="1st",
-                    eventsource=eventsource)
+                                      eventsource=eventsource)
         second_event = catalogue.Event(source_key="2nd",
-                    eventsource=eventsource)
+                                       eventsource=eventsource)
         self.session.add(first_event)
         self.session.add(second_event)
 
         agency_one = catalogue.Agency(source_key="Tatooine",
-                eventsource=eventsource)
+                                      eventsource=eventsource)
         agency_two = catalogue.Agency(source_key='Alderaan',
-                eventsource=eventsource)
+                                      eventsource=eventsource)
         agency_three = catalogue.Agency(source_key="DeathStar",
-                eventsource=eventsource)
+                                        eventsource=eventsource)
         self.session.add(agency_one)
         self.session.add(agency_two)
         self.session.add(agency_three)
@@ -157,21 +148,21 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
         self.session.add(measure_one)
 
         measure_two = catalogue.MagnitudeMeasure(
-           event=second_event, agency=agency_two,
-           origin=origin_two, scale='mb', value=6.0)
+            event=second_event, agency=agency_two,
+            origin=origin, scale='mb', value=6.0)
         self.session.add(measure_two)
 
     def test_available_measures_agencies(self):
         self.create_test_fixture()
 
         self.assertEqual(set(['Tatooine', 'Alderaan', 'DeathStar']),
-                    self.catalogue.get_agencies())
+                         self.catalogue.get_agencies())
 
     def test_available_measures_scales(self):
         self.create_test_fixture()
 
         self.assertEqual(set(['mL', 'mb']),
-                    self.catalogue.get_measure_scales())
+                         self.catalogue.get_measure_scales())
 
     def test_get_dates(self):
         self.create_test_fixture()
@@ -185,8 +176,9 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
     def test_get_summary(self):
         self.create_test_fixture()
 
-        self.assertEqual({catalogue.CatalogueDatabase.MEASURE_AGENCIES:
-                            set(['Tatooine', 'Alderaan', 'DeathStar']),
-                          catalogue.CatalogueDatabase.MEASURE_SCALES:
-                            set(['mL', 'mb'])},
-                            self.catalogue.get_summary())
+        self.assertEqual({
+            catalogue.CatalogueDatabase.MEASURE_AGENCIES:
+            set(['Tatooine', 'Alderaan', 'DeathStar']),
+            catalogue.CatalogueDatabase.MEASURE_SCALES:
+            set(['mL', 'mb'])},
+            self.catalogue.get_summary())
