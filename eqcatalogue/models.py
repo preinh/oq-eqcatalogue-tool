@@ -27,6 +27,7 @@ from shapely import wkb
 import numpy as np
 
 from eqcatalogue import log
+from sqlalchemy import func
 
 
 DEFAULT_ENGINE = 'eqcatalogue.datastores.spatialite'
@@ -532,6 +533,15 @@ class CatalogueDatabase(object):
                             for magnitude_measure in
                             self.session.query(MagnitudeMeasure).all()]
         return set(available_scales)
+
+    def get_dates(self):
+        """
+        Returns a tuple with minimum and maximum date
+        """
+
+        date_min = self.session.query(func.min(Origin.time)).first()[0]
+        date_max = self.session.query(func.max(Origin.time)).first()[0]
+        return date_min, date_max
 
     def get_summary(self):
         """
