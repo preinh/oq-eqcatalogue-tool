@@ -149,7 +149,7 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
 
         measure_two = catalogue.MagnitudeMeasure(
             event=second_event, agency=agency_two,
-            origin=origin, scale='mb', value=6.0)
+            origin=origin_two, scale='mb', value=6.0)
         self.session.add(measure_two)
 
     def test_available_measures_agencies(self):
