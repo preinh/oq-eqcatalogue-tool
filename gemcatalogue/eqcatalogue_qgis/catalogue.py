@@ -36,9 +36,7 @@ import resources_rc
 # Import the code for the dialog
 from dock import GemDock
 from importer_dialog import ImporterDialog
-from datetime import datetime
 
-import gemcatalogue
 from eqcatalogue import CatalogueDatabase, filtering
 from eqcatalogue.importers import V1, Iaspei, store_events
 from eqcatalogue import filtering
@@ -48,7 +46,6 @@ FMT_MAP = {'Isf file (*.txt *.html)': V1, ';; Iaspei file (*.csv)': Iaspei}
 
 
 class EqCatalogue:
-
     def __init__(self, iface):
         # Save reference to the QGIS interface
         self.iface = iface
@@ -76,8 +73,7 @@ class EqCatalogue:
         self.dock = GemDock(self.iface, gemcatalogue=self)
         self.catalogue_db = None
         self.basemap_dir = os.path.abspath(
-                os.path.join(os.path.dirname( __file__ ), '..', 'basemap'))
-        
+            os.path.join(os.path.dirname(__file__), '..', 'basemap'))
 
     def initGui(self):
         # Create action that will start plugin configuration
@@ -104,7 +100,8 @@ class EqCatalogue:
         #QObject.connect(self.import_action, SIGNAL("triggered()"),
         #                lambda: self.import_catalogue("isf"))
 
-        QObject.connect(self.show_pippo1_action, SIGNAL("triggered()"), self.show_pippo1)
+        QObject.connect(self.show_pippo1_action, SIGNAL("triggered()"),
+                        self.show_pippo1)
 
         # Add toolbar button and menu item
         self.iface.addToolBarIcon(self.show_catalogue_action)
@@ -133,7 +130,6 @@ class EqCatalogue:
         mscales = list(self.catalogue_db.get_measure_scales())
         self.dock.set_agencies(agencies)
         self.dock.set_magnitude_scales(mscales)
-
 
     ## this is an example of using the raw spatialite layer
     def show_pippo1(self, agencies=None):
@@ -166,20 +162,25 @@ class EqCatalogue:
         self.import_dialog = ImporterDialog(self.iface)
         if self.import_dialog.exec_():
             self.create_db(self.import_dialog.import_file_path,
-                            str(self.import_dialog.fmt),
-                            self.import_dialog.save_file_path)
-            self.dock.update_selectDbComboBox(self.import_dialog.save_file_path)
-                
-    def update_map(self, agencies_selected, mscales_selected, mag_range, date_range):
-        filter_agency = filtering.WithAgencies([str(x) for x in agencies_selected])
-        filter_mscales = filtering.WithMagnitudeScales([str(x) for x in mscales_selected])
+                           str(self.import_dialog.fmt),
+                           self.import_dialog.save_file_path)
+            self.dock.update_selectDbComboBox(
+                self.import_dialog.save_file_path)
+
+    def update_map(self, agencies_selected, mscales_selected, mag_range,
+                   date_range):
+        filter_agency = filtering.WithAgencies(
+            [str(x) for x in agencies_selected])
+        filter_mscales = filtering.WithMagnitudeScales(
+            [str(x) for x in mscales_selected])
         filter_mvalues = filtering.C(magnitude__gt=mag_range.low_value,
                                      magnitude__lt=mag_range.high_value)
         filter_dvalues = filtering.C(time_between=date_range)
-        
-        results = filter_agency & filter_mscales & filter_mvalues & filter_dvalues
+
+        results = filter_agency & filter_mscales & \
+                  filter_mvalues & filter_dvalues
         self.create_layer(results)
-        
+
     def create_layer(self, data):
         display_name = 'Events'
         uri = 'Point?crs=epsg:4326&index=yes&uuid=%s' % uuid.uuid4()
@@ -215,4 +216,3 @@ class EqCatalogue:
         vlayer = QgsVectorLayer(uri, display_name, 'ogr')
         vlayer.rendererV2().symbol().setColor(QColor("#FFFFFF"))
         QgsMapLayerRegistry.instance().addMapLayer(vlayer)
-

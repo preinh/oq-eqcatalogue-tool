@@ -20,10 +20,11 @@ class ImporterDialog(QDialog, Ui_ImporterDialog):
         self.file_filter = 'Isf file (*.txt *.html)' + ';; Iaspei file (*.csv)'
         self.import_file_path = None
         self.save_file_path = None
-        self.selectCatalogueLineEdit.textChanged.connect(self.toggle_import_btn)
+        self.selectCatalogueLineEdit.textChanged.connect(
+            self.toggle_import_btn)
         self.selectDbLineEdit.textChanged.connect(self.toggle_import_btn)
 
-    @pyqtSlot()    
+    @pyqtSlot()
     def on_cataloguefileSelBtn_clicked(self):
         dialog = QFileDialog(self, 'Select Catalogue file')
         dialog.setFileMode(QFileDialog.ExistingFile)
@@ -40,20 +41,19 @@ class ImporterDialog(QDialog, Ui_ImporterDialog):
         self.save_file_path = unicode(QFileDialog.getSaveFileName(
             self.iface.mainWindow(), 'Save Catalogue file into',
             QDir.homePath()))
-        self.selectDbLineEdit.setText(self.save_file_path)        
+        self.selectDbLineEdit.setText(self.save_file_path)
 
     def toggle_import_btn(self):
         if (self.import_file_path is not None and
-            self.save_file_path is not None):
+                    self.save_file_path is not None):
             self.importBtn.setEnabled(True)
         else:
             self.importBtn.setEnabled(False)
-    
+
     # STUB adding more catalogues to the same db.
     def select_db(self):
         pass
 
     def closeEvent(self, event):
-        self.emit( SIGNAL( "closed" ), self )
+        self.emit(SIGNAL("closed"), self)
         return QDialog.closeEvent(self, event)
-	
