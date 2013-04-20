@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>CatalogueEvents</class>
- <widget class="QDockWidget" name="CatalogueEvents">
+ <class>Dock</class>
+ <widget class="QDockWidget" name="Dock">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>329</width>
-    <height>544</height>
+    <width>435</width>
+    <height>508</height>
    </rect>
   </property>
   <property name="windowIcon">
@@ -31,22 +31,6 @@
     <property name="bottomMargin">
      <number>3</number>
     </property>
-    <item row="4" column="0">
-     <layout class="QHBoxLayout" name="horizontalLayout"/>
-    </item>
-    <item row="6" column="0">
-     <spacer name="verticalSpacer">
-      <property name="orientation">
-       <enum>Qt::Vertical</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>20</width>
-        <height>40</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
     <item row="0" column="0">
      <widget class="QGroupBox" name="grpQuestion">
       <property name="title">
@@ -68,11 +52,11 @@
        <property name="verticalSpacing">
         <number>1</number>
        </property>
-       <item row="9" column="0">
+       <item row="15" column="0">
         <widget class="DateRangeFilter" name="date_range" native="true"/>
        </item>
-       <item row="6" column="0">
-        <widget class="QLabel" name="label_8">
+       <item row="12" column="0">
+        <widget class="QLabel" name="mrangeLabel">
          <property name="text">
           <string>Define magnitude range:</string>
          </property>
@@ -81,22 +65,28 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="0" colspan="2">
-        <widget class="MultiCheckComboBox" name="mscalesCombo">
+       <item row="11" column="0" colspan="2">
+        <widget class="MultiCheckComboBox" name="mscalesComboBox">
          <property name="insertPolicy">
           <enum>QComboBox::InsertAlphabetically</enum>
          </property>
         </widget>
        </item>
-       <item row="2" column="0" colspan="2">
-        <widget class="MultiCheckComboBox" name="agenciesCombo">
+       <item row="8" column="0" colspan="2">
+        <widget class="MultiCheckComboBox" name="agenciesComboBox">
          <property name="insertPolicy">
           <enum>QComboBox::InsertAlphabetically</enum>
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label">
+       <item row="7" column="0">
+        <widget class="QLabel" name="agencyLabel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>Select one or more agencies:</string>
          </property>
@@ -105,8 +95,8 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="label_7">
+       <item row="9" column="0">
+        <widget class="QLabel" name="mscalesLabel">
          <property name="text">
           <string>Select one or more magnitude scales:</string>
          </property>
@@ -114,12 +104,12 @@
           <number>10</number>
          </property>
          <property name="buddy">
-          <cstring>mscalesCombo</cstring>
+          <cstring>mscalesComboBox</cstring>
          </property>
         </widget>
        </item>
-       <item row="8" column="0">
-        <widget class="QLabel" name="label_2">
+       <item row="14" column="0">
+        <widget class="QLabel" name="drangeLabel">
          <property name="text">
           <string>Define date range:</string>
          </property>
@@ -128,18 +118,89 @@
          </property>
         </widget>
        </item>
-       <item row="7" column="0">
+       <item row="13" column="0">
         <widget class="DoubleRangeFilter" name="mag_range" native="true"/>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Select one of the availables db:</string>
+         </property>
+         <property name="margin">
+          <number>10</number>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <property name="topMargin">
+          <number>10</number>
+         </property>
+         <item>
+          <widget class="QComboBox" name="selectDbComboBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="addDbBtn">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </widget>
     </item>
     <item row="5" column="0">
-     <widget class="QPushButton" name="filterButton">
+     <widget class="QPushButton" name="filterBtn">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="text">
        <string>Filter</string>
       </property>
      </widget>
+    </item>
+    <item row="6" column="0">
+     <spacer name="verticalSpacer">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>40</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item row="4" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <item>
+       <widget class="QPushButton" name="drawBtn">
+        <property name="text">
+         <string>Draw</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="clearBtn">
+        <property name="text">
+         <string>Clear</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
@@ -164,7 +225,7 @@
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>mscalesCombo</tabstop>
+  <tabstop>mscalesComboBox</tabstop>
  </tabstops>
  <resources>
   <include location="resources.qrc"/>
