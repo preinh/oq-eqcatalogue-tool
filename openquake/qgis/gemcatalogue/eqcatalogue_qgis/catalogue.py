@@ -41,7 +41,8 @@ from eqcatalogue import CatalogueDatabase, filtering
 from eqcatalogue.importers import V1, Iaspei, store_events
 import os
 
-FMT_MAP = {'Isf file (*.txt *.html)': V1, ';; Iaspei file (*.csv)': Iaspei}
+FMT_MAP = {ImporterDialog.ISF_PATTERN: V1,
+           ImporterDialog.IASPEI_PATTERN: Iaspei}
 
 
 class EqCatalogue:
