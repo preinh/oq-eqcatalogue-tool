@@ -71,8 +71,8 @@ class EqCatalogue:
         # Create the dialog (after translation) and keep reference
         self.dock = GemDock(self.iface, gemcatalogue=self)
         self.catalogue_db = None
-        self.basemap_dir = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..', 'basemap'))
+        self.data_dir = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), '..', 'data'))
 
     def initGui(self):
         # Create action that will start plugin configuration
@@ -182,9 +182,8 @@ class EqCatalogue:
         self.iface.mapCanvas().setExtent(vlayer.extent())
         vlayer.triggerRepaint()
 
-    def load_basemap(self):
+    def load_data(self):
         display_name = 'World Countries'
-        uri = os.path.join(self.basemap_dir, 'Countries.shp')
+        uri = os.path.join(self.data_dir, 'Countries.shp')
         vlayer = QgsVectorLayer(uri, display_name, 'ogr')
-        vlayer.rendererV2().symbol().setColor(QColor("#FFFFFF"))
         QgsMapLayerRegistry.instance().addMapLayer(vlayer)
