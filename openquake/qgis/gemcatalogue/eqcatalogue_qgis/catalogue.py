@@ -87,6 +87,8 @@ class EqCatalogue:
             u"Import catalogue file in db", self.iface.mainWindow())
 
         # connect the action to the run method
+        QObject.connect(self.dock, SIGNAL("visibilityChanged(bool)"),
+                        self.update_toggle_status)
         QObject.connect(self.show_catalogue_action, SIGNAL("triggered()"),
                         self.toggle_dock)
 
@@ -110,6 +112,10 @@ class EqCatalogue:
         # show the dock
         self.dockIsVisible = not self.dockIsVisible
         self.dock.setVisible(self.dockIsVisible)
+
+    def update_toggle_status(self, status):
+        self.dockIsVisible = status
+        self.show_catalogue_action.setChecked(status)
 
     def update_catalogue_db(self, db_filename):
         self.catalogue_db = CatalogueDatabase(filename=db_filename)
