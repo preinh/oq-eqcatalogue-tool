@@ -31,7 +31,7 @@ import uuid
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from qgis.core import *
-# Initialize Qt resources from file resources.py
+# Initialize Qt resources from file resources.py, used for side-effects
 import resources_rc
 # Import the code for the dialog
 from dock import GemDock
@@ -39,7 +39,6 @@ from importer_dialog import ImporterDialog
 
 from eqcatalogue import CatalogueDatabase, filtering
 from eqcatalogue.importers import V1, Iaspei, store_events
-from eqcatalogue import filtering
 import os
 
 FMT_MAP = {'Isf file (*.txt *.html)': V1, ';; Iaspei file (*.csv)': Iaspei}
@@ -87,27 +86,16 @@ class EqCatalogue:
             QIcon(":/plugins/eqcatalogue/icon.png"),
             u"Import catalogue file in db", self.iface.mainWindow())
 
-        self.show_pippo1_action = QAction(
-            QIcon(":/plugins/eqcatalogue/icon.png"),
-            u"Display Sqlite Data", self.iface.mainWindow())
-
         # connect the action to the run method
         QObject.connect(self.show_catalogue_action, SIGNAL("triggered()"),
                         self.toggle_dock)
 
         self.import_action.triggered.connect(self.show_import_dialog)
-        # Passing parameter using lambda exp
-        #QObject.connect(self.import_action, SIGNAL("triggered()"),
-        #                lambda: self.import_catalogue("isf"))
-
-        QObject.connect(self.show_pippo1_action, SIGNAL("triggered()"),
-                        self.show_pippo1)
 
         # Add toolbar button and menu item
         self.iface.addToolBarIcon(self.show_catalogue_action)
         self.iface.addPluginToMenu(u"&eqcatalogue", self.show_catalogue_action)
         self.iface.addPluginToMenu(u"&eqcatalogue", self.import_action)
-        self.iface.addPluginToMenu(u"&eqcatalogue", self.show_pippo1_action)
 
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dock)
 
@@ -117,7 +105,6 @@ class EqCatalogue:
         self.iface.removePluginMenu(
             u"&eqcatalogue", self.show_catalogue_action)
         self.iface.removePluginMenu(u"&eqcatalogue", self.import_action)
-        self.iface.removePluginMenu(u"&eqcatalogue", self.show_pippo1_action)
 
     def toggle_dock(self):
         # show the dock
@@ -130,27 +117,6 @@ class EqCatalogue:
         mscales = list(self.catalogue_db.get_measure_scales())
         self.dock.set_agencies(agencies)
         self.dock.set_magnitude_scales(mscales)
-
-    ## this is an example of using the raw spatialite layer
-    def show_pippo1(self, agencies=None):
-        dbfile = '/home/michele/pippo.db'
-        db = CatalogueDatabase(filename=dbfile)
-        if agencies is None:
-            agencies = db.get_agencies()
-        data = filtering.WithAgencies(agencies)
-        uri = QgsDataSourceURI()
-        uri.setDatabase(dbfile)
-        schema = ''
-        table = 'catalogue_origin'
-        geom_column = 'position'
-        uri.setDataSource(schema, table, geom_column)
-
-        display_name = 'Origin'
-        vlayer = QgsVectorLayer(uri.uri(), display_name, 'spatialite')
-        QgsMapLayerRegistry.instance().addMapLayer(vlayer)
-        ids = tuple(row.origin.id for row in data)
-        vlayer.setSubsetString('id in %s' % str(ids))
-        vlayer.triggerRepaint()
 
     def create_db(self, catalogue_filename, fmt, db_filename):
         cat_db = CatalogueDatabase(filename=db_filename)
@@ -178,7 +144,7 @@ class EqCatalogue:
         filter_dvalues = filtering.C(time_between=date_range)
 
         results = filter_agency & filter_mscales & \
-                  filter_mvalues & filter_dvalues
+            filter_mvalues & filter_dvalues
         self.create_layer(results)
 
     def create_layer(self, data):
