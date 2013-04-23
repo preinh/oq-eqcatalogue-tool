@@ -34,8 +34,8 @@ from qgis.core import *
 # Initialize Qt resources from file resources.py, used for side-effects
 import resources_rc
 # Import the code for the dialog
-from dock import GemDock
-from importer_dialog import ImporterDialog
+from openquake.qgis.gemcatalogue.dock import GemDock
+from openquake.qgis.gemcatalogue.importer_dialog import ImporterDialog
 
 from eqcatalogue import CatalogueDatabase, filtering
 from eqcatalogue.importers import V1, Iaspei, store_events
@@ -73,7 +73,7 @@ class EqCatalogue:
         self.dock = GemDock(self.iface, gemcatalogue=self)
         self.catalogue_db = None
         self.data_dir = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..', 'data'))
+            os.path.join(os.path.dirname(__file__), 'data'))
 
     def initGui(self):
         # Create action that will start plugin configuration

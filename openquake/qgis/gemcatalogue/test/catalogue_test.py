@@ -4,8 +4,8 @@ import uuid
 
 from qgis.core import QgsMapLayerRegistry
 
-from openquake.qgis.gemcatalogue.eqcatalogue_qgis.catalogue import EqCatalogue
-from openquake.qgis.gemcatalogue.eqcatalogue_qgis.importer_dialog \
+from openquake.qgis.gemcatalogue.catalogue import EqCatalogue
+from openquake.qgis.gemcatalogue.importer_dialog \
     import ImporterDialog
 from openquake.qgis.gemcatalogue.test.app import getTestApp
 
