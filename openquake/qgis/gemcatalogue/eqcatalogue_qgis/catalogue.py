@@ -183,7 +183,7 @@ class EqCatalogue:
         self.iface.mapCanvas().setExtent(vlayer.extent())
         vlayer.triggerRepaint()
 
-    def load_data(self):
+    def load_countries(self):
         display_name = 'World Countries'
         uri = os.path.join(self.data_dir, 'Countries.shp')
         vlayer = QgsVectorLayer(uri, display_name, 'ogr')

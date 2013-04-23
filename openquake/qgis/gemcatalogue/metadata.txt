@@ -9,7 +9,7 @@
 
 
 [general]
-name=eqcatalogue
+name=GEM EarthQuake Catalogue
 qgisMinimumVersion=1.8
 description=earthquake catalogue tool
 version=0.1
