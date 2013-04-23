@@ -34,7 +34,7 @@ from qgis.core import *
 # Initialize Qt resources from file resources.py, used for side-effects
 import resources_rc
 # Import the code for the dialog
-from openquake.qgis.gemcatalogue.dock import GemDock
+from openquake.qgis.gemcatalogue.dock import Dock
 from openquake.qgis.gemcatalogue.importer_dialog import ImporterDialog
 
 from eqcatalogue import CatalogueDatabase, filtering
@@ -70,7 +70,7 @@ class EqCatalogue:
                 QCoreApplication.installTranslator(self.translator)
 
         # Create the dialog (after translation) and keep reference
-        self.dock = GemDock(self.iface, gemcatalogue=self)
+        self.dock = Dock(self.iface, gemcatalogue=self)
         self.catalogue_db = None
         self.data_dir = os.path.abspath(
             os.path.join(os.path.dirname(__file__), 'data'))
@@ -187,4 +187,4 @@ class EqCatalogue:
         display_name = 'World Countries'
         uri = os.path.join(self.data_dir, 'Countries.shp')
         vlayer = QgsVectorLayer(uri, display_name, 'ogr')
-        QgsMapLayerRegistry.instance().addMapLayer(vlayer)
+        QgsMapLayerRegistry.instance().addMapLayers([vlayer])

@@ -17,7 +17,7 @@ from MapTools import PolygonDrawer
 Range = namedtuple('Range', 'low_value high_value')
 
 
-class GemDock(QDockWidget, Ui_Dock):
+class Dock(QDockWidget, Ui_Dock):
     def __init__(self, iface, parent=None, gemcatalogue=None):
         QDockWidget.__init__(self, parent)
         self.iface = iface
@@ -161,13 +161,3 @@ class GemDock(QDockWidget, Ui_Dock):
         self.polygonDrawer = None
 
         QWidget.deleteLater(self, *args)
-
-    def showRubberBands(self, show=True):
-        """ show/hide all the rubberbands """
-        if self.polygonDrawer.isEmittingPoints:
-            self.polygonDrawer.reset()
-        else:
-            if show:
-                self.polygonDrawer.rubberBand.show()
-            else:
-                self.polygonDrawer.rubberBand.hide()

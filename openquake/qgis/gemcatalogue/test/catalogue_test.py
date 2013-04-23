@@ -2,6 +2,7 @@ import os
 import unittest
 import uuid
 
+from PyQt4 import QtCore, QtTest
 from qgis.core import QgsMapLayerRegistry
 
 from openquake.qgis.gemcatalogue.catalogue import EqCatalogue
@@ -22,6 +23,11 @@ ISF = os.path.join(datadir, 'isc-query-small.html')
 IASPEI = os.path.join(datadir, 'iaspei.csv')
 
 
+def layerdict():
+    layers = QgsMapLayerRegistry.instance().mapLayers().values()
+    return dict((str(l.name()), l) for l in layers)
+
+
 class CatalogueTestCase(unittest.TestCase):
     def setUp(self):
         self.eqcat = EqCatalogue(IFACE)
@@ -37,6 +43,7 @@ class CatalogueTestCase(unittest.TestCase):
             str, self.eqcat.dock.mscalesComboBox.checkedItems())
         self.assertEqual(checked_agencies, expected_agencies)
         self.assertEqual(checked_mscales, expected_mscales)
+        # self._filter_button()
         os.remove(db_name)
 
     def test_IASPEI(self):
@@ -52,11 +59,18 @@ class CatalogueTestCase(unittest.TestCase):
              'Ms1', 'MW', 'MLv', 'MS', 'mb1mx', 'Mb', 'MD', 'mb1', 'Muk']
         )
 
+    @unittest.skip
     def test_load_countries(self):
         self.eqcat.load_countries()
-        layers = QgsMapLayerRegistry.instance().mapLayers()
-        self.assertEqual(str(layers.values()[0].name()), 'World Countries')
+        layers = layerdict()
+        self.assertIn('World Countries', layers)
 
+    # THIS IS NOT WORKING RIGHT NOW :-(
+    def _filter_button(self):
+        btn = self.eqcat.dock.filterBtn
+        QtTest.QTest.mouseClick(btn, QtCore.Qt.LeftButton)
+        events = layerdict()['Events']
+        self.assertEqual(events.featureCount(), 0)
 
 if __name__ == '__main__':
     unittest.main()
