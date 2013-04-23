@@ -43,7 +43,7 @@ class CatalogueTestCase(unittest.TestCase):
             str, self.eqcat.dock.mscalesComboBox.checkedItems())
         self.assertEqual(checked_agencies, expected_agencies)
         self.assertEqual(checked_mscales, expected_mscales)
-        # self._filter_button()
+        self._filter_button()
         os.remove(db_name)
 
     def test_IASPEI(self):
@@ -59,13 +59,11 @@ class CatalogueTestCase(unittest.TestCase):
              'Ms1', 'MW', 'MLv', 'MS', 'mb1mx', 'Mb', 'MD', 'mb1', 'Muk']
         )
 
-    @unittest.skip
     def test_load_countries(self):
         self.eqcat.load_countries()
         layers = layerdict()
         self.assertIn('World Countries', layers)
 
-    # THIS IS NOT WORKING RIGHT NOW :-(
     def _filter_button(self):
         btn = self.eqcat.dock.filterBtn
         QtTest.QTest.mouseClick(btn, QtCore.Qt.LeftButton)
