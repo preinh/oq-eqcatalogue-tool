@@ -51,16 +51,6 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
                 source_key='test').count(),
             1)
 
-    def test_event(self):
-        eventsource = catalogue.EventSource(name="test3")
-        self.session.add(eventsource)
-
-        event = catalogue.Event(source_key="test", eventsource=eventsource)
-        self.session.add(event)
-        self.assertEqual(
-            self.session.query(catalogue.Event).filter_by(
-                source_key='test').count(), 1)
-
     def test_origin(self):
         eventsource = catalogue.EventSource(name="test4")
         self.session.add(eventsource)
@@ -79,9 +69,6 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
         eventsource = catalogue.EventSource(name="test4")
         self.session.add(eventsource)
 
-        event = catalogue.Event(source_key="test", eventsource=eventsource)
-        self.session.add(event)
-
         agency = catalogue.Agency(source_key="test", eventsource=eventsource)
         self.session.add(agency)
 
@@ -93,7 +80,9 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
         self.session.add(origin)
 
         measure = catalogue.MagnitudeMeasure(
-            event=event, agency=agency, origin=origin, scale='mL', value=5.0)
+            eventsource=eventsource,
+            event_source_key="test",
+            agency=agency, origin=origin, scale='mL', value=5.0)
         self.session.add(measure)
 
         self.assertEqual(
@@ -102,13 +91,6 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
     def create_test_fixture(self):
         eventsource = catalogue.EventSource(name="AnEventSource")
         self.session.add(eventsource)
-
-        first_event = catalogue.Event(source_key="1st",
-                                      eventsource=eventsource)
-        second_event = catalogue.Event(source_key="2nd",
-                                       eventsource=eventsource)
-        self.session.add(first_event)
-        self.session.add(second_event)
 
         agency_one = catalogue.Agency(source_key="Tatooine",
                                       eventsource=eventsource)
@@ -143,12 +125,16 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
         self.session.add(origin_three)
 
         measure_one = catalogue.MagnitudeMeasure(
-            event=first_event, agency=agency_one,
+            eventsource=eventsource,
+            event_source_key='1st',
+            agency=agency_one,
             origin=origin_one, scale='mL', value=5.0)
         self.session.add(measure_one)
 
         measure_two = catalogue.MagnitudeMeasure(
-            event=second_event, agency=agency_two,
+            eventsource=eventsource,
+            event_source_key='2nd',
+            agency=agency_two,
             origin=origin_two, scale='mb', value=6.0)
         self.session.add(measure_two)
 

@@ -52,7 +52,7 @@ class GroupMeasuresByEventSourceKey(object):
         """
         groups = {}
         for m in measures:
-            key = m.event.source_key
+            key = m.event_source_key
             if not key in groups:
                 groups[key] = []
             groups[key].append(m)

@@ -18,12 +18,11 @@ from StringIO import StringIO
 
 
 from eqcatalogue.importers import (
-    CsvEqCatalogueReader, Converter, BaseImporter,
-    Iaspei, V1, isf_bulletin as isf)
+    CsvEqCatalogueReader, Converter, BaseImporter, Iaspei, V1)
 
 from eqcatalogue.importers.reader_utils import (STR_TRANSF, INT_TRANSF,
                                                 FLOAT_TRANSF)
-from eqcatalogue.exceptions import InvalidMagnitudeSeq, ParsingFailure
+from eqcatalogue.exceptions import InvalidMagnitudeSeq
 
 from eqcatalogue import models as catalogue
 
@@ -55,9 +54,9 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
         importer = V1(self.f, self.cat)
 
         # Assert
-        ret = importer.store(allow_junk=False)
+        importer.store(allow_junk=False)
 
-        self.assertTrue(len(ret[BaseImporter.ERRORS]) > 0)
+        self.assertTrue(len(importer.errors) > 0)
 
     def test_parse_html_file(self):
         # Common Assess part in setUp method
@@ -68,43 +67,30 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
 
         # Assert
         self.assertEqual(v1_importer.summary, {
-                    BaseImporter.EVENT_SOURCE: 1,
-                    BaseImporter.AGENCY: 17,
-                    BaseImporter.EVENT: 18,
-                    BaseImporter.ORIGIN: 128,
-                    BaseImporter.MEASURE:  334,
-                    BaseImporter.ERRORS: []
-                    })
+            BaseImporter.EVENT_SOURCE: 1,
+            BaseImporter.AGENCY: 16,
+            BaseImporter.ORIGIN: 126,
+            BaseImporter.MEASURE:  335})
 
-        sources = self.cat.session.query(catalogue.EventSource)
-        agencies = self.cat.session.query(catalogue.Agency)
-        events = self.cat.session.query(catalogue.Event)
-        origins = self.cat.session.query(catalogue.Origin)
         measures = self.cat.session.query(catalogue.MagnitudeMeasure)
 
-        self.assertEqual(sources.count(),  1)
-        self.assertEqual(agencies.count(),  17)
-        self.assertEqual(events.count(),  18)
-        self.assertEqual(origins.count(),  128)
-        self.assertEqual(measures.count(),  334)
+        self.assertEqual(measures.count(),  335)
 
     def test_raises_parsing_failure(self):
         importer = V1(self.broken_isc, self.cat)
-        ret = importer.store()
-        self.assertEqual(1, len(ret[BaseImporter.ERRORS]))
+        importer.store()
+        self.assertEqual(1, len(importer.errors))
 
     def test_import_with_uk_scale(self):
         importer = V1(self.uk_scale_isc, self.cat)
         importer.store()
                 # Assert
         self.assertEqual(importer.summary, {
-                    BaseImporter.EVENT_SOURCE: 1,
-                    BaseImporter.AGENCY: 5,
-                    BaseImporter.EVENT: 1,
-                    BaseImporter.ORIGIN: 5,
-                    BaseImporter.MEASURE:  4,
-                    BaseImporter.ERRORS: []
-                    })
+            BaseImporter.EVENT_SOURCE: 1,
+            BaseImporter.AGENCY: 2,
+            BaseImporter.ORIGIN: 4,
+            BaseImporter.MEASURE:  4})
+        self.assertEqual(importer.errors, [])
 
 
 class AIaspeiImporterShould(unittest.TestCase):
@@ -143,10 +129,8 @@ class AIaspeiImporterShould(unittest.TestCase):
         self.assertEqual(summary, {
             BaseImporter.EVENT_SOURCE: 1,
             BaseImporter.AGENCY: 1,
-            BaseImporter.EVENT: 46,
             BaseImporter.ORIGIN: 46,
-            BaseImporter.MEASURE:  61,
-            BaseImporter.ERRORS: []
+            BaseImporter.MEASURE:  61
         })
 
         importer = Iaspei(self.file, self.cat)
@@ -160,16 +144,7 @@ class AIaspeiImporterShould(unittest.TestCase):
         second_importer = Iaspei(self.file, self.cat)
         second_importer.store()
 
-        sources = self.cat.session.query(catalogue.EventSource)
-        agencies = self.cat.session.query(catalogue.Agency)
-        events = self.cat.session.query(catalogue.Event)
-        origins = self.cat.session.query(catalogue.Origin)
         measures = self.cat.session.query(catalogue.MagnitudeMeasure)
-
-        self.assertEqual(sources.count(),  1)
-        self.assertEqual(agencies.count(),  1)
-        self.assertEqual(events.count(),  46)
-        self.assertEqual(origins.count(),  46)
         self.assertEqual(measures.count(),  61)
 
 
@@ -188,20 +163,20 @@ class EqCatalogueReaderTestCase(unittest.TestCase):
             '3.70,0.20,3,IDC      ,mb   ,IDC')
 
         self.fst_exp_entry = {'azimuthGap': 156.0, 'solutionAgency': 'IDC',
-                                'mag_agency': 'IDC', 'month': 9,
-                                'minDistance': 7.05, 'depthError': None,
-                                'second': 37.11, 'year': 2002,
-                                'Latitude': 25.4812, 'time_rms': 0.95,
-                                'originID': '4644028', 'phases': 6,
-                                'solutionKey': '1', 'solutionDesc': '1_IDC_ML',
-                                'timeError': 1.29, 'solutionID': '4644028',
-                                'semiMajor90': 61.5, 'semiMinor90': 18.6,
-                                'Longitude': 97.9598, 'errorAzimuth': 73.0,
-                                'maxDistance': 59.32, 'day': 3, 'minute': 37,
-                                'mag_type': 'ML', 'magStations': 1, 'hour': 21,
-                                'stations': None, 'depth': 0.0,
-                                'magnitude': 3.9, 'eventKey': '1009476',
-                                'magnitudeError': 0.3}
+                              'mag_agency': 'IDC', 'month': 9,
+                              'minDistance': 7.05, 'depthError': None,
+                              'second': 37.11, 'year': 2002,
+                              'Latitude': 25.4812, 'time_rms': 0.95,
+                              'originID': '4644028', 'phases': 6,
+                              'solutionKey': '1', 'solutionDesc': '1_IDC_ML',
+                              'timeError': 1.29, 'solutionID': '4644028',
+                              'semiMajor90': 61.5, 'semiMinor90': 18.6,
+                              'Longitude': 97.9598, 'errorAzimuth': 73.0,
+                              'maxDistance': 59.32, 'day': 3, 'minute': 37,
+                              'mag_type': 'ML', 'magStations': 1, 'hour': 21,
+                              'stations': None, 'depth': 0.0,
+                              'magnitude': 3.9, 'eventKey': '1009476',
+                              'magnitudeError': 0.3}
 
         self.reader = CsvEqCatalogueReader(self.fst_three_rows)
         self.convert = Converter()
@@ -226,8 +201,10 @@ class EqCatalogueReaderTestCase(unittest.TestCase):
 class ConvertTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.conversion_map = {'a': INT_TRANSF,
-            'b': STR_TRANSF, 'c': FLOAT_TRANSF}
+        self.conversion_map = {
+            'a': INT_TRANSF,
+            'b': STR_TRANSF,
+            'c': FLOAT_TRANSF}
         self.converter = Converter(conversion_map=self.conversion_map)
         self.maxDiff = None
 

@@ -68,15 +68,6 @@ class Criteria(object):
     def __contains__(self, el):
         return self.predicate(el)
 
-    def events(self):
-        """
-        Returns all the distinct events associated with all the
-        measures that satisfies the criteria
-        """
-
-        subquery = self.filter().subquery()
-        return self._session.query(db.Event).join(subquery).all()
-
     def count(self):
         """
         Returns a count of all the measures that satisfies the criteria.

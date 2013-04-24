@@ -60,28 +60,15 @@ class Importer(BaseImporter):
         if len(mag_group) % 3 != 0:
             raise InvalidMagnitudeSeq(self.ERR_MAG_GROUP)
 
-    def update_summary(self, item_key):
-        self._summary[item_key] += 1
-
     def store(self, header=True):
         """
         Read and parse from the input stream the data and insert them
         into the catalogue db, a summary of entities stored is returned.
         """
 
-        event_source, created = self._catalogue.get_or_create(
-            catalogue.EventSource, {'name': 'IASPEI'})
-        if created:
-            self.update_summary(Importer.EVENT_SOURCE)
+        event_source = 'IASPEI'
 
         for entry in self._parse_csv(header):
-            event, created = self._catalogue.get_or_create(
-                catalogue.Event,
-                {'source_key': entry[self.EVENTID_INDEX],
-                 'eventsource': event_source})
-            if created:
-                self.update_summary(Importer.EVENT)
-
             self._check_magnitude_group(entry[self.MAG_GR_INDEX:])
 
             # Time String Creation
@@ -95,39 +82,29 @@ class Importer(BaseImporter):
             else:
                 depth = None
 
-            values = {'time': datetime.strptime(
+            origin = {'time': datetime.strptime(
                 date_time, '%Y-%m-%d/%H:%M:%S.%f'),
                 'position': self._catalogue.position_from_latlng(
                     entry[self.LAT_INDEX], entry[self.LON_INDEX]),
                 'depth': depth,
-                'eventsource': event_source,
-                'source_key': entry[self.EVENTID_INDEX]}
+                'origin_key': entry[self.EVENTID_INDEX]}
 
             magnitude_group = entry[self.MAG_GR_INDEX:]
 
             for mag_group_start in xrange(
                     0, len(magnitude_group), self.MAG_MEASURE_ITEMS):
-                agency, created = self._catalogue.get_or_create(
-                    catalogue.Agency,
-                    {'source_key': magnitude_group[mag_group_start],
-                     'eventsource': event_source})
-                if created:
-                    self.update_summary(Importer.AGENCY)
+                agency = magnitude_group[mag_group_start]
 
-                origin, created = self._catalogue.get_or_create(
-                    catalogue.Origin, values)
-                if created:
-                    self.update_summary(Importer.ORIGIN)
-                _,  created = self._catalogue.get_or_create(
-                    catalogue.MagnitudeMeasure,
-                    {'event': event,
-                     'agency': agency,
-                     'scale': magnitude_group[mag_group_start + 1],
-                     'value': magnitude_group[mag_group_start + 2],
-                     'origin': origin
-                     })
-                if created:
-                    self.update_summary(Importer.MEASURE)
+                params = {
+                    'event_key': entry[self.EVENTID_INDEX],
+                    'event_source': event_source,
+                    'agency': agency,
+                    'scale': magnitude_group[mag_group_start + 1],
+                    'value': magnitude_group[mag_group_start + 2],
+                }
+                params.update(origin)
+                self._catalogue.session.add(
+                    catalogue.MagnitudeMeasure(**params))
 
         self._catalogue.session.commit()
 

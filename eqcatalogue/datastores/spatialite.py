@@ -25,8 +25,7 @@ import sqlalchemy
 from sqlalchemy import orm
 from sqlalchemy.events import event as sqlevent
 import geoalchemy
-from eqcatalogue.models import (EventSource, Event, MagnitudeMeasure, Agency,
-                                Origin, MeasureMetadata, METADATA_TYPES)
+from eqcatalogue.models import MagnitudeMeasure
 
 DLL_LIBRARY = "libspatialite.dll"
 DYLIB_LIBRARY = "libspatialite.dylib"
@@ -70,7 +69,9 @@ class Engine(object):
                         _connect)
         self.session = orm.sessionmaker(bind=self._engine)()
         self._metadata = sqlalchemy.MetaData(self._engine)
-        self._create_schema()
+        orm.clear_mappers()
+        self._create_schema_magnitudemeasure()
+
         if to_be_initialized:
             self.recreate()
 
@@ -81,125 +82,37 @@ class Engine(object):
         self._metadata.drop_all()
         self._metadata.create_all(self._engine)
 
-    def _create_schema_eventsource(self):
-        """Create Event Source Schema"""
-        metadata = self._metadata
-
-        eventsource = sqlalchemy.Table(
-            'catalogue_eventsource', metadata,
-            sqlalchemy.Column('id', sqlalchemy.Integer,
-                              primary_key=True),
-            sqlalchemy.Column('created_at',
-                              sqlalchemy.DateTime,
-                              default=datetime.now()),
-            sqlalchemy.Column('name',
-                              sqlalchemy.String(255), unique=True))
-        orm.Mapper(EventSource, eventsource)
-        geoalchemy.GeometryDDL(eventsource)
-
-    def _create_schema_agency(self):
-        """Create the schema for the Agency model"""
-
-        metadata = self._metadata
-
-        agency = sqlalchemy.Table(
-            'catalogue_agency', metadata,
-            sqlalchemy.Column('id',
-                              sqlalchemy.Integer, primary_key=True),
-            sqlalchemy.Column('created_at',
-                              sqlalchemy.DateTime, default=datetime.now()),
-            sqlalchemy.Column('source_key',
-                              sqlalchemy.String(), nullable=False, index=True),
-            sqlalchemy.Column('eventsource_id',
-                              sqlalchemy.Integer,
-                              sqlalchemy.ForeignKey(
-                    'catalogue_eventsource.id'),
-                    nullable=False))
-        orm.Mapper(Agency, agency, properties={
-                'eventsource': orm.relationship(
-                    EventSource,
-                    lazy='noload',
-                    backref=orm.backref('agencies'))
-                })
-        geoalchemy.GeometryDDL(agency)
-
-    def _create_schema_event(self):
-        """Create the schema for the Event model"""
-
-        metadata = self._metadata
-
-        event = sqlalchemy.Table(
-            'catalogue_event', metadata,
-            sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True),
-            sqlalchemy.Column('created_at',
-                              sqlalchemy.DateTime, default=datetime.now()),
-            sqlalchemy.Column('source_key',
-                              sqlalchemy.String(), nullable=False, index=True),
-            sqlalchemy.Column('name',
-                              sqlalchemy.String(), nullable=True),
-            sqlalchemy.Column('eventsource_id', sqlalchemy.Integer,
-                              sqlalchemy.ForeignKey(
-                    'catalogue_eventsource.id'),
-                    nullable=False))
-        orm.Mapper(Event, event, properties={
-                'eventsource': orm.relationship(EventSource,
-                                                backref=orm.backref('events'))
-                })
-        geoalchemy.GeometryDDL(event)
-
     def _create_schema_magnitudemeasure(self):
-        """Create the schema for the magnitude measure model"""
+        """
+        Create and contains the model definition. We used
+        non-declarative model mapping, as we need to define models at
+        runtime (not at module import time). Actually, only at runtime
+        we can load the spatialite extension and then the spatialite
+        metadata needed by geoalchemy to build the orm (s. #_setup
+        method)"""
 
         metadata = self._metadata
 
-        magnitudemeasure = sqlalchemy.Table(
+        measure = sqlalchemy.Table(
             'catalogue_magnitudemeasure', metadata,
             sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True),
             sqlalchemy.Column('created_at',
                               sqlalchemy.DateTime, default=datetime.now()),
-            sqlalchemy.Column('event_id',
-                              sqlalchemy.Integer,
-                              sqlalchemy.ForeignKey('catalogue_event.id'),
-                              nullable=False),
-            sqlalchemy.Column('agency_id',
-                              sqlalchemy.Integer,
-                              sqlalchemy.ForeignKey('catalogue_agency.id'),
-                              nullable=False),
-            sqlalchemy.Column('origin_id',
-                              sqlalchemy.Integer,
-                              sqlalchemy.ForeignKey('catalogue_origin.id'),
-                              nullable=False),
-            sqlalchemy.Column('scale', sqlalchemy.String()),
-            sqlalchemy.Column('value', sqlalchemy.Float(), index=True),
-            sqlalchemy.Column('standard_error',
-                              sqlalchemy.Float(),
-                              nullable=True))
 
-        orm.Mapper(MagnitudeMeasure, magnitudemeasure, properties={
-                'event': orm.relationship(Event,
-                                          backref=orm.backref('measures')),
-                'agency': orm.relationship(Agency,
-                                           backref=orm.backref('measures')),
-                'origin': orm.relationship(Origin,
-                                           backref=orm.backref('measures'))
-                })
-        geoalchemy.GeometryDDL(magnitudemeasure)
+            sqlalchemy.Column('event_source',
+                              sqlalchemy.String(255), nullable=False),
 
-    def _create_schema_origin(self):
-        """Create the schema for the Origin model"""
-        metadata = self._metadata
-        origin = sqlalchemy.Table(
-            'catalogue_origin', metadata,
-            sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True),
-            sqlalchemy.Column('created_at',
-                              sqlalchemy.DateTime, default=datetime.now()),
-            sqlalchemy.Column('source_key',
-                              sqlalchemy.String(), nullable=False),
-            sqlalchemy.Column('eventsource_id',
-                              sqlalchemy.Integer,
-                              sqlalchemy.ForeignKey(
-                                  'catalogue_eventsource.id'),
-                              nullable=False),
+            sqlalchemy.Column('event_key',
+                              sqlalchemy.String(), nullable=False, index=True),
+            sqlalchemy.Column('event_name',
+                              sqlalchemy.String(), nullable=True),
+
+            sqlalchemy.Column('agency',
+                              sqlalchemy.String(), nullable=False, index=True),
+
+            sqlalchemy.Column('origin_key',
+                              sqlalchemy.String(), nullable=False, index=True),
+
             sqlalchemy.Column('time', sqlalchemy.DateTime,
                               nullable=False, index=True),
             sqlalchemy.Column('time_error', sqlalchemy.Float(), nullable=True),
@@ -214,58 +127,17 @@ class Engine(object):
                               sqlalchemy.Float(), nullable=True),
             sqlalchemy.Column('depth', sqlalchemy.Float(), nullable=True),
             sqlalchemy.Column('depth_error',
-                              sqlalchemy.Float(), nullable=True))
-        orm.Mapper(Origin, origin, properties={
-            'eventsource': orm.relationship(
-                EventSource,
-                backref=orm.backref('origins')),
-            'position': geoalchemy.GeometryColumn(
-                origin.c.position)})
-        geoalchemy.GeometryDDL(origin)
+                              sqlalchemy.Float(), nullable=True),
 
-    def _create_schema_measuremetadata(self):
-        """Create the schema for the measure metadata model"""
+            sqlalchemy.Column('scale', sqlalchemy.String()),
+            sqlalchemy.Column('value', sqlalchemy.Float(), index=True),
+            sqlalchemy.Column('standard_error',
+                              sqlalchemy.Float(),
+                              nullable=True))
 
-        metadata = self._metadata
-
-        measuremetadata = sqlalchemy.Table(
-            'catalogue_measuremetadata', metadata,
-            sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True),
-            sqlalchemy.Column('created_at', sqlalchemy.DateTime,
-                              default=datetime.now()),
-            sqlalchemy.Column(
-                'magnitudemeasure_id', sqlalchemy.Integer,
-                sqlalchemy.ForeignKey(
-                    'catalogue_magnitudemeasure.id'),
-                nullable=False),
-            sqlalchemy.Column('name',
-                              sqlalchemy.Enum(*METADATA_TYPES),
-                              nullable=False),
-            sqlalchemy.Column('value', sqlalchemy.Float(), nullable=False))
-        orm.Mapper(MeasureMetadata, measuremetadata, properties={
-                'magnitudemeasure': orm.relationship(
-                    MagnitudeMeasure,
-                    backref=orm.backref('metadata'))})
-        geoalchemy.GeometryDDL(measuremetadata)
-
-    def _create_schema(self):
-        """
-        Create and contains the model definition. We used
-        non-declarative model mapping, as we need to define models at
-        runtime (not at module import time). Actually, only at runtime
-        we can load the spatialite extension and then the spatialite
-        metadata needed by geoalchemy to build the orm (s. #_setup
-        method)
-        """
-
-        orm.clear_mappers()
-
-        self._create_schema_eventsource()
-        self._create_schema_agency()
-        self._create_schema_event()
-        self._create_schema_magnitudemeasure()
-        self._create_schema_origin()
-        self._create_schema_measuremetadata()
+        orm.Mapper(MagnitudeMeasure, measure, properties={
+            'position': geoalchemy.GeometryColumn(measure.c.position)})
+        geoalchemy.GeometryDDL(measure)
 
     @staticmethod
     def position_from_latlng(latitude, longitude):

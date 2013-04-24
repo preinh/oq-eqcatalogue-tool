@@ -38,38 +38,6 @@ METADATA_TYPES = ('phases', 'stations',
                   'num_stations')
 
 
-class EventSource(object):
-    """A source catalogue of seismic events. E.g. ISC Web Catalogue
-
-    :attribute id:
-      Internal identifier
-
-    :attribute created_at:
-      When this object has been imported into the catalogue db
-
-    :attribute name:
-      an unique event source short name.
-
-    :attribyte agencies:
-      a list of :py:class:`~eqcatalogue.models.Agency` instances
-      imported by this eventsource
-
-    :attribyte events:
-      a list of :py:class:`~eqcatalogue.models.Event` instances
-      imported by this eventsource
-
-    :attribyte origins:
-      a list of :py:class:`~eqcatalogue.models.Origin` instances
-      imported by this eventsource
-    """
-
-    def __init__(self, name):
-        self.name = name
-
-    def __repr__(self):
-        return "EventSource %s" % self.name
-
-
 class Agency(object):
     """
     The agency which recorded the measures.
@@ -83,9 +51,10 @@ class Agency(object):
     :attribute source_key:
       the identifier used by the event source for the object
 
-    :attribute eventsource:
+    :attribute event:
       the source object we have imported the agency from. It is unique
-      together with `source_key`
+      together with `source_key` and `even_source_name`
+
     """
     def __repr__(self):
         return "Agency %s" % self.source_key
@@ -93,38 +62,6 @@ class Agency(object):
     def __init__(self, source_key, eventsource):
         self.source_key = source_key
         self.eventsource = eventsource
-
-
-class Event(object):
-    """
-    Models a seismic event.
-
-    :attribute id:
-      Internal identifier
-
-    :attribute created_at:
-      When this object has been imported into the catalogue db
-
-    :attribute source_key:
-      the identifier used by the event source for the object
-
-    :attribute name:
-      an event short name
-
-    :attribute eventsource:
-      the source object we have imported the agency from. unique
-      together with `source_key`
-      """
-
-    def __init__(self, source_key, eventsource, name=None):
-        self.source_key = source_key
-        self.eventsource = eventsource
-        if name:
-            self.name = name
-
-    def __repr__(self):
-        return "Event %s from %s" % (self.source_key,
-                                     self.eventsource)
 
 
 class MagnitudeMeasure(object):
@@ -137,9 +74,16 @@ class MagnitudeMeasure(object):
     :attribute created_at:
       When this object has been imported into the catalogue db
 
-    :attribute event:
-      the :py:class:`~eqcatalogue.models.Event`
+    :attribute eventsource:
+      the :py:class:`~eqcatalogue.models.EventSource`
       object associated with this measure
+
+    :attribute event_source_key: the identifier used by the event
+      source for the event. A same event could be related to different
+      measures. Intensionally denormalized.
+
+    :attribute event_source_name:
+      a short name for the event. Same consideration as above
 
     :attribute agency:
       the :py:class:`~eqcatalogue.models.Agency`
@@ -159,15 +103,40 @@ class MagnitudeMeasure(object):
       the standard error of the magnitude value
     """
 
-    def __init__(self, agency, event, origin, scale, value,
-                 standard_error=None):
+    def __init__(self, event_source,
+                 event_key,
+                 agency,
+                 origin_key,
+                 time, position,
+                 scale, value,
+                 event_name=None,
+                 standard_error=None,
+                 semi_minor_90error=None,
+                 semi_major_90error=None,
+                 depth_error=None,
+                 time_rms=None,
+                 azimuth_error=None,
+                 time_error=None,
+                 depth=None,
+                 ):
         self.id = None
         self.agency = agency
-        self.event = event
-        self.origin = origin
+        self.event_source = event_source
+        self.event_key = event_key
+        self.origin_key = origin_key
+        self.event_name = event_name
         self.scale = scale
         self.value = value
         self.standard_error = standard_error
+        self.semi_minor_90error = semi_minor_90error
+        self.semi_major_90error = semi_major_90error
+        self.depth_error = depth_error
+        self.time_rms = time_rms
+        self.azimuth_error = azimuth_error
+        self.time_error = time_error
+        self.depth = depth
+        self.time = time
+        self.position = position
 
     def __repr__(self):
         return "%s %s (sigma=%s) @ %s" % (
@@ -184,7 +153,7 @@ class MagnitudeMeasure(object):
             stderr = ""
 
         return [self.id, self.agency.source_key,
-                self.event.source_key, self.origin.source_key,
+                self.event_source_key, self.origin.source_key,
                 self.scale, "%.4f" % self.value, stderr]
 
     def time_distance(self, measure):
@@ -219,7 +188,10 @@ class MagnitudeMeasure(object):
         Returns a list of measures with the given scale, values and
         standard errors
         """
-        return [cls(agency=None, event=None, origin=None,
+        return [cls(agency=None,
+                    event_source_key=None,
+                    eventsource=None,
+                    origin=None,
                 scale=scale, value=v[0], standard_error=v[1])
                 for v in zip(values, sigmas)]
 
@@ -228,7 +200,10 @@ class MagnitudeMeasure(object):
         Convert the measure to a ConvertedMeasure with `new_value`
         through `formula`
         """
-        return ConvertedMeasure(self.agency, self.event, self.origin,
+        return ConvertedMeasure(self.agency,
+                                self.eventsource,
+                                self.event_source_key,
+                                self.origin,
                                 formula.target_scale,
                                 new_value, standard_error,
                                 self, [formula])
@@ -238,13 +213,16 @@ class ConvertedMeasure(object):
     """
     A converted measure is measure that is the result of a conversion
     """
-    def __init__(self, agency, event, origin, scale, value,
-                 standard_error=None, original_measure=None, formulas=None):
+    def __init__(self, agency, eventsource, event_source_key,
+                 origin, scale, value,
+                 standard_error=None,
+                 original_measure=None, formulas=None):
         # we do not inherit by MagnitudeMeasure because it could be
         # sqlalchemizable, and, consenquently it may have some magic
         # in the constructor that we don't want here
         self.agency = agency
-        self.event = event
+        self.eventsource = eventsource
+        self.event_source_key = event_source_key
         self.origin = origin
         self.scale = scale
         self.value = value
@@ -268,7 +246,7 @@ class ConvertedMeasure(object):
         else:
             stderr = ""
         return [self.agency.source_key,
-                self.event.source_key, self.origin.source_key,
+                self.event_source_key, self.origin.source_key,
                 self.scale, "%.4f" % self.value, stderr,
                 self.original_measure, ".".join(f.name for f in self.formulas)]
 
@@ -278,7 +256,8 @@ class ConvertedMeasure(object):
         and `standard_error` through `formula`.
         """
         return self.__class__(
-            self.agency, self.event, self.origin, formula.target_scale,
+            self.agency, self.eventsource, self.event_source_key,
+            self.origin, formula.target_scale,
             new_value, standard_error, self.original_measure,
             self.formulas[:] + [formula])
 
@@ -491,28 +470,6 @@ class CatalogueDatabase(object):
         into :class:`eqcatalogue.models.Origin.position`
         """
         return self._engine_class.position_from_latlng(latitude, longitude)
-
-    # FIXME: this method should go into the datastore implementation
-    def get_or_create(self, class_object, query_args, creation_args=None):
-        """Handy method to create an object of type `class_object`
-        given the query conditions in `query_args`. If an object
-        already exists it returns it, otherwise it creates the object
-        with params given by `creation_args`"""
-
-        class_cache = self._cache[class_object]
-
-        if tuple(query_args.values()) in class_cache:
-            return class_cache[tuple(query_args.values())], False
-
-        if not creation_args:
-            creation_args = query_args
-        else:
-            creation_args.update(query_args)
-        obj = class_object(**creation_args)
-        self.session.add(obj)
-
-        class_cache[tuple(query_args.values())] = obj
-        return obj, True
 
     def get_agencies(self):
         """
