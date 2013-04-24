@@ -103,14 +103,14 @@ class MagnitudeMeasure(object):
     """
 
     def __init__(self,
-                 event_source,
-                 event_key,
-                 agency,
-                 origin_key,
                  time,
                  position,
                  scale,
                  value,
+                 origin_key=None,
+                 agency=None,
+                 event_source=None,
+                 event_key=None,
                  event_name=None,
                  standard_error=None,
                  semi_minor_90error=None,
@@ -140,9 +140,13 @@ class MagnitudeMeasure(object):
         self.position = position
 
     def __repr__(self):
-        return "%s %s (sigma=%s) @ %s-%s" % (
-            self.value, self.scale, self.standard_error,
-            self.position_as_tuple(), self.time)
+        if self.position is not None:
+            return "%s %s (sigma=%s) @ %s-%s" % (
+                self.value, self.scale, self.standard_error,
+                self.position_as_tuple(), self.time)
+        else:
+            return "%s %s (sigma=%s) at %s" % (
+                self.value, self.scale, self.standard_error, self.time)
 
     def keys(self):
         return ["id", "agency", "event", "origin",
@@ -189,11 +193,8 @@ class MagnitudeMeasure(object):
         Returns a list of measures with the given scale, values and
         standard errors
         """
-        return [cls(agency=None,
-                    event_source_key=None,
-                    eventsource=None,
-                    origin=None,
-                scale=scale, value=v[0], standard_error=v[1])
+        return [cls(time=None, position=None,
+                    scale=scale, value=v[0], standard_error=v[1])
                 for v in zip(values, sigmas)]
 
     def position_as_tuple(self):
@@ -215,7 +216,7 @@ class MagnitudeMeasure(object):
             origin_key=self.origin_key,
             time=self.time,
             position=self.position,
-            scale=self.scale,
+            scale=formula.target_scale,
             value=new_value,
             event_name=self.event_name,
             standard_error=standard_error,
@@ -235,16 +236,16 @@ class ConvertedMeasure(object):
     A converted measure is measure that is the result of a conversion
     """
     def __init__(self,
-                 event_source,
-                 event_key,
-                 agency,
-                 origin_key,
                  time,
                  position,
                  scale,
                  value,
                  original_measure,
                  formulas,
+                 event_source=None,
+                 event_key=None,
+                 agency=None,
+                 origin_key=None,
                  event_name=None,
                  standard_error=None,
                  semi_minor_90error=None,

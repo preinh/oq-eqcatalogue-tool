@@ -265,9 +265,8 @@ class AgencyRanking(MeasureSelection):
             max_val = len(agency_list_name)
             scale_regexp = re.compile(scale_pattern)
             if scale_regexp.match(measure.scale):
-                if measure.agency.source_key in agency_list_name:
-                    return max_val - agency_list_name.index(
-                        measure.agency.source_key)
+                if measure.agency in agency_list_name:
+                    return max_val - agency_list_name.index(measure.agency)
         return self.__class__.RANK_IF_NOT_FOUND
 
     def select(self, grouped_measures,

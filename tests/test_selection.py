@@ -49,10 +49,10 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
         self.assertEqual(len(t), 6)
         for measure in n:
             self.assertEqual(measure.scale, self.native_scale)
-            self.assertEqual(measure.agency.source_key, 'IDC')
+            self.assertEqual(measure.agency, 'IDC')
         for measure in t:
             self.assertEqual(measure.scale, self.target_scale)
-            self.assertEqual(measure.agency.source_key, 'GCMT',
+            self.assertEqual(measure.agency, 'GCMT',
                              "%s is not from GCMT" % measure)
 
     def test_pattern_ranking(self):
@@ -70,10 +70,10 @@ class ShouldSelectMeasureByAgencyRanking(unittest.TestCase):
         self.assertEqual(len(t), 6)
         for measure in n:
             self.assertEqual(measure.scale, self.native_scale)
-            self.assertEqual(measure.agency.source_key, 'IDC')
+            self.assertEqual(measure.agency, 'IDC')
         for measure in t:
             self.assertEqual(measure.scale, self.target_scale)
-            self.assertEqual(measure.agency.source_key, 'GCMT',
+            self.assertEqual(measure.agency, 'GCMT',
                              "%s is not from GCMT" % measure)
 
     def test_random_ranking(self):

@@ -61,32 +61,23 @@ class AnHomogeniserShould(unittest.TestCase):
 
         self.assertEqual(7, len(self.homogeniser.measures()))
 
-        self.assertEqual(set([
-            "Event 14342120 from EventSource ISC Bulletin",
-            "Event 17273456 from EventSource ISC Bulletin",
-            "Event 14357818 from EventSource ISC Bulletin"]),
-            set([str(e) for e in self.homogeniser.events()]))
-
         self.assertEqual(set([u'17273456', u'14342120', u'14357818']),
                          set(self.homogeniser.grouped_measures().keys()))
 
         self.homogeniser.set_criteria(C(scale__in=["Mw", "mb"]))
-        self.assertEqual(17, len(self.homogeniser.events()))
         self.assertEqual(97, len(self.homogeniser.measures()))
         self.assertEqual(17, len(self.homogeniser.grouped_measures().keys()))
         self.assertEqual(0, len(self.homogeniser.selected_native_measures()))
 
     def test_set_different_mus(self):
         self.homogeniser.set_scales(native="mb", target="Mw")
-        self.assertEqual(18, len(self.homogeniser.events()))
-        self.assertEqual(334, len(self.homogeniser.measures()))
+        self.assertEqual(335, len(self.homogeniser.measures()))
         self.assertEqual(18, len(self.homogeniser.grouped_measures().keys()))
         self.assertEqual(0, len(self.homogeniser.selected_native_measures()))
 
         self.homogeniser.set_missing_uncertainty_strategy(
             selection.MUSSetDefault, default=1)
-        self.assertEqual(18, len(self.homogeniser.events()))
-        self.assertEqual(334, len(self.homogeniser.measures()))
+        self.assertEqual(335, len(self.homogeniser.measures()))
         self.assertEqual(18, len(self.homogeniser.grouped_measures().keys()))
         self.assertEqual(1, len(self.homogeniser.selected_native_measures()))
 

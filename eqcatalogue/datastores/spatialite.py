@@ -130,7 +130,9 @@ class Engine(object):
             sqlalchemy.Column('depth', sqlalchemy.Float(), nullable=True),
             sqlalchemy.Column('depth_error',
                               sqlalchemy.Float(), nullable=True),
-
+            sqlalchemy.Column('azimuth_error',
+                              sqlalchemy.Float(),
+                              nullable=True),
             sqlalchemy.Column('scale', sqlalchemy.String()),
             sqlalchemy.Column('value', sqlalchemy.Float(), index=True),
             sqlalchemy.Column('standard_error',
