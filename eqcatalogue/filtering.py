@@ -422,7 +422,7 @@ class WithinDistanceFromPoint(Criteria):
 CRITERIA_MAP = {
     'before': Before,
     'after': After,
-    'time_between': TimeBetween,
+    'time__between': TimeBetween,
     'agency__in': WithAgencies,
     'agency': WithAgencies.make_with_agency,
     'scale__in': WithMagnitudeScales,

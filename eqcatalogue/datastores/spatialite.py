@@ -55,7 +55,7 @@ class Engine(object):
         self.to_be_initialized = drop
         if memory:
             # set echo=True in debugging
-            self._engine = sqlalchemy.create_engine('sqlite://', module=sqlite)
+            self._engine = sqlalchemy.create_engine('sqlite://', module=sqlite, echo=True)
             self.to_be_initialized = True
         else:
             filename = filename or self.DEFAULT_FILENAME

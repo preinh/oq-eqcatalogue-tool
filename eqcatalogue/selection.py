@@ -70,8 +70,14 @@ class MUSSetEventMaximum(MissingUncertaintyStrategy):
     """
 
     def _get_event_errors(self, measure):
-        errors = [m.standard_error for m in measure.event.measures
-                  if m.standard_error]
+        # FIXME(lp). How does it work with in-memory Measure
+        # instances?
+        from eqcatalogue import models
+
+        cat = models.CatalogueDatabase()
+        measures = cat.session.query(models.MagnitudeMeasure).filter(
+            models.MagnitudeMeasure.event_key == measure.event_key).all()
+        errors = [m.standard_error for m in measures if m.standard_error]
         return errors
 
     def should_be_discarded(self, measure):

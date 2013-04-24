@@ -238,7 +238,7 @@ class TestCriteriaFactory(unittest.TestCase):
         self.TESTS = [
             ['before', filtering.Before, datetime.now()],
             ['after', filtering.After, datetime.now()],
-            ['time_between', filtering.TimeBetween,
+            ['time__between', filtering.TimeBetween,
                 [datetime.now(), datetime.now()]],
             ['agency__in', filtering.WithAgencies, ["LEIC"]],
             ['scale__in', filtering.WithMagnitudeScales, ["Mw"]],
