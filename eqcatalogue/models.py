@@ -32,37 +32,6 @@ from sqlalchemy import func
 
 DEFAULT_ENGINE = 'eqcatalogue.datastores.spatialite'
 
-METADATA_TYPES = ('phases', 'stations',
-                  'azimuth_gap', 'azimuth_error',
-                  'min_distance', 'max_distance',
-                  'num_stations')
-
-
-class Agency(object):
-    """
-    The agency which recorded the measures.
-
-    :attribute id:
-      Internal identifier
-
-    :attribute created_at:
-      When this object has been imported into the catalogue db
-
-    :attribute source_key:
-      the identifier used by the event source for the object
-
-    :attribute event:
-      the source object we have imported the agency from. It is unique
-      together with `source_key` and `even_source_name`
-
-    """
-    def __repr__(self):
-        return "Agency %s" % self.source_key
-
-    def __init__(self, source_key, eventsource):
-        self.source_key = source_key
-        self.eventsource = eventsource
-
 
 class MagnitudeMeasure(object):
     """
@@ -71,23 +40,22 @@ class MagnitudeMeasure(object):
     :attribute id:
       Internal identifier
 
-    :attribute created_at:
+    :attribute datetime created_at:
       When this object has been imported into the catalogue db
 
-    :attribute eventsource:
-      the :py:class:`~eqcatalogue.models.EventSource`
-      object associated with this measure
+    :attribute str agency:
+      the identifier used by the event source for the Agency that has provided
+      the measure
 
-    :attribute event_source_key: the identifier used by the event
+    :attribute str event_source:
+      the source from which this measure has been imported
+
+    :attribute event_key: the identifier used by the event
       source for the event. A same event could be related to different
       measures. Intensionally denormalized.
 
-    :attribute event_source_name:
+    :attribute event_name:
       a short name for the event. Same consideration as above
-
-    :attribute agency:
-      the :py:class:`~eqcatalogue.models.Agency`
-      that has provided the measure
 
     :attribute origin:
       the origin related to this measure
@@ -101,180 +69,6 @@ class MagnitudeMeasure(object):
 
     :attribute standard_error:
       the standard error of the magnitude value
-    """
-
-    def __init__(self, event_source,
-                 event_key,
-                 agency,
-                 origin_key,
-                 time, position,
-                 scale, value,
-                 event_name=None,
-                 standard_error=None,
-                 semi_minor_90error=None,
-                 semi_major_90error=None,
-                 depth_error=None,
-                 time_rms=None,
-                 azimuth_error=None,
-                 time_error=None,
-                 depth=None,
-                 ):
-        self.id = None
-        self.agency = agency
-        self.event_source = event_source
-        self.event_key = event_key
-        self.origin_key = origin_key
-        self.event_name = event_name
-        self.scale = scale
-        self.value = value
-        self.standard_error = standard_error
-        self.semi_minor_90error = semi_minor_90error
-        self.semi_major_90error = semi_major_90error
-        self.depth_error = depth_error
-        self.time_rms = time_rms
-        self.azimuth_error = azimuth_error
-        self.time_error = time_error
-        self.depth = depth
-        self.time = time
-        self.position = position
-
-    def __repr__(self):
-        return "%s %s (sigma=%s) @ %s" % (
-            self.value, self.scale, self.standard_error, self.origin)
-
-    def keys(self):
-        return ["id", "agency", "event", "origin",
-                "scale", "value", "standard_error"]
-
-    def values(self):
-        if self.standard_error:
-            stderr = "%.4f" % self.standard_error
-        else:
-            stderr = ""
-
-        return [self.id, self.agency.source_key,
-                self.event_source_key, self.origin.source_key,
-                self.scale, "%.4f" % self.value, stderr]
-
-    def time_distance(self, measure):
-        return abs(self.origin.time - measure.origin.time).total_seconds()
-
-    def magnitude_distance(self, measure):
-        return abs(self.value - measure.value)
-
-    def space_distance(self, measure):
-        """
-        calculate geographical distance using the haversine formula.
-        """
-
-        earth_rad = 6371.227
-        coords = (self.origin.position_as_tuple() +
-                  measure.origin.position_as_tuple())
-
-        # convert to radians
-        lon1, lat1, lon2, lat2 = [c * np.pi / 180 for c in coords]
-
-        dlat, dlon = lat1 - lat2, lon1 - lon2
-        aval = (np.sin(dlat / 2.) ** 2. +
-                np.cos(lat1) * np.cos(lat2) * (np.sin(dlon / 2.) ** 2.))
-        distance = (2. * earth_rad *
-                    np.arctan2(np.sqrt(aval), np.sqrt(1 - aval)))
-
-        return distance
-
-    @classmethod
-    def make_from_lists(cls, scale, values, sigmas):
-        """
-        Returns a list of measures with the given scale, values and
-        standard errors
-        """
-        return [cls(agency=None,
-                    event_source_key=None,
-                    eventsource=None,
-                    origin=None,
-                scale=scale, value=v[0], standard_error=v[1])
-                for v in zip(values, sigmas)]
-
-    def convert(self, new_value, formula, standard_error):
-        """
-        Convert the measure to a ConvertedMeasure with `new_value`
-        through `formula`
-        """
-        return ConvertedMeasure(self.agency,
-                                self.eventsource,
-                                self.event_source_key,
-                                self.origin,
-                                formula.target_scale,
-                                new_value, standard_error,
-                                self, [formula])
-
-
-class ConvertedMeasure(object):
-    """
-    A converted measure is measure that is the result of a conversion
-    """
-    def __init__(self, agency, eventsource, event_source_key,
-                 origin, scale, value,
-                 standard_error=None,
-                 original_measure=None, formulas=None):
-        # we do not inherit by MagnitudeMeasure because it could be
-        # sqlalchemizable, and, consenquently it may have some magic
-        # in the constructor that we don't want here
-        self.agency = agency
-        self.eventsource = eventsource
-        self.event_source_key = event_source_key
-        self.origin = origin
-        self.scale = scale
-        self.value = value
-        self.standard_error = standard_error
-        self.original_measure = original_measure
-        self.formulas = formulas or []
-
-    def __repr__(self):
-        return "%s %s (sigma=%s) converted by %s" % (
-            self.value, self.scale, self.standard_error,
-            self.original_measure)
-
-    def keys(self):
-        return ["agency", "event", "origin",
-                "scale", "value", "standard_error",
-                "original_measure", "formulas"]
-
-    def values(self):
-        if self.standard_error:
-            stderr = "%.4f" % self.standard_error
-        else:
-            stderr = ""
-        return [self.agency.source_key,
-                self.event_source_key, self.origin.source_key,
-                self.scale, "%.4f" % self.value, stderr,
-                self.original_measure, ".".join(f.name for f in self.formulas)]
-
-    def convert(self, new_value, formula, standard_error):
-        """
-        Convert the measure to a ConvertedMeasure with `new_value`
-        and `standard_error` through `formula`.
-        """
-        return self.__class__(
-            self.agency, self.eventsource, self.event_source_key,
-            self.origin, formula.target_scale,
-            new_value, standard_error, self.original_measure,
-            self.formulas[:] + [formula])
-
-
-class Origin(object):
-    """
-    Describes a point at a given depth and a time.
-    For each quantity a measure of the  accuracy is described.
-
-    :attribute id:
-      Internal identifier
-
-    :attribute created_at:
-      When this object has been imported into the catalogue db
-
-    :attribute source_key:
-      the identifier used by the event source for the object
 
     :attribute time:
       Time in format "YYYY-MM-DD HH:MM:SS.SSS".
@@ -306,26 +100,101 @@ class Origin(object):
 
     :attribute depth_error:
       Error in km on the hypocentre depth.
-
-    :attribute eventsource:
-      the source object we have imported the origin from. unique
-      together with `source_key`
     """
-    def __repr__(self):
-        return "%s @ %s" % (str(self.source_key), self.time)
 
-    def __init__(self, position, time, eventsource, source_key,
-                 **kwargs):
-        """
-        :param position
-          spatial position of the origin. Given in wkt or wkb format
-        """
+    def __init__(self,
+                 event_source,
+                 event_key,
+                 agency,
+                 origin_key,
+                 time,
+                 position,
+                 scale,
+                 value,
+                 event_name=None,
+                 standard_error=None,
+                 semi_minor_90error=None,
+                 semi_major_90error=None,
+                 depth_error=None,
+                 time_rms=None,
+                 azimuth_error=None,
+                 time_error=None,
+                 depth=None):
+        self.id = None
+        self.agency = agency
+        self.event_source = event_source
+        self.event_key = event_key
+        self.origin_key = origin_key
+        self.event_name = event_name
+        self.scale = scale
+        self.value = value
+        self.standard_error = standard_error
+        self.semi_minor_90error = semi_minor_90error
+        self.semi_major_90error = semi_major_90error
+        self.depth_error = depth_error
+        self.time_rms = time_rms
+        self.azimuth_error = azimuth_error
+        self.time_error = time_error
+        self.depth = depth
         self.time = time
         self.position = position
-        self.eventsource = eventsource
-        self.source_key = source_key
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+
+    def __repr__(self):
+        return "%s %s (sigma=%s) @ %s-%s" % (
+            self.value, self.scale, self.standard_error,
+            self.position_as_tuple(), self.time)
+
+    def keys(self):
+        return ["id", "agency", "event", "origin",
+                "scale", "value", "standard_error"]
+
+    def values(self):
+        if self.standard_error:
+            stderr = "%.4f" % self.standard_error
+        else:
+            stderr = ""
+
+        return [self.id, self.agency,
+                self.event_key, self.origin_key,
+                self.scale, "%.4f" % self.value, stderr]
+
+    def time_distance(self, measure):
+        return abs(self.time - measure.time).total_seconds()
+
+    def magnitude_distance(self, measure):
+        return abs(self.value - measure.value)
+
+    def space_distance(self, measure):
+        """
+        calculate geographical distance using the haversine formula.
+        """
+
+        earth_rad = 6371.227
+        coords = self.position_as_tuple() + measure.position_as_tuple()
+
+        # convert to radians
+        lon1, lat1, lon2, lat2 = [c * np.pi / 180 for c in coords]
+
+        dlat, dlon = lat1 - lat2, lon1 - lon2
+        aval = (np.sin(dlat / 2.) ** 2. +
+                np.cos(lat1) * np.cos(lat2) * (np.sin(dlon / 2.) ** 2.))
+        distance = (2. * earth_rad *
+                    np.arctan2(np.sqrt(aval), np.sqrt(1 - aval)))
+
+        return distance
+
+    @classmethod
+    def make_from_lists(cls, scale, values, sigmas):
+        """
+        Returns a list of measures with the given scale, values and
+        standard errors
+        """
+        return [cls(agency=None,
+                    event_source_key=None,
+                    eventsource=None,
+                    origin=None,
+                scale=scale, value=v[0], standard_error=v[1])
+                for v in zip(values, sigmas)]
 
     def position_as_tuple(self):
         if hasattr(self.position, 'geom_wkb'):
@@ -334,33 +203,127 @@ class Origin(object):
         else:
             return self.position.coords(0)
 
+    def convert(self, new_value, formula, standard_error):
+        """
+        Convert the measure to a ConvertedMeasure with `new_value`
+        through `formula`
+        """
+        return ConvertedMeasure(
+            event_source=self.event_source,
+            event_key=self.event_key,
+            agency=self.agency,
+            origin_key=self.origin_key,
+            time=self.time,
+            position=self.position,
+            scale=self.scale,
+            value=new_value,
+            event_name=self.event_name,
+            standard_error=standard_error,
+            semi_minor_90error=self.semi_minor_90error,
+            semi_major_90error=self.semi_major_90error,
+            depth_error=self.depth_error,
+            time_rms=self.time_rms,
+            azimuth_error=self.azimuth_error,
+            time_error=self.time_error,
+            depth=self.depth,
+            original_measure=self,
+            formulas=[formula])
 
-class MeasureMetadata(object):
-    """Metadata of a measurement.
 
-    :attribute id:
-      Internal identifier
-
-    :attribute created_at:
-      When this object has been imported into the catalogue db
-
-    :attribute magnitudemeasure:
-      the measure, the metadata is associated with
-
-    :attribute name:
-      the name of the metadata. It is unique together with magnitudemeasure
-
-    :attribute value:
-      the float value of the metadata.
+class ConvertedMeasure(object):
     """
-    def __repr__(self):
-        return "%s = %s" % (self.name, self.value)
+    A converted measure is measure that is the result of a conversion
+    """
+    def __init__(self,
+                 event_source,
+                 event_key,
+                 agency,
+                 origin_key,
+                 time,
+                 position,
+                 scale,
+                 value,
+                 original_measure,
+                 formulas,
+                 event_name=None,
+                 standard_error=None,
+                 semi_minor_90error=None,
+                 semi_major_90error=None,
+                 depth_error=None,
+                 time_rms=None,
+                 azimuth_error=None,
+                 time_error=None,
+                 depth=None):
+        # we do not inherit by MagnitudeMeasure because it could be
+        # sqlalchemizable, and, consenquently it may have some magic
+        # in the constructor that we don't want here
 
-    def __init__(self, metadata_type, value, magnitudemeasure):
-        assert(metadata_type in METADATA_TYPES)
-        self.name = metadata_type
+        self.id = None
+        self.agency = agency
+        self.event_source = event_source
+        self.event_key = event_key
+        self.origin_key = origin_key
+        self.event_name = event_name
+        self.scale = scale
         self.value = value
-        self.magnitudemeasure = magnitudemeasure
+        self.standard_error = standard_error
+        self.semi_minor_90error = semi_minor_90error
+        self.semi_major_90error = semi_major_90error
+        self.depth_error = depth_error
+        self.time_rms = time_rms
+        self.azimuth_error = azimuth_error
+        self.time_error = time_error
+        self.depth = depth
+        self.time = time
+        self.position = position
+        self.original_measure = original_measure
+        self.formulas = formulas or []
+
+    def __repr__(self):
+        return "%s %s (sigma=%s) converted by %s" % (
+            self.value, self.scale, self.standard_error,
+            self.original_measure)
+
+    def keys(self):
+        return ["agency", "event", "origin",
+                "scale", "value", "standard_error",
+                "original_measure", "formulas"]
+
+    def values(self):
+        if self.standard_error:
+            stderr = "%.4f" % self.standard_error
+        else:
+            stderr = ""
+        return [self.agency,
+                self.event_key, self.origin_key,
+                self.scale, "%.4f" % self.value, stderr,
+                self.original_measure, ".".join(f.name for f in self.formulas)]
+
+    def convert(self, new_value, formula, standard_error):
+        """
+        Convert the measure to a ConvertedMeasure with `new_value`
+        and `standard_error` through `formula`.
+        """
+        return self.__class__(
+            event_source=self.event_source,
+            event_key=self.event_key,
+            agency=self.agency,
+            origin_key=self.origin_key,
+            time=self.time,
+            position=self.position,
+            scale=formula.target_scale,
+            value=new_value,
+            event_name=self.event_name,
+            standard_error=standard_error,
+            semi_minor_90error=self.semi_minor_90error,
+            semi_major_90error=self.semi_major_90error,
+            depth_error=self.depth_error,
+            time_rms=self.time_rms,
+            azimuth_error=self.azimuth_error,
+            time_error=self.time_error,
+            depth=self.depth,
+            original_measure=self.original_measure,
+            formulas=self.formulas[:] + [formula])
 
 
 class Workspace(type):
@@ -411,15 +374,14 @@ class CatalogueDatabase(object):
     MEASURE_AGENCIES = 'available_measure_agencies'
     MEASURE_SCALES = 'available_measure_scales'
 
-    def __init__(self, drop=False, engine=DEFAULT_ENGINE, **engine_params):
+    def __init__(self, engine=DEFAULT_ENGINE, **engine_params):
         log.logger(__name__).info(
             "initializing Catalogue Database (engine=%s, params %s)",
             engine, engine_params)
         self._engine_class = self.__class__.get_engine(engine)
         self._engine = self._engine_class(**engine_params)
-        if drop or 'memory' in engine_params:
+        if 'drop' in engine_params or 'memory' in engine_params:
             log.logger(__name__).info("reset catalogue data")
-            self.recreate()
         self._cache = collections.defaultdict(dict)
 
     def recreate(self):
@@ -476,10 +438,8 @@ class CatalogueDatabase(object):
         Returns a set containing the measure agencies.
         """
 
-        available_agencies = [agency.source_key
-                              for agency in
-                              self.session.query(Agency).all()]
-        return set(available_agencies)
+        query = self.session.query(MagnitudeMeasure).distinct()
+        return set([m.agency for m in query])
 
     def get_measure_scales(self):
         """
@@ -496,8 +456,10 @@ class CatalogueDatabase(object):
         Returns a tuple with minimum and maximum date
         """
 
-        date_min = self.session.query(func.min(Origin.time)).first()[0]
-        date_max = self.session.query(func.max(Origin.time)).first()[0]
+        date_min = self.session.query(
+            func.min(MagnitudeMeasure.time)).first()[0]
+        date_max = self.session.query(
+            func.max(MagnitudeMeasure.time)).first()[0]
         return date_min, date_max
 
     def get_summary(self):

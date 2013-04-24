@@ -36,41 +36,27 @@ def load_fixtures(session):
         reader = CsvEqCatalogueReader(eq_source)
         entries = [entry for entry in reader.read(Converter())]
 
-    event_source = models.EventSource(name='query_catalogue')
-    session.add(event_source)
+    event_source = 'query_catalogue'
+
     for entry in entries:
-        inserted_agency = session.query(models.Agency).filter(
-            models.Agency.source_key == entry['solutionAgency'])
-        if not inserted_agency.count():
-            agency = models.Agency(source_key=entry['solutionAgency'],
-                                   eventsource=event_source)
-            session.add(agency)
-        else:
-            agency = inserted_agency.all()[0]
+        agency = entry['solutionAgency']
 
         entry_time = datetime(entry['year'], entry['month'], entry['day'],
                               entry['hour'], entry['minute'],
                               int(entry['second']))
         entry_pos = 'POINT(%f %f)' % (entry['Longitude'], entry['Latitude'])
-        origin = models.Origin(
+        origin = dict(
             time=entry_time, position=WKTSpatialElement(entry_pos),
-            eventsource=event_source,
-            source_key=entry['eventKey'], depth=entry['depth'])
+            origin_key=entry['eventKey'], depth=entry['depth'])
 
         mag_measure = models.MagnitudeMeasure(
             agency=agency,
-            origin=origin, scale=entry['mag_type'],
+            scale=entry['mag_type'],
             value=entry['magnitude'], standard_error=0.2,
-            event_source_key=entry['eventKey'],
-            eventsource=event_source)
+            event_key=entry['eventKey'],
+            event_source=event_source, **origin)
 
-        measure_meta = models.MeasureMetadata(
-            metadata_type='stations', value=entry['stations'],
-            magnitudemeasure=mag_measure)
-
-        session.add(origin)
         session.add(mag_measure)
-        session.add(measure_meta)
 
 
 class ACriteriaShould(unittest.TestCase):
@@ -208,7 +194,7 @@ class ACriteriaShould(unittest.TestCase):
         result = measures1 & measures2
         self.assertEqual(2, len(result))
         for m in result:
-            self.assertEqual('BJI', m.agency.source_key)
+            self.assertEqual(u'BJI', m.agency)
             self.assertTrue(m.value > value)
 
         measure = random.choice(result)

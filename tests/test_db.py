@@ -30,118 +30,46 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
         self.session.commit()
 
     def test_drop(self):
+        self.catalogue = catalogue.CatalogueDatabase(memory=True, drop=True)
         self.catalogue = catalogue.CatalogueDatabase(
             drop=True, filename=in_data_dir("test_drop.db"))
-        self.catalogue = catalogue.CatalogueDatabase(memory=True, drop=True)
-
-    def test_eventsource(self):
-        event_source = catalogue.EventSource(name="test1")
-        self.session.add(event_source)
-        self.assertEqual(self.session.query(
-            catalogue.EventSource).filter_by(name='test1').count(), 1)
-
-    def test_agency(self):
-        eventsource = catalogue.EventSource(name="test2")
-        self.session.add(eventsource)
-
-        agency = catalogue.Agency(source_key="test", eventsource=eventsource)
-        self.session.add(agency)
-        self.assertEqual(
-            self.session.query(catalogue.Agency).filter_by(
-                source_key='test').count(),
-            1)
-
-    def test_origin(self):
-        eventsource = catalogue.EventSource(name="test4")
-        self.session.add(eventsource)
-
-        origin = catalogue.Origin(source_key="test", eventsource=eventsource,
-                                 position=geoalchemy.WKTSpatialElement(
-                                     'POINT(-81.40 38.08)'),
-                                 time=datetime.now(),
-                                 depth=3)
-        self.session.add(origin)
-        self.assertEqual(
-            self.session.query(catalogue.Origin).filter(
-                catalogue.Origin.depth > 2).count(), 1)
-
-    def test_magnitudemeasure(self):
-        eventsource = catalogue.EventSource(name="test4")
-        self.session.add(eventsource)
-
-        agency = catalogue.Agency(source_key="test", eventsource=eventsource)
-        self.session.add(agency)
-
-        origin = catalogue.Origin(
-            source_key="test", eventsource=eventsource,
-            position=geoalchemy.WKTSpatialElement('POINT(-81.40 38.08)'),
-            time=datetime.now(),
-            depth=1)
-        self.session.add(origin)
-
-        measure = catalogue.MagnitudeMeasure(
-            eventsource=eventsource,
-            event_source_key="test",
-            agency=agency, origin=origin, scale='mL', value=5.0)
-        self.session.add(measure)
-
-        self.assertEqual(
-            self.session.query(catalogue.MagnitudeMeasure).count(), 1)
 
     def create_test_fixture(self):
-        eventsource = catalogue.EventSource(name="AnEventSource")
-        self.session.add(eventsource)
+        event_source = "AnEventSource"
 
-        agency_one = catalogue.Agency(source_key="Tatooine",
-                                      eventsource=eventsource)
-        agency_two = catalogue.Agency(source_key='Alderaan',
-                                      eventsource=eventsource)
-        agency_three = catalogue.Agency(source_key="DeathStar",
-                                        eventsource=eventsource)
-        self.session.add(agency_one)
-        self.session.add(agency_two)
-        self.session.add(agency_three)
+        agency_one = "Tatooine"
+        agency_two = 'Alderaan'
 
-        origin_one = catalogue.Origin(
-            source_key="test", eventsource=eventsource,
+        origin_one = dict(
+            origin_key="test",
             position=geoalchemy.WKTSpatialElement('POINT(-81.40 38.08)'),
             time=datetime(1950, 2, 19, 23, 14, 5),
             depth=1)
 
-        origin_two = catalogue.Origin(
-            source_key="test", eventsource=eventsource,
+        origin_two = dict(
+            origin_key="test",
             position=geoalchemy.WKTSpatialElement('POINT(-81.40 38.08)'),
             time=datetime(1987, 2, 6, 9, 14, 15),
             depth=1)
 
-        origin_three = catalogue.Origin(
-            source_key="test", eventsource=eventsource,
-            position=geoalchemy.WKTSpatialElement('POINT(-81.40 38.08)'),
-            time=datetime(1990, 7, 5, 5, 19, 45),
-            depth=1)
-
-        self.session.add(origin_one)
-        self.session.add(origin_two)
-        self.session.add(origin_three)
-
         measure_one = catalogue.MagnitudeMeasure(
-            eventsource=eventsource,
-            event_source_key='1st',
-            agency=agency_one,
-            origin=origin_one, scale='mL', value=5.0)
+            event_source=event_source,
+            event_key='1st',
+            agency=agency_one, scale='mL', value=5.0,
+            **origin_one)
         self.session.add(measure_one)
 
         measure_two = catalogue.MagnitudeMeasure(
-            eventsource=eventsource,
-            event_source_key='2nd',
+            event_source=event_source,
+            event_key='2nd',
             agency=agency_two,
-            origin=origin_two, scale='mb', value=6.0)
+            scale='mb', value=6.0, **origin_two)
         self.session.add(measure_two)
 
     def test_available_measures_agencies(self):
         self.create_test_fixture()
 
-        self.assertEqual(set(['Tatooine', 'Alderaan', 'DeathStar']),
+        self.assertEqual(set(['Tatooine', 'Alderaan']),
                          self.catalogue.get_agencies())
 
     def test_available_measures_scales(self):
@@ -153,7 +81,7 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
     def test_get_dates(self):
         self.create_test_fixture()
         exp_min_date = datetime(1950, 2, 19, 23, 14, 5)
-        exp_max_date = datetime(1990, 7, 5, 5, 19, 45)
+        exp_max_date = datetime(1987, 2, 6, 9, 14, 15)
         dates = self.catalogue.get_dates()
 
         self.assertEqual(exp_min_date, dates[0])
@@ -164,7 +92,7 @@ class ShouldCreateAlchemyTestCase(unittest.TestCase):
 
         self.assertEqual({
             catalogue.CatalogueDatabase.MEASURE_AGENCIES:
-            set(['Tatooine', 'Alderaan', 'DeathStar']),
+            set(['Tatooine', 'Alderaan']),
             catalogue.CatalogueDatabase.MEASURE_SCALES:
-            set(['mL', 'mb'])},
+            set([u'mL', u'mb'])},
             self.catalogue.get_summary())

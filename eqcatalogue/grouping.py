@@ -52,7 +52,7 @@ class GroupMeasuresByEventSourceKey(object):
         """
         groups = {}
         for m in measures:
-            key = m.event_source_key
+            key = m.event_key
             if not key in groups:
                 groups[key] = []
             groups[key].append(m)
@@ -79,9 +79,7 @@ class GroupMeasuresByHierarchicalClustering(object):
     """
 
     def __init__(self, key_fn=None, args=None):
-        self._clustering_args = {'t': 200,
-            'criterion': 'distance'
-            }
+        self._clustering_args = {'t': 200, 'criterion': 'distance'}
         if args:
             self._clustering_args.update(args)
         self._key_fn = key_fn or GroupMeasuresByHierarchicalClustering.get_time
@@ -92,7 +90,7 @@ class GroupMeasuresByHierarchicalClustering(object):
         return the origin time of the measure, a float with the unix
         timestamp (plus milliseconds)
         """
-        return float(measure.origin.time.strftime('%s'))
+        return float(measure.time.strftime('%s'))
 
     def group_measures(self, measures):
         """

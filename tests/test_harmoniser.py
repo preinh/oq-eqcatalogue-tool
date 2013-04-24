@@ -19,7 +19,7 @@ import unittest
 from eqcatalogue.harmoniser import Harmoniser, ConversionFormula
 from eqcatalogue.regression import (LinearModel,
                                     EmpiricalMagnitudeScalingRelationship)
-from eqcatalogue.models import MagnitudeMeasure, Event, CatalogueDatabase
+from eqcatalogue.models import MagnitudeMeasure, CatalogueDatabase
 from tests.test_filtering import load_fixtures
 from eqcatalogue.filtering import C
 
@@ -31,13 +31,18 @@ def generate_measures():
         for i in range(0, count):
             measures.append(
                 MagnitudeMeasure(
-                    agency=None, event=events[i], origin=None,
+                    event_source=None,
+                    agency=None,
+                    origin_key=None,
+                    event_key=events[i][0],
+                    event_name=events[i][1],
+                    position=None,
+                    time=None,
                     scale=scale,
                     value=(i + 1) * mfactor,
                     standard_error=0.2))
 
-    events = [Event(source_key=i, eventsource=None,
-        name="test event %d" % i) for i in range(0, 10)]
+    events = [(i, "test event %d" % i) for i in range(0, 10)]
 
     append_fixture_measures(events, "mb", 1.0)
     append_fixture_measures(events, "Ml", 3.0)

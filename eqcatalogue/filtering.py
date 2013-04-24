@@ -37,8 +37,7 @@ class Criteria(object):
     def __init__(self):
         self._cat = db.CatalogueDatabase()
         self._session = self._cat.session
-        self.default_queryset = self._session.query(
-            db.MagnitudeMeasure).join(db.Origin).join(db.Agency)
+        self.default_queryset = self._session.query(db.MagnitudeMeasure)
 
     def filter(self, queryset=None):
         """
@@ -172,10 +171,10 @@ class Before(Criteria):
 
     def filter(self, queryset=None):
         queryset = queryset or self.default_queryset
-        return queryset.filter(db.Origin.time < self.time)
+        return queryset.filter(db.MagnitudeMeasure.time < self.time)
 
     def predicate(self, measure):
-        return measure.origin.time < self.time
+        return measure.time < self.time
 
     def __repr__(self):
         return "<before %s>" % self.time
@@ -194,10 +193,10 @@ class After(Criteria):
 
     def filter(self, queryset=None):
         queryset = queryset or self.default_queryset
-        return queryset.filter(db.Origin.time > self.time)
+        return queryset.filter(db.MagnitudeMeasure.time > self.time)
 
     def predicate(self, measure):
-        return measure.origin.time > self.time
+        return measure.time > self.time
 
     def __repr__(self):
         return "<after %s>" % self.time
@@ -239,10 +238,10 @@ class WithAgencies(Criteria):
     def filter(self, queryset=None):
         queryset = queryset or self.default_queryset
         return queryset.filter(
-            db.Agency.source_key.in_(self.agencies))
+            db.MagnitudeMeasure.agency.in_(self.agencies))
 
     def predicate(self, measure):
-        return measure.agency.source_key in self.agencies
+        return measure.agency in self.agencies
 
     @classmethod
     def make_with_agency(cls, agency):
@@ -333,10 +332,10 @@ class WithDepthGreater(Criteria):
 
     def filter(self, queryset=None):
         queryset = queryset or self.default_queryset
-        return queryset.filter(db.Origin.depth > self.value)
+        return queryset.filter(db.MagnitudeMeasure.depth > self.value)
 
     def predicate(self, measure):
-        return measure.value > self.value
+        return measure.depth > self.value
 
 
 class WithDepthLower(Criteria):
@@ -352,10 +351,10 @@ class WithDepthLower(Criteria):
 
     def filter(self, queryset=None):
         queryset = queryset or self.default_queryset
-        return queryset.filter(db.Origin.depth < self.value)
+        return queryset.filter(db.MagnitudeMeasure.depth < self.value)
 
     def predicate(self, measure):
-        return measure.value < self.value
+        return measure.depth < self.value
 
 
 class DepthBetween(Criteria):
@@ -369,7 +368,7 @@ class DepthBetween(Criteria):
         super(DepthBetween, self).__init__()
         self.depth_lb, self.depth_ub = bounds
         self._comb = WithDepthLower(self.depth_ub) & (
-                WithDepthGreater(self.depth_lb))
+            WithDepthGreater(self.depth_lb))
 
     def filter(self, queryset=None):
         return self._comb.filter(queryset)
@@ -392,7 +391,7 @@ class WithinPolygon(Criteria):
     def filter(self, queryset=None):
         queryset = queryset or self.default_queryset
         return queryset.filter(
-            db.Origin.position.within(self.polygon))
+            db.MagnitudeMeasure.position.within(self.polygon))
 
     def __repr__(self):
         return "<within %s>" % self.polygon
@@ -413,8 +412,8 @@ class WithinDistanceFromPoint(Criteria):
     def filter(self, queryset=None):
         queryset = queryset or self.default_queryset
         return queryset.filter(
-            "PtDistWithin(catalogue_origin.position, GeomFromText('%s', "
-            "4326), %s)" % (self.point, self.distance))
+            "PtDistWithin(catalogue_magnitudemeasure.position, "
+            "GeomFromText('%s', 4326), %s)" % (self.point, self.distance))
 
     def __repr__(self):
         return "<within distance %s from %s>" % (self.distance, self.point)

@@ -84,17 +84,15 @@ class ASequentialMeasureGrouperShould(unittest.TestCase):
         # create 3 events. Event1 is near Event2 in time but not in
         # space, Event2 is near Event3 in space but not in time
         self.n = 3
-        events = [models.Event(source_key="event key %d" % i,
-                               eventsource=None,
-                               name="test event %d")
-                 for i in range(0, self.n)]
+        events = [("event key %d" % i, "test event %d")
+                  for i in range(0, self.n)]
 
         # create m positions for the first two events
         self.m = 10
         positions = [[catalogue.position_from_latlng(i * 10. + random.random(),
                                                      i * 10. + random.random())
                      for _ in range(0, self.m)]
-                    for i in range(0, self.n - 1)]
+                     for i in range(0, self.n - 1)]
         # add m positions for the third event with a distance < 1 from
         # the positions associated with the second event
         self.space_window = 500
@@ -111,22 +109,24 @@ class ASequentialMeasureGrouperShould(unittest.TestCase):
                          for j in range(0, self.m)])
 
         # create m origins for each event
-        origins = [[models.Origin(position=positions[i][j],
-                          time=times[i][j],
-                          eventsource=None,
-                          source_key=(i, j))
+        origins = [[dict(position=positions[i][j],
+                         time=times[i][j],
+                         origin_key=(i, j))
                    for j in range(0, self.m)]
-                  for i in range(0, self.n)]
+                   for i in range(0, self.n)]
 
-        an_agency = models.Agency(source_key="test agency", eventsource=None)
+        an_agency = "test agency"
         # create corresponding measures
-        self.measures = [models.MagnitudeMeasure(agency=an_agency,
-                                                 event=events[i],
-                                                 origin=origins[i][j],
-                                                 scale="Mw",
-                                                 value=i + j)
-                        for i in range(0, self.n)
-                        for j in range(0, self.m)]
+        self.measures = [models.MagnitudeMeasure(
+            event_source=None,
+            agency=an_agency,
+            event_key=events[i][0],
+            event_name=events[i][0],
+            scale="Mw",
+            value=i + j,
+            **origins[i][j])
+            for i in range(0, self.n)
+            for j in range(0, self.m)]
         self.grouper = grouping.GroupMeasuresBySequentialClustering(
             time_window=self.time_window, space_window=self.space_window)
 
@@ -138,8 +138,7 @@ class ASequentialMeasureGrouperShould(unittest.TestCase):
 
         for m1, related in graph.items():
             for m2 in related:
-                self.assertTrue(
-                    abs(m1.origin.time - m2.origin.time).total_seconds() < 0.5)
+                self.assertTrue(abs(m1.time - m2.time).total_seconds() < 0.5)
                 self.assertTrue(m1 != m2)
 
     def test_find_connected_components(self):
@@ -182,10 +181,10 @@ class ASequentialMeasureGrouperShould(unittest.TestCase):
 
         for measures in groups.values():
             self.assertEqual(self.m, len(measures))
-            expected_group = measures[0].origin.source_key[0]
+            expected_group = measures[0].origin_key[0]
 
             for measure in measures:
-                self.assertEqual(expected_group, measure.origin.source_key[0])
+                self.assertEqual(expected_group, measure.origin_key[0])
 
     def test_group_sequentially_with_magnitude(self):
         self.grouper = grouping.GroupMeasuresBySequentialClustering(

@@ -39,7 +39,7 @@ class Engine(object):
     """
     DEFAULT_FILENAME = "eqcatalogue.db"
 
-    def __init__(self, memory=False, filename=None):
+    def __init__(self, memory=False, filename=None, drop=False):
         """Setup a sqlalchemy connection to spatialite with the proper
         metadata.
 
@@ -48,31 +48,34 @@ class Engine(object):
 
         :param filename: the filename of the database used. Unused if
         `memory` is True
+
+        :param drop: drop the content of the database
         """
 
-        to_be_initialized = False
+        self.to_be_initialized = drop
         if memory:
+            # set echo=True in debugging
             self._engine = sqlalchemy.create_engine('sqlite://', module=sqlite)
-            to_be_initialized = True
+            self.to_be_initialized = True
         else:
             filename = filename or self.DEFAULT_FILENAME
             if not os.path.exists(filename):
-                to_be_initialized = True
+                self.to_be_initialized = True
             self._engine = sqlalchemy.create_engine(
                 'sqlite:///%s' % filename,
                 module=sqlite,
                 poolclass=sqlalchemy.pool.QueuePool,
-                pool_size=1,
-                )
-        sqlevent.listen(self._engine,
-                        "first_connect",
-                        _connect)
-        self.session = orm.sessionmaker(bind=self._engine)()
-        self._metadata = sqlalchemy.MetaData(self._engine)
+                pool_size=1)
+        self.session = None
+        self._metadata = None
+        sqlevent.listen(self._engine, "first_connect", self._connect)
+        self._engine.connect()
+        while self.session is None:
+            pass
         orm.clear_mappers()
         self._create_schema_magnitudemeasure()
 
-        if to_be_initialized:
+        if self.to_be_initialized:
             self.recreate()
 
     def recreate(self):
@@ -117,9 +120,8 @@ class Engine(object):
                               nullable=False, index=True),
             sqlalchemy.Column('time_error', sqlalchemy.Float(), nullable=True),
             sqlalchemy.Column('time_rms', sqlalchemy.Float(), nullable=True),
-            geoalchemy.GeometryExtensionColumn('position',
-                                               geoalchemy.Point(2, srid=4326),
-                                               nullable=False),
+            geoalchemy.GeometryExtensionColumn(
+                'position', geoalchemy.Point(2, srid=4326), nullable=False),
             sqlalchemy.Column('semi_minor_90error',
                               sqlalchemy.Float(),
                               nullable=True),
@@ -148,6 +150,15 @@ class Engine(object):
         position = geoalchemy.WKTSpatialElement(
             'POINT(%s %s)' % (longitude, latitude))
         return position
+
+    def _connect(self, dbapi_connection, _connection_rec=None):
+        """Enable load extension on connect. Event handler triggered
+        by sqlalchemy"""
+
+        dbapi_connection.enable_load_extension(True)
+        _load_extension(dbapi_connection)
+        self.session = orm.sessionmaker(bind=self._engine)()
+        self._metadata = sqlalchemy.MetaData(self._engine)
 
 
 def _initialize_spatialite_db(connection):
@@ -196,12 +207,3 @@ def _load_extension(session):
         session.execute('select * from spatial_ref_sys')
     except sqlite.OperationalError:
         _initialize_spatialite_db(session)
-
-
-def _connect(dbapi_connection, connection_rec=None):
-    """Enable load extension on connect. Event handler triggered
-    by sqlalchemy"""
-    dbapi_connection.enable_load_extension(True)
-    _load_extension(dbapi_connection)
-    if connection_rec:
-        pass
