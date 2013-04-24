@@ -45,6 +45,10 @@ FMT_MAP = {ImporterDialog.ISF_PATTERN: V1,
            ImporterDialog.IASPEI_PATTERN: Iaspei}
 
 
+def to_year(value):
+    return str(value.toPyDateTime().year)
+
+
 class EqCatalogue:
     def __init__(self, iface):
         # Save reference to the QGIS interface
@@ -156,7 +160,17 @@ class EqCatalogue:
         self.create_layer(results)
 
     def create_layer(self, data):
-        display_name = 'Events'
+        dock = self.dock
+        date_range = ':'.join([to_year(dock.date_range.lowValue()),
+                               to_year(dock.date_range.highValue())])
+        mag_range = ':'.join([str(dock.mag_range.lowValue()),
+                              str(dock.mag_range.highValue())])
+        agencies = ','.join(map(str, dock.agenciesComboBox.checkedItems()))
+        mscales = ','.join(map(str, dock.mscalesComboBox.checkedItems()))
+
+        display_name = 'Events-%s-%s-%s-%s' % (
+            date_range, mag_range, mscales, agencies)
+
         uri = 'Point?crs=epsg:4326&index=yes&uuid=%s' % uuid.uuid4()
         vlayer = QgsVectorLayer(uri, display_name, 'memory')
         QgsMapLayerRegistry.instance().addMapLayer(vlayer)
