@@ -43,11 +43,17 @@ class CatalogueTestCase(unittest.TestCase):
             os.remove(db_name)
 
     def test_IASPEI(self):
+        # no features with the default selections
         self._check(IASPEI, ImporterDialog.IASPEI_PATTERN,
                     ['IASPEI'], ['MS', 'mb'])
         feature_count = self._filter_button()
         self.assertEqual(feature_count, 0)
-        # no features with the default selections
+
+        # 61 features with magnitude in the range [1, 8]
+        self.eqcat.dock.mag_range.setLowValue(1)
+        self.eqcat.dock.mag_range.setHighValue(8)
+        feature_count = self._filter_button()
+        self.assertEqual(feature_count, 61)
 
     def test_ISF(self):
         self._check(ISF, ImporterDialog.ISF_PATTERN, [
