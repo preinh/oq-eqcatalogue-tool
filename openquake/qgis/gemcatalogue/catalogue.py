@@ -130,6 +130,8 @@ class EqCatalogue:
         parser = FMT_MAP[fmt]
         with open(catalogue_filename, 'rb') as cat_file:
             store_events(parser, cat_file, cat_db)
+        self.dock.update_selectDbComboBox(db_filename)
+        return cat_db
 
     def show_import_dialog(self):
         self.import_dialog = ImporterDialog(self.iface)
@@ -137,8 +139,6 @@ class EqCatalogue:
             self.create_db(self.import_dialog.import_file_path,
                            str(self.import_dialog.fmt),
                            self.import_dialog.save_file_path)
-            self.dock.update_selectDbComboBox(
-                self.import_dialog.save_file_path)
 
     def update_map(self, agencies_selected, mscales_selected, mag_range,
                    date_range):
@@ -152,6 +152,7 @@ class EqCatalogue:
 
         results = filter_agency & filter_mscales & \
             filter_mvalues & filter_dvalues
+
         self.create_layer(results)
 
     def create_layer(self, data):

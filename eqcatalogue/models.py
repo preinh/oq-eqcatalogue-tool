@@ -438,6 +438,7 @@ class CatalogueDatabase(object):
             engine, engine_params)
         self._engine_class = self.__class__.get_engine(engine)
         self._engine = self._engine_class(**engine_params)
+        print self._engine, engine_params, '++++++++++++++++++++++++++++++++'
         if drop or 'memory' in engine_params:
             log.logger(__name__).info("reset catalogue data")
             self.recreate()

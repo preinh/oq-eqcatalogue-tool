@@ -23,32 +23,31 @@ ISF = os.path.join(datadir, 'isc-query-small.html')
 IASPEI = os.path.join(datadir, 'iaspei.csv')
 
 
-def layerdict():
-    layers = QgsMapLayerRegistry.instance().mapLayers().values()
-    return dict((str(l.name()), l) for l in layers)
-
-
 class CatalogueTestCase(unittest.TestCase):
     def setUp(self):
         self.eqcat = EqCatalogue(IFACE)
 
     def _check(self, catfile, pattern, expected_agencies, expected_mscales):
         db_name = str(uuid.uuid1())
-        self.eqcat.create_db(
-            catfile, pattern, db_name)
-        self.eqcat.update_catalogue_db(db_name)
-        checked_agencies = map(
-            str, self.eqcat.dock.agenciesComboBox.checkedItems())
-        checked_mscales = map(
-            str, self.eqcat.dock.mscalesComboBox.checkedItems())
-        self.assertEqual(checked_agencies, expected_agencies)
-        self.assertEqual(checked_mscales, expected_mscales)
-        self._filter_button()
-        os.remove(db_name)
+        db = self.eqcat.create_db(catfile, pattern, db_name)
+        try:
+            self.eqcat.update_catalogue_db(db_name)
+            checked_agencies = map(
+                str, self.eqcat.dock.agenciesComboBox.checkedItems())
+            checked_mscales = map(
+                str, self.eqcat.dock.mscalesComboBox.checkedItems())
+            self.assertEqual(checked_agencies, expected_agencies)
+            self.assertEqual(checked_mscales, expected_mscales)
+        finally:
+            db.close()
+            os.remove(db_name)
 
     def test_IASPEI(self):
         self._check(IASPEI, ImporterDialog.IASPEI_PATTERN,
                     ['IASPEI'], ['MS', 'mb'])
+        feature_count = self._filter_button()
+        self.assertEqual(feature_count, 0)
+        # no features with the default selections
 
     def test_ISF(self):
         self._check(ISF, ImporterDialog.ISF_PATTERN, [
@@ -59,16 +58,21 @@ class CatalogueTestCase(unittest.TestCase):
              'Ms1', 'MW', 'MLv', 'MS', 'mb1mx', 'Mb', 'MD', 'mb1', 'Muk']
         )
 
+        feature_count = self._filter_button()
+        self.assertEqual(feature_count, 174)
+
     def test_load_countries(self):
         self.eqcat.load_countries()
-        layers = layerdict()
-        self.assertIn('World Countries', layers)
+        layer = QgsMapLayerRegistry.instance().mapLayersByName(
+            'World Countries')[0]
+        self.assertEqual('World Countries', str(layer.name()))
 
     def _filter_button(self):
         btn = self.eqcat.dock.filterBtn
         QtTest.QTest.mouseClick(btn, QtCore.Qt.LeftButton)
-        events = layerdict()['Events']
-        self.assertEqual(events.featureCount(), 0)
+        events = QgsMapLayerRegistry.instance().mapLayersByName(
+            'Events')[-1]  # last layer
+        return events.featureCount()
 
 if __name__ == '__main__':
     unittest.main()
