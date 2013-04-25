@@ -73,8 +73,6 @@ class Engine(object):
         self._metadata = None
         sqlevent.listen(self._engine, "first_connect", self._connect)
         self._engine.connect()
-        while self.session is None:
-            pass
         orm.clear_mappers()
         self._create_schema_magnitudemeasure()
 
