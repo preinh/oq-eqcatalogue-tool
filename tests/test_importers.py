@@ -70,11 +70,11 @@ class ShouldImportFromISFBulletinV1(unittest.TestCase):
             BaseImporter.EVENT_SOURCE: 1,
             BaseImporter.AGENCY: 16,
             BaseImporter.ORIGIN: 126,
-            BaseImporter.MEASURE:  335})
+            BaseImporter.MEASURE:  334})
 
         measures = self.cat.session.query(catalogue.MagnitudeMeasure)
 
-        self.assertEqual(measures.count(),  335)
+        self.assertEqual(measures.count(),  334)
 
     def test_raises_parsing_failure(self):
         importer = V1(self.broken_isc, self.cat)

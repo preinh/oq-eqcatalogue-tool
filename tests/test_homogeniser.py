@@ -71,13 +71,13 @@ class AnHomogeniserShould(unittest.TestCase):
 
     def test_set_different_mus(self):
         self.homogeniser.set_scales(native="mb", target="Mw")
-        self.assertEqual(335, len(self.homogeniser.measures()))
+        self.assertEqual(334, len(self.homogeniser.measures()))
         self.assertEqual(18, len(self.homogeniser.grouped_measures().keys()))
         self.assertEqual(0, len(self.homogeniser.selected_native_measures()))
 
         self.homogeniser.set_missing_uncertainty_strategy(
             selection.MUSSetDefault, default=1)
-        self.assertEqual(335, len(self.homogeniser.measures()))
+        self.assertEqual(334, len(self.homogeniser.measures()))
         self.assertEqual(18, len(self.homogeniser.grouped_measures().keys()))
         self.assertEqual(1, len(self.homogeniser.selected_native_measures()))
 

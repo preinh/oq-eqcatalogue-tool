@@ -25,9 +25,12 @@ from sqlalchemy.exc import IntegrityError
 
 from eqcatalogue import models as catalogue
 
+from eqcatalogue.log import logger
 from eqcatalogue.importers import BaseImporter
 from eqcatalogue.exceptions import ParsingFailure
 
+
+LOG = logger(__name__)
 CATALOG_URL = 'http://www.isc.ac.uk/cgi-bin/web-db-v4'
 
 ANALYSIS_TYPES = {'a': 'automatic',
@@ -244,6 +247,8 @@ class OriginBlockState(BaseState):
 
         position = self._catalogue.position_from_latlng(float(line[36:44]),
                                                         float(line[45:54]))
+        position = "GeomFromText('POINT(%s %s)', 4326)" % (
+            float(line[45:54]), float(line[36:44]))
         fixed_position = line[54] == 'f'
         errors = (line[55:60].strip(), line[61:66].strip())
         if fixed_position or not errors[0]:
@@ -316,7 +321,16 @@ class MeasureBlockState(BaseState):
                       origin_key=origin_source_key)
         params.update(self.context['origins'][origin_source_key])
 
-        self._catalogue.session.add(catalogue.MagnitudeMeasure(**params))
+        self._catalogue.session.execute("""
+INSERT OR REPLACE INTO catalogue_magnitudemeasure(
+created_at, scale, value, standard_error, event_source,
+event_key, event_name, agency, origin_key, time, time_error, time_rms,
+semi_major_90error, semi_minor_90error, position, depth, depth_error,
+azimuth_error)
+VALUES(datetime(), :scale, :value, :standard_error, :event_source,
+:event_key, :event_name, :agency, :origin_key, :time, :time_error, :time_rms,
+:semi_major_90error, :semi_minor_90error, %s,
+:depth, :depth_error, :azimuth_error)""" % params['position'], params)
 
 
 class MeasureUKScaleBlockState(MeasureBlockState):
@@ -388,7 +402,7 @@ class Importer(BaseImporter):
         unexpected line inputs at the beginning of the file
         """
         for line_num, line in enumerate(self._file_stream, start=1):
-            if on_line_read:
+            if on_line_read is not None:
                 on_line_read(self, line_num)
             line = line.strip()
 
@@ -406,17 +420,21 @@ class Importer(BaseImporter):
                 next_state = self._state.transition_rule(line_type)
                 self._transition(next_state)
                 next_state.process_line(line)
+                if line_num % 100000 == 0:
+                    LOG.info('%dk lines processed' % (line_num / 1000))
+                    self._catalogue.session.commit()
             except IntegrityError:
                 # we can not skip an integrity error
+                LOG.warn('Measure already present. linenum %d' % line_num)
                 raise self._parsing_error(line_num)
             except (UnexpectedLine, ValueError):
                 current = self._state
                 if current.is_start() and line_type == 'junk' and allow_junk:
                     continue
                 else:
+                    LOG.warn('Unexpected line at linenum %d' % line_num)
                     self.errors.append(self._parsing_error(line_num))
                     self._state = self._initial
-                    continue
         self._catalogue.session.commit()
 
     def _parsing_error(self, line_num):

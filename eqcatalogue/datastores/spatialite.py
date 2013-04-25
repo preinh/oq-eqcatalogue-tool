@@ -26,7 +26,10 @@ from sqlalchemy import orm
 from sqlalchemy.events import event as sqlevent
 import geoalchemy
 from eqcatalogue.models import MagnitudeMeasure
+from eqcatalogue.log import logger
 
+
+LOG = logger(__name__)
 DLL_LIBRARY = "libspatialite.dll"
 DYLIB_LIBRARY = "libspatialite.dylib"
 SO_LIBRARY = "libspatialite.so.3"
@@ -55,7 +58,7 @@ class Engine(object):
         self.to_be_initialized = drop
         if memory:
             # set echo=True in debugging
-            self._engine = sqlalchemy.create_engine('sqlite://', module=sqlite, echo=True)
+            self._engine = sqlalchemy.create_engine('sqlite://', module=sqlite)
             self.to_be_initialized = True
         else:
             filename = filename or self.DEFAULT_FILENAME
@@ -94,16 +97,16 @@ class Engine(object):
         metadata needed by geoalchemy to build the orm (s. #_setup
         method)"""
 
-        metadata = self._metadata
-
         measure = sqlalchemy.Table(
-            'catalogue_magnitudemeasure', metadata,
+            'catalogue_magnitudemeasure', self._metadata,
             sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True),
             sqlalchemy.Column('created_at',
                               sqlalchemy.DateTime, default=datetime.now()),
 
             sqlalchemy.Column('event_source',
-                              sqlalchemy.String(255), nullable=False),
+                              sqlalchemy.String(255),
+                              nullable=False,
+                              index=True),
 
             sqlalchemy.Column('event_key',
                               sqlalchemy.String(), nullable=False, index=True),
@@ -127,18 +130,27 @@ class Engine(object):
                               nullable=True),
             sqlalchemy.Column('semi_major_90error',
                               sqlalchemy.Float(), nullable=True),
-            sqlalchemy.Column('depth', sqlalchemy.Float(), nullable=True),
+            sqlalchemy.Column('depth', sqlalchemy.Float(),
+                              nullable=True, index=True),
             sqlalchemy.Column('depth_error',
                               sqlalchemy.Float(), nullable=True),
             sqlalchemy.Column('azimuth_error',
                               sqlalchemy.Float(),
                               nullable=True),
-            sqlalchemy.Column('scale', sqlalchemy.String()),
+            sqlalchemy.Column('scale', sqlalchemy.String(), index=True),
             sqlalchemy.Column('value', sqlalchemy.Float(), index=True),
             sqlalchemy.Column('standard_error',
                               sqlalchemy.Float(),
-                              nullable=True))
+                              nullable=True,
+                              index=True))
 
+        sqlalchemy.schema.UniqueConstraint(
+            measure.c.event_source,
+            measure.c.event_key,
+            measure.c.origin_key,
+            measure.c.time,
+            measure.c.agency,
+            measure.c.scale)
         orm.Mapper(MagnitudeMeasure, measure, properties={
             'position': geoalchemy.GeometryColumn(measure.c.position)})
         geoalchemy.GeometryDDL(measure)
@@ -203,9 +215,13 @@ def _load_extension(session):
     Check your spatialite and pysqlite2 installation
     Errors %s""" % exceptions)
 
+    LOG.debug("Spatialite extension loaded")
     # spatialite needs this initialization on the first usage. This
     # should be probably go into a package installation script
     try:
+        session.execute("select st_x(GeomFromText('POINT(5 5)', 4326))")
         session.execute('select * from spatial_ref_sys')
+        LOG.debug("Spatialite already present")
     except sqlite.OperationalError:
         _initialize_spatialite_db(session)
+        LOG.debug("Spatialite initialized")
