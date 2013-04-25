@@ -13,11 +13,14 @@ from ui_importer_dialog import Ui_ImporterDialog
 
 
 class ImporterDialog(QDialog, Ui_ImporterDialog):
+    ISF_PATTERN = 'Isf file (*.txt *.html)'
+    IASPEI_PATTERN = 'Iaspei file (*.csv)'
+
     def __init__(self, iface, parent=None):
         QDialog.__init__(self)
         self.iface = iface
         self.setupUi(self)
-        self.file_filter = 'Isf file (*.txt *.html)' + ';; Iaspei file (*.csv)'
+        self.file_filter = self.ISF_PATTERN + ';; ' + self.IASPEI_PATTERN
         self.import_file_path = None
         self.save_file_path = None
         self.selectCatalogueLineEdit.textChanged.connect(
@@ -44,8 +47,7 @@ class ImporterDialog(QDialog, Ui_ImporterDialog):
         self.selectDbLineEdit.setText(self.save_file_path)
 
     def toggle_import_btn(self):
-        if (self.import_file_path is not None and
-                    self.save_file_path is not None):
+        if self.import_file_path and self.save_file_path:
             self.importBtn.setEnabled(True)
         else:
             self.importBtn.setEnabled(False)

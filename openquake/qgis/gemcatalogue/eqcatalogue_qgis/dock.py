@@ -10,7 +10,7 @@ from qgis.core import *
 from qgis.gui import *
 
 from ui_dock import Ui_Dock
-from gemcatalogue import log_msg
+from openquake.qgis.gemcatalogue import log_msg
 from collections import namedtuple
 from MapTools import PolygonDrawer
 
@@ -55,15 +55,11 @@ class GemDock(QDockWidget, Ui_Dock):
         self.date_range.setLowValue(QDate(1970, 01, 01))
         self.date_range.setHighValue(QDate.currentDate())
 
-    @pyqtSlot()
-    def on_filterBtn_clicked(self):
-        selectedItems = self.agenciesCombo.checkedItems()
-
     def update_selectDbComboBox(self, db_sel):
         if db_sel is not None and db_sel != '':
             if self.selectDbComboBox.count() == 0:
                 self.selectDbComboBox.addItem(db_sel)
-                self.gemcatalogue.load_basemap()
+                self.gemcatalogue.load_data()
             else:
                 item_index = self.selectDbComboBox.findText(db_sel)
                 self.selectDbComboBox.blockSignals(True)
