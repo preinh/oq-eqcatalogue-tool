@@ -420,7 +420,7 @@ class Importer(BaseImporter):
                 next_state = self._state.transition_rule(line_type)
                 self._transition(next_state)
                 next_state.process_line(line)
-                if line_num % 100000 == 0:
+                if line_num % 250000 == 0:
                     LOG.info('%dk lines processed' % (line_num / 1000))
                     self._catalogue.session.commit()
             except IntegrityError:

@@ -151,7 +151,7 @@ class GroupMeasuresBySequentialClustering(object):
         self.time_distance_fn = (time_distance_fn or
                                  MagnitudeMeasure.time_distance)
         self.space_distance_fn = (space_distance_fn or
-                                 MagnitudeMeasure.space_distance)
+                                  MagnitudeMeasure.space_distance)
         self.magnitude_window = magnitude_window
         self.magnitude_distance_fn = magnitude_distance_fn
         if self.magnitude_window and not self.magnitude_distance_fn:
