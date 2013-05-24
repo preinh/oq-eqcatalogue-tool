@@ -22,15 +22,15 @@ class ShoudPlotEMSR(unittest.TestCase):
         native_values = np.random.uniform(3., 8.5, points)
         native_sigmas = np.random.uniform(0.02, 0.2, points)
         target_values = p2_0 + p2_1 * native_values +\
-          p2_2 * (native_values ** 2.)
+                        p2_2 * (native_values ** 2.)
         target_values += np.random.normal(0., 1, points)
         target_sigmas = np.random.uniform(0.025, 0.2, points)
         native_measures = [models.MagnitudeMeasure(
-            agency=None, event=None, origin=None,
+            position=None, time=None,
             scale='Mtest', value=v[0], standard_error=v[1])
             for v in zip(native_values, native_sigmas)]
         target_measures = [models.MagnitudeMeasure(
-            agency=None, event=None, origin=None,
+            position=None, time=None,
             scale='Mtest', value=v[0], standard_error=v[1])
             for v in zip(target_values, target_sigmas)]
 

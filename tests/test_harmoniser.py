@@ -19,7 +19,7 @@ import unittest
 from eqcatalogue.harmoniser import Harmoniser, ConversionFormula
 from eqcatalogue.regression import (LinearModel,
                                     EmpiricalMagnitudeScalingRelationship)
-from eqcatalogue.models import MagnitudeMeasure, Event, CatalogueDatabase
+from eqcatalogue.models import MagnitudeMeasure, CatalogueDatabase
 from tests.test_filtering import load_fixtures
 from eqcatalogue.filtering import C
 
@@ -27,21 +27,20 @@ from eqcatalogue.filtering import C
 def generate_measures():
     measures = []
 
-    def append_fixture_measures(events, scale, mfactor, count=10):
+    def append_fixture_measures(scale, mfactor, count=10):
         for i in range(0, count):
             measures.append(
                 MagnitudeMeasure(
-                    agency=None, event=events[i], origin=None,
+                    time=None,
+                    position=None,
                     scale=scale,
                     value=(i + 1) * mfactor,
                     standard_error=0.2))
 
-    events = [Event(source_key=i, eventsource=None,
-        name="test event %d" % i) for i in range(0, 10)]
-
-    append_fixture_measures(events, "mb", 1.0)
-    append_fixture_measures(events, "Ml", 3.0)
-    append_fixture_measures(events, "Mw", 2.0)
+    # order matters!!!
+    append_fixture_measures("mb", 1.0)  # from 1 to 10
+    append_fixture_measures("Ml", 3.0)  # from 3 to 30
+    append_fixture_measures("Mw", 2.0)  # from 2 to 20
 
     return measures
 
@@ -93,21 +92,25 @@ class HarmoniserWithModelTestCase(HarmoniserWithFixturesAbstractTestCase):
 
     def setUp(self):
         super(HarmoniserWithModelTestCase, self).setUp()
+
+        # mb measures
         native_measures_1 = self.measures[0:self.number_of_measures / 3]
+
+        # Ml measures
         native_measures_2 = self.measures[
             self.number_of_measures / 3:2 * self.number_of_measures / 3]
+
+        # Mw measures
         target_measures = self.measures[2 * self.number_of_measures / 3:]
         emsr = EmpiricalMagnitudeScalingRelationship(
             native_measures=native_measures_1,
             target_measures=target_measures)
-        self.a_model, _ = emsr.apply_regression_model(
-            LinearModel)
+        self.a_model, _ = emsr.apply_regression_model(LinearModel)
 
         emsr = EmpiricalMagnitudeScalingRelationship(
             native_measures=native_measures_2,
             target_measures=target_measures)
-        self.ya_model, _ = emsr.apply_regression_model(
-            LinearModel)
+        self.ya_model, _ = emsr.apply_regression_model(LinearModel)
 
     def test_one_model(self):
         """
@@ -330,9 +333,10 @@ class HarmoniserWithDifferentTargetScales(
 
         for measure in self.measures:
             converted_measure = result.converted[measure]
+            print measure, converted_measure
             if measure.scale == self.a_native_scale:
-                self.assertAlmostEqual(converted_measure.value,
-                                       measure.value * 8)
+                self.assertAlmostEqual(
+                    converted_measure.value, measure.value * 8)
             elif measure.scale == self.target_scale:
                 self.assertAlmostEqual(converted_measure.value, measure.value)
             elif measure.scale == self.ya_native_scale:

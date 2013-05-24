@@ -52,7 +52,7 @@ class GroupMeasuresByEventSourceKey(object):
         """
         groups = {}
         for m in measures:
-            key = m.event.source_key
+            key = m.event_key
             if not key in groups:
                 groups[key] = []
             groups[key].append(m)
@@ -79,9 +79,7 @@ class GroupMeasuresByHierarchicalClustering(object):
     """
 
     def __init__(self, key_fn=None, args=None):
-        self._clustering_args = {'t': 200,
-            'criterion': 'distance'
-            }
+        self._clustering_args = {'t': 200, 'criterion': 'distance'}
         if args:
             self._clustering_args.update(args)
         self._key_fn = key_fn or GroupMeasuresByHierarchicalClustering.get_time
@@ -92,7 +90,7 @@ class GroupMeasuresByHierarchicalClustering(object):
         return the origin time of the measure, a float with the unix
         timestamp (plus milliseconds)
         """
-        return float(measure.origin.time.strftime('%s'))
+        return float(measure.time.strftime('%s'))
 
     def group_measures(self, measures):
         """
@@ -153,7 +151,7 @@ class GroupMeasuresBySequentialClustering(object):
         self.time_distance_fn = (time_distance_fn or
                                  MagnitudeMeasure.time_distance)
         self.space_distance_fn = (space_distance_fn or
-                                 MagnitudeMeasure.space_distance)
+                                  MagnitudeMeasure.space_distance)
         self.magnitude_window = magnitude_window
         self.magnitude_distance_fn = magnitude_distance_fn
         if self.magnitude_window and not self.magnitude_distance_fn:

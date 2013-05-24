@@ -18,8 +18,10 @@ Module :mod:`eqcatalogue.importers.base` defines base classes for different
 kinds of :class:` earthquake catalogue readers <CatalogueReader>`.
 """
 
+import collections
+from sqlalchemy import distinct, func
+from eqcatalogue.models import MagnitudeMeasure
 import abc
-from eqcatalogue import models
 
 
 def store_events(cls, stream, cat, **kwargs):
@@ -40,30 +42,32 @@ class BaseImporter(object):
 
     EVENT_SOURCE = 'EventSources_Created'
     AGENCY = 'Agencies_Created'
-    EVENT = 'Events_Created'
     ORIGIN = 'Origins_Created'
     MEASURE = 'Measures_Created'
-    ERRORS = 'Errors'
 
     def __init__(self, file_stream, db_catalogue):
         self._file_stream = file_stream
         self._catalogue = db_catalogue
 
-        self._catalogue.session.execute("PRAGMA synchronous=OFF")
-        self._catalogue.session.execute("PRAGMA count_changes=OFF")
-        self._catalogue.session.execute("PRAGMA journal_mode=OFF")
-        self._catalogue.session.execute("PRAGMA temp_store=OFF")
-        self._catalogue.session.autocommit = False
-        self._catalogue.session.autoflush = False
+        s = self._catalogue.session
+        s.execute("PRAGMA synchronous=OFF")
+        s.execute("PRAGMA count_changes=OFF")
+        s.execute("PRAGMA journal_mode=OFF")
+        s.execute("PRAGMA temp_store=OFF")
+        s.autocommit = False
+        s.autoflush = False
 
-        self._catalogue.session.query(models.EventSource).all()
+        self._before = collections.Counter(
+            {self.EVENT_SOURCE: self.counter('event_source'),
+             self.AGENCY: self.counter('agency'),
+             self.ORIGIN: self.counter('origin_key'),
+             self.MEASURE: self.counter('id')})
 
-        self._summary = {self.EVENT_SOURCE: 0,
-                         self.AGENCY: 0,
-                         self.EVENT: 0,
-                         self.ORIGIN: 0,
-                         self.MEASURE: 0,
-                         self.ERRORS: []}
+        self.errors = []
+
+    def counter(self, field):
+        return self._catalogue.session.query(
+            func.count(distinct(getattr(MagnitudeMeasure, field)))).scalar()
 
     @abc.abstractmethod
     def store(self, **kwargs):
@@ -75,17 +79,16 @@ class BaseImporter(object):
         :returns: the summary of the inserted/updated catalogue data
         """
 
-    @abc.abstractmethod
-    def update_summary(self):
-        """
-        Update the summary key values.
-        """
-
     @property
     def summary(self):
         """
         Returns a dictionary where each key and associated value
         represents the number of entities, stored in the catalogue db.
         """
+        summary = collections.Counter(
+            {self.EVENT_SOURCE: self.counter('event_source'),
+             self.AGENCY: self.counter('agency'),
+             self.ORIGIN: self.counter('origin_key'),
+             self.MEASURE: self.counter('id')})
 
-        return self._summary
+        return dict(summary - self._before)
