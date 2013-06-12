@@ -4,8 +4,9 @@ OQ-QGIS
 Dependencies
 --------------------------------------------------------------------------------
 
-* Python Qt4 bindings: python-qt4, pyqt4-dev-tools .
-* Python bindings for QGIS: python-qgis, python-qgis-common .
+* Python Qt4 bindings: python-qt4, pyqt4-dev-tools
+* Python bindings for QGIS: python-qgis, python-qgis-common,
+  python-qscintilla2
 
 Test Drive
 --------------------------------------------------------------------------------

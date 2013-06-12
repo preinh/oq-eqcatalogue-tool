@@ -3,7 +3,7 @@ import sys
 import unittest
 
 from gemplotterdialog import GEMPlotterDialog
-from PyQt4 import QtGui, QtCore, QtTest
+from PyQt4 import QtGui
 
 FRAGMODEL = os.path.expanduser('~/oq-nrmllib/examples/fragm_d.xml')
 
