@@ -199,7 +199,7 @@ class EqCatalogue:
             [str(x) for x in mscales_selected])
         filter_mvalues = filtering.C(magnitude__gt=mag_range.low_value,
                                      magnitude__lt=mag_range.high_value)
-        filter_dvalues = filtering.C(time_between=date_range)
+        filter_dvalues = filtering.C(time__between=date_range)
 
         results = filter_agency & filter_mscales & \
             filter_mvalues & filter_dvalues
@@ -231,12 +231,12 @@ class EqCatalogue:
         ])
         features = []
         for i, row in enumerate(data):
-            x, y = row.origin.position_as_tuple()
+            x, y = row.position_as_tuple()
             feat = QgsFeature()
             geom = QgsGeometry.fromPoint(QgsPoint(x, y))
             feat.setGeometry(geom)
             feat.setAttributes([QVariant(str(row.agency)),
-                                QVariant(row.event.name),
+                                QVariant(row.event_name),
                                 QVariant(str(row))])
             features.append(feat)
         provider.addFeatures(features)

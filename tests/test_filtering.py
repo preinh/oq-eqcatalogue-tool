@@ -264,4 +264,4 @@ class TestCriteriaFactory(unittest.TestCase):
             agency__in=['ISC', 'NEIC'], magnitude__gt=5)))
 
         self.assertRaises(exceptions.InvalidCriteria,
-                filtering.C, kwargs={'wtf': 3})
+                          filtering.C, kwargs={'wtf': 3})

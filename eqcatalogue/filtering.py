@@ -433,7 +433,7 @@ CRITERIA_MAP = {
     'magnitude__lt': WithMagnitudeLower,
     'depth__gt': WithDepthGreater,
     'depth__lt': WithDepthLower,
-    'depth_between': DepthBetween
+    'depth__between': DepthBetween
 }
 
 CRITERIA_AVAILABLES = CRITERIA_MAP.keys()
