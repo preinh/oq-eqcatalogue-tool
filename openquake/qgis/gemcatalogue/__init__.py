@@ -50,16 +50,19 @@ def icon():
 def qgisMinimumVersion():
     return "1.8"
 
+
 def author():
     return "GEM Foundation"
+
 
 def email():
     return "devops@openquake.org"
 
+
 def log_msg(msg):
     QgsMessageLog.logMessage(msg, name())
 
+
 def classFactory(iface):
-    # load EqCatalogue class from file EqCatalogue
-    from gemcatalogue.eqcatalogue_qgis.catalogue import EqCatalogue
+    from openquake.qgis.gemcatalogue.catalogue import EqCatalogue
     return EqCatalogue(iface)

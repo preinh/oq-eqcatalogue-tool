@@ -17,7 +17,7 @@ from MapTools import PolygonDrawer
 Range = namedtuple('Range', 'low_value high_value')
 
 
-class GemDock(QDockWidget, Ui_Dock):
+class Dock(QDockWidget, Ui_Dock):
     def __init__(self, iface, parent=None, gemcatalogue=None):
         QDockWidget.__init__(self, parent)
         self.iface = iface
@@ -59,7 +59,7 @@ class GemDock(QDockWidget, Ui_Dock):
         if db_sel is not None and db_sel != '':
             if self.selectDbComboBox.count() == 0:
                 self.selectDbComboBox.addItem(db_sel)
-                self.gemcatalogue.load_data()
+                self.gemcatalogue.load_countries()
             else:
                 item_index = self.selectDbComboBox.findText(db_sel)
                 self.selectDbComboBox.blockSignals(True)
@@ -161,13 +161,3 @@ class GemDock(QDockWidget, Ui_Dock):
         self.polygonDrawer = None
 
         QWidget.deleteLater(self, *args)
-
-    def showRubberBands(self, show=True):
-        """ show/hide all the rubberbands """
-        if self.polygonDrawer.isEmittingPoints:
-            self.polygonDrawer.reset()
-        else:
-            if show:
-                self.polygonDrawer.rubberBand.show()
-            else:
-                self.polygonDrawer.rubberBand.hide()

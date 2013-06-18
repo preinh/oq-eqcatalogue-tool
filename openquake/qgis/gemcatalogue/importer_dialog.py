@@ -9,7 +9,7 @@ from PyQt4.QtGui import *
 from qgis.core import *
 from qgis.gui import *
 
-from ui_importer_dialog import Ui_ImporterDialog
+from openquake.qgis.gemcatalogue.ui_importer_dialog import Ui_ImporterDialog
 
 
 class ImporterDialog(QDialog, Ui_ImporterDialog):
