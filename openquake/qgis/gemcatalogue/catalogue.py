@@ -38,7 +38,7 @@ import resources_rc
 # Import the code for the dialog
 from openquake.qgis.gemcatalogue.dock import Dock
 from openquake.qgis.gemcatalogue.importer_dialog import ImporterDialog
-
+from openquake.qgis.gemcatalogue.download_exposure import ExposureDownloader
 from eqcatalogue import CatalogueDatabase, filtering
 from eqcatalogue.importers import V1, Iaspei, store_events
 import os
@@ -46,7 +46,7 @@ import os
 FMT_MAP = {ImporterDialog.ISF_PATTERN: V1,
            ImporterDialog.IASPEI_PATTERN: Iaspei}
 
-OQ_PLATFORM = "oq-platform-mn.gem.lan"
+OQ_PLATFORM = "http://193.206.66.163"
 
 
 def to_year(value):
@@ -156,40 +156,23 @@ class EqCatalogue:
 
     def show_exposure(self):
 
-        crsSrc = self.iface.mapCanvas().mapRenderer().destinationCrs()
-        crsDest = QgsCoordinateReferenceSystem(4326)  # WGS 84 / UTM zone 33N
-        xform = QgsCoordinateTransform(crsSrc, crsDest)
-
-        extent = self.iface.mapCanvas().extent()
-        extent = xform.transform(extent)
+        crs = self.iface.mapCanvas().mapRenderer().destinationCrs()
+        xform = QgsCoordinateTransform(crs, QgsCoordinateReferenceSystem(4326))
+        extent = xform.transform(self.iface.mapCanvas().extent())
         lon_min, lon_max = extent.xMinimum(), extent.xMaximum()
         lat_min, lat_max = extent.yMinimum(), extent.yMaximum()
 
         # download data
-        c = httplib.HTTPSConnection(OQ_PLATFORM)
-        c.request("GET", '/exposure/population.json?lat1=%s&lng1=%s&'
-                  'lat2=%s&lng2=%s&output_type=csv' %
-                  (lat_min, lon_min, lat_max, lon_max))
-        response = c.getresponse()
-        assert response.status == 200, response.status
-
-        # save csv on a temporary file
-        fd, fname = tempfile.mkstemp(suffix='.csv')
-        os.close(fd)
-        # TODO: the server should give the size of the data
-        with open(fname, 'w') as csv:
-            while True:
-                data = response.read(10000)
-                if not data:
-                    break
-                csv.write(data)
+        ed = ExposureDownloader(OQ_PLATFORM)
+        ed.login('bob', 'tomcat')
+        fname = ed.download(lat_min, lon_min, lat_max, lon_max)
         uri = 'file://%s?delimiter=%s&xField=%s&yField=%s&crs=epsg:4326&' \
             'skipLines=25&trimFields=yes' % (fname, ',', 'lat', 'lon')
         try:
             vlayer = QgsVectorLayer(uri, 'exposure_export', 'delimitedtext')
             QgsMapLayerRegistry.instance().addMapLayer(vlayer)
         finally:
-            return  # os.remove(fname)
+            os.remove(fname)
 
     def update_map(self, agencies_selected, mscales_selected, mag_range,
                    date_range):
