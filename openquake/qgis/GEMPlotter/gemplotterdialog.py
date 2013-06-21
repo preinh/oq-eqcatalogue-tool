@@ -65,8 +65,9 @@ class GEMPlotterDialog(QtGui.QDialog):
             return
         self.axes.clear()
         taxonomy = str(self.ui.taxonomyCombo.itemText(taxonomy_idx))
-        for state, y in zip(self.states, self.ff[taxonomy]):
-            self.axes.plot(self.iml['imls'], y, label=state)
+        iml, ys = self.ff[taxonomy]
+        for state, y in zip(self.states, ys):
+            self.axes.plot(iml['imls'], y, label=state)
         self.axes.legend(loc='upper left')
         self.canvas.draw()
         self.ui.saveButton.setEnabled(True)
@@ -84,8 +85,9 @@ class GEMPlotterDialog(QtGui.QDialog):
 
     def _fillCombo(self):
         p = iter(FragilityModelParser(self.modelfile))
-        kind, self.iml, self.states = next(p)
-        self.ff = dict((taxonomy, y) for taxonomy, y, no_damage_limit in p)
+        kind, self.states = next(p)
+        self.ff = dict((taxonomy, (iml, y))
+                       for taxonomy, iml, y, no_damage_limit in p)
         self.ui.taxonomyCombo.clear()
         self.ui.taxonomyCombo.addItems(['Taxonomy'] + self.ff.keys())
         self.ui.taxonomyCombo.setEnabled(True)

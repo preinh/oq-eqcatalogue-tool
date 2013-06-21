@@ -25,9 +25,12 @@ from sqlalchemy.exc import IntegrityError
 
 from eqcatalogue import models as catalogue
 
+from eqcatalogue.log import logger
 from eqcatalogue.importers import BaseImporter
 from eqcatalogue.exceptions import ParsingFailure
 
+
+LOG = logger(__name__)
 CATALOG_URL = 'http://www.isc.ac.uk/cgi-bin/web-db-v4'
 
 ANALYSIS_TYPES = {'a': 'automatic',
@@ -39,7 +42,7 @@ LOCATION_METHODS = {
     'p': 'pattern recognition',
     'g': 'ground truth',
     'o': 'other'
-    }
+}
 
 EVENT_TYPES = {
     'uk': 'unknown',
@@ -60,7 +63,9 @@ EVENT_TYPES = {
     'kn': 'known nuclear expl.',
     'sn': 'suspected nuclear explosion',
     'ls': 'landslide'
-    }
+}
+
+
 UNKNOWN_EVENT_TYPE_DESCRIPTION = "unknown event type"
 
 ERR_MSG = ('The line %s violates the format, please check the related format'
@@ -84,16 +89,16 @@ class BaseState(object):
     and calculate the next state based on the current event
     """
 
-    def __init__(self):
+    def __init__(self, context=None):
         self._catalogue = None
+        self.context = context
 
-    def setup(self, cat, context):
+    def setup(self, cat):
         """
         Save the catalogue `cat` to allow further data insert
         operation
         """
         self._catalogue = cat
-        self._context = context
 
     def is_start(self):
         """
@@ -128,7 +133,7 @@ class BaseState(object):
         proper model object. It returns a dictionary with the partial
         summary of this import phase
         """
-        return {}
+        pass
 
 
 class StartState(BaseState):
@@ -137,28 +142,20 @@ class StartState(BaseState):
     """
     def __init__(self):
         super(StartState, self).__init__()
-        self.eventsource = None
+        self.started = None
 
     def is_start(self):
-        return self.eventsource is None
+        return self.started is None
 
     def _get_next_state(self, line_type):
         if line_type == 'catalogue_header':
             return self
-        elif line_type == 'event_header' and self.eventsource:
-            return EventState(self.eventsource)
+        elif line_type == 'event_header' and self.started:
+            return EventState(self.context)
 
     def process_line(self, line):
-        self.eventsource, created = self._save_eventsource(line)
-        return {Importer.EVENT_SOURCE: 1 if created else 0}
-
-    def _save_eventsource(self, name):
-        """
-        Save the EventSource with `name` if it does not exist in the
-        database
-        """
-        return self._catalogue.get_or_create(catalogue.EventSource,
-                                             {'name': name})
+        self.context['current_event_source'] = line
+        self.started = True
 
 
 class EventState(BaseState):
@@ -166,14 +163,10 @@ class EventState(BaseState):
     When data about a seismic event arrives, the fsm jumps to an Event
     State
     """
-    def __init__(self, eventsource):
-        super(EventState, self).__init__()
-        self._eventsource = eventsource
-        self.event = None
-
     def _get_next_state(self, line_type):
-        if line_type == 'origin_header' and self.event:
-            return OriginHeaderState(self.event)
+        if (line_type == 'origin_header' and
+            'current_event' in self.context):
+            return OriginHeaderState(self.context)
 
     @classmethod
     def match(cls, line):
@@ -184,24 +177,9 @@ class EventState(BaseState):
         return event_regexp.match(line)
 
     def process_line(self, line):
-        result = self.__class__.match(line)
-        created = self._save_event(**result.groupdict())
-        created_nr = 1 if created else 0
-        return {Importer.EVENT: created_nr}
-
-    def _save_event(self, source_event_id, name):
-        """
-        Save the Event with `name` and `source_event_id` if it does
-        not exist in the database. If it exists, the event name will
-        be updated to `name`
-        """
-        self.event, created = self._catalogue.get_or_create(
-            catalogue.Event,
-            {'source_key': source_event_id,
-             'eventsource': self._eventsource})
-        if self.event.name != name:
-            self.event.name = name
-        return created
+        result = self.__class__.match(line).groupdict()
+        source_event_id, name = result['source_event_id'], result['name']
+        self.context['current_event'] = (source_event_id, name)
 
 
 class OriginHeaderState(BaseState):
@@ -210,58 +188,33 @@ class OriginHeaderState(BaseState):
     information about the origins and the agencies related to the
     current parsed event.
     """
-    def __init__(self, event):
-        super(OriginHeaderState, self).__init__()
-        self.event = event
-
     def _get_next_state(self, line_type):
         if line_type == 'origin_block':
-            return OriginBlockState(self.event)
+            return OriginBlockState(self.context)
 
 
 class MeasureHeaderState(BaseState):
     """
     Parse the Header of a Measure Block.
     """
-    def __init__(self, event, metadata):
-        super(MeasureHeaderState, self).__init__()
-        self.event = event
-        self.metadata = metadata
-
     def _get_next_state(self, line_type):
         if line_type == 'measure_block':
-            return MeasureBlockState(self.event, self.metadata)
+            return MeasureBlockState(self.context)
         elif line_type == 'measure_unknown_scale_block':
-            return MeasureUKScaleBlockState(self.event, self.metadata)
+            return MeasureUKScaleBlockState(self.context)
 
 
 class OriginBlockState(BaseState):
     """
     Parse the Origin Block
     """
-    def __init__(self, event):
-        super(OriginBlockState, self).__init__()
-        self.event = event
-        self.agency = None
-        self.origin = None
-        self.metadata = None
-
     def _get_next_state(self, line_type):
         if line_type == 'measure_header':
-            return MeasureHeaderState(self.event, self.metadata)
+            return MeasureHeaderState(self.context)
         elif line_type == 'origin_block':
-            return OriginBlockState(self.event)
+            return OriginBlockState(self.context)
         elif line_type == 'event_header':
-            return EventState(self.event.eventsource)
-
-    def _process_agency(self, line):
-        """
-        Extract the authorship, save and return the current parsed
-        agency
-        """
-        author = line[118:127].strip()
-        self.agency, agency_created = self._save_agency(author)
-        return agency_created
+            return EventState(self.context)
 
     @staticmethod
     def _process_time(line):
@@ -276,7 +229,7 @@ class OriginBlockState(BaseState):
         datetime_components = [int(d) for d in datetime_components]
         return datetime.datetime(*datetime_components)
 
-    def _process_origin(self, line):
+    def process_line(self, line):
         """
         Extract the origin data, save and return the current parsed
         origin
@@ -294,6 +247,8 @@ class OriginBlockState(BaseState):
 
         position = self._catalogue.position_from_latlng(float(line[36:44]),
                                                         float(line[45:54]))
+        position = "GeomFromText('POINT(%s %s)', 4326)" % (
+            float(line[45:54]), float(line[36:44]))
         fixed_position = line[54] == 'f'
         errors = (line[55:60].strip(), line[61:66].strip())
         if fixed_position or not errors[0]:
@@ -317,114 +272,24 @@ class OriginBlockState(BaseState):
         else:
             depth_error = float(line[78:82])
 
-        self.origin = self._save_origin(
-            line[128:136].strip(),
+        self.context['origins'][line[128:136].strip()] = dict(
             time=time, time_error=time_error, time_rms=time_rms,
             position=position, semi_major_90error=semi_major_90error,
             semi_minor_90error=semi_minor_90error, depth=depth,
             depth_error=depth_error, azimuth_error=azimuth_error)
-        return True
-
-    def _process_metadata(self, line):
-        """
-        Extract origin metadata and save them in the field `metadata`
-        """
-        strike = None if not line[67:70].strip() else int(line[67:70])
-        if line[83:87].strip():
-            phases = int(line[83:87])
-        else:
-            phases = None
-        stations_string = line[88:92].strip()
-
-        if stations_string:
-            stations = int(stations_string)
-        else:
-            stations = None
-
-        dist1 = None if not line[97:103].strip() else float(line[97:103])
-        dist2 = None if not line[104:110].strip() else float(line[104:110])
-
-        analysis_type_str = line[111].strip()
-        if analysis_type_str:
-            analysis_type = ANALYSIS_TYPES[analysis_type_str]
-        else:
-            analysis_type = None
-        location_method_str = line[113].strip()
-        if location_method_str:
-            location_method = LOCATION_METHODS[location_method_str]
-        else:
-            location_method = None
-        event_type = line[115:117].strip()
-        if not event_type:
-            event_type = None
-        else:
-            event_type = EVENT_TYPES.get(
-                event_type, UNKNOWN_EVENT_TYPE_DESCRIPTION)
-
-        self.metadata = {'strike': strike,
-                         'phases': phases,
-                         'stations': stations,
-                         'distance_to_closest_station': dist1,
-                         'distance_to_furthest_station': dist2,
-                         'analysis_type': analysis_type,
-                         'location_method': location_method,
-                         'event_type': event_type
-                         }
-
-    def process_line(self, line):
-        agency_created = self._process_agency(line)
-        origin_created = self._process_origin(line)
-        self._process_metadata(line)
-
-        return {
-            Importer.AGENCY: 1 if agency_created else 0,
-            Importer.ORIGIN: 1 if origin_created else 0}
-
-    def _save_agency(self, author):
-        """
-        Save agency with name == `author` if it does not exist.
-        Otherwise, it returns the agency with name == `author` stored
-        into the db
-        """
-        agency = self._catalogue.get_or_create(
-            catalogue.Agency,
-            {'source_key': author,
-             'eventsource': self.event.eventsource})
-        self._context['agencies'][author] = agency
-        return agency
-
-    def _save_origin(self, source_key, **kwargs):
-        """
-        Save the origin with `source_key` and the remaining kwargs if
-        it does not exist. Otherwise, it returns the pre-existing
-        origin with `source_key` stored into the catalogue
-        """
-
-        origin = self._catalogue.get_or_create(
-            catalogue.Origin,
-            {'source_key': source_key,
-             'eventsource': self.event.eventsource},
-            kwargs)[0]
-        self._context['origins'][source_key] = origin
-        return origin
 
 
 class MeasureBlockState(BaseState):
     """
     When a Measure Block is found the fsm jumps to this state
     """
-    def __init__(self, event, metadata):
-        super(MeasureBlockState, self).__init__()
-        self.event = event
-        self.metadata = metadata
-
     def _get_next_state(self, line_type):
         if line_type == 'event_header':
-            return EventState(self.event.eventsource)
+            return EventState(self.context)
         elif line_type == 'measure_block':
-            return MeasureBlockState(self.event, self.metadata)
+            return MeasureBlockState(self.context)
         elif line_type == 'measure_unknown_scale_block':
-            return MeasureUKScaleBlockState(self.event, self.metadata)
+            return MeasureUKScaleBlockState(self.context)
 
     def process_line(self, line):
         scale = line[0:5].strip()
@@ -435,46 +300,37 @@ class MeasureBlockState(BaseState):
 
         value = float(line[6:11])
         if line[11:14].strip():
-            standard_magnitude_error = float(line[11:14])
+            standard_error = float(line[11:14])
         else:
-            standard_magnitude_error = None
-        if line[15:19].strip():
-            stations = int(line[15:19])
-        else:
-            stations = None
+            standard_error = None
         agency_name = line[19:29].strip()
         origin_source_key = line[30:38].strip()
+        self._save_measure(
+            agency_name, scale, value, standard_error, origin_source_key)
 
-        created = self._save_measure(
-            agency_name=agency_name,
-            origin_source_key=origin_source_key,
-            scale=scale,
-            value=value,
-            standard_error=standard_magnitude_error)
-        self.metadata['stations'] = stations
-        return {Importer.MEASURE: 1 if created else 0}
+    def _save_measure(self,
+                      agency_name, scale, value, standard_error,
+                      origin_source_key):
+        params = dict(event_source=self.context['current_event_source'],
+                      event_key=self.context['current_event'][0],
+                      event_name=self.context['current_event'][1],
+                      agency=agency_name,
+                      scale=scale,
+                      value=value,
+                      standard_error=standard_error,
+                      origin_key=origin_source_key)
+        params.update(self.context['origins'][origin_source_key])
 
-    def _save_measure(self, agency_name, origin_source_key,
-                      scale, value, standard_error):
-        """
-        Save (if necessary) the measure and the associated agency (if
-        it does not exist).
-        """
-        agency = self._context['agencies'].get(
-            'agency_name',
-            self._catalogue.get_or_create(
-                catalogue.Agency,
-                {'source_key': agency_name,
-                 'eventsource': self.event.eventsource})[0])
-        origin = self._context['origins'][origin_source_key]
-
-        _, created = self._catalogue.get_or_create(
-            catalogue.MagnitudeMeasure,
-            {'event': self.event, 'origin': origin,
-             'agency': agency, 'scale': scale},
-             {'value': value,
-              'standard_error': standard_error})
-        return created
+        self._catalogue.session.execute("""
+INSERT OR REPLACE INTO catalogue_magnitudemeasure(
+created_at, scale, value, standard_error, event_source,
+event_key, event_name, agency, origin_key, time, time_error, time_rms,
+semi_major_90error, semi_minor_90error, position, depth, depth_error,
+azimuth_error)
+VALUES(datetime(), :scale, :value, :standard_error, :event_source,
+:event_key, :event_name, :agency, :origin_key, :time, :time_error, :time_rms,
+:semi_major_90error, :semi_minor_90error, %s,
+:depth, :depth_error, :azimuth_error)""" % params['position'], params)
 
 
 class MeasureUKScaleBlockState(MeasureBlockState):
@@ -498,14 +354,12 @@ class MeasureUKScaleBlockState(MeasureBlockState):
         scale = 'Muk'
         result = MeasureUKScaleBlockState.match(line)
         data = result.groupdict()
-        created = self._save_measure(
+        self._save_measure(
             agency_name=data['agency'],
             origin_source_key=data['origin'],
             scale=scale,
             value=data['val'],
             standard_error=data.get('error'))
-        self.metadata['stations'] = data.get('stations')
-        return {Importer.MEASURE: 1 if created else 0}
 
 
 class Importer(BaseImporter):
@@ -539,7 +393,6 @@ class Importer(BaseImporter):
         # rollback state
         self._initial = StartState()
         self._state = None
-        self._context = dict(agencies=dict(), origins=dict())
         self._transition(self._initial)
 
     def store(self, allow_junk=True, on_line_read=None):
@@ -549,7 +402,7 @@ class Importer(BaseImporter):
         unexpected line inputs at the beginning of the file
         """
         for line_num, line in enumerate(self._file_stream, start=1):
-            if on_line_read:
+            if on_line_read is not None:
                 on_line_read(self, line_num)
             line = line.strip()
 
@@ -566,22 +419,23 @@ class Importer(BaseImporter):
             try:
                 next_state = self._state.transition_rule(line_type)
                 self._transition(next_state)
-                state_output = next_state.process_line(line)
-                self.update_summary(state_output)
+                next_state.process_line(line)
+                if line_num % 250000 == 0:
+                    LOG.info('%dk lines processed' % (line_num / 1000))
+                    self._catalogue.session.commit()
             except IntegrityError:
                 # we can not skip an integrity error
+                LOG.warn('Measure already present. linenum %d' % line_num)
                 raise self._parsing_error(line_num)
             except (UnexpectedLine, ValueError):
                 current = self._state
                 if current.is_start() and line_type == 'junk' and allow_junk:
                     continue
                 else:
-                    self._summary[self.ERRORS].append(
-                        self._parsing_error(line_num))
+                    LOG.warn('Unexpected line at linenum %d' % line_num)
+                    self.errors.append(self._parsing_error(line_num))
                     self._state = self._initial
-                    continue
         self._catalogue.session.commit()
-        return self._summary
 
     def _parsing_error(self, line_num):
         """
@@ -606,25 +460,27 @@ class Importer(BaseImporter):
         comment_regexp = re.compile(r'^\([^\)].+\)')
 
         if line == 'ISC Bulletin':
-            return "catalogue_header"
+            line_type = "catalogue_header"
         elif line == 'STOP':
-            return 'stop'
+            line_type = 'stop'
         elif comment_regexp.match(line) or not line.strip():
-            return "comment"
+            line_type = "comment"
         elif origin_regexp.match(line):
-            return "origin_header"
+            line_type = "origin_header"
         elif measure_regexp.match(line):
-            return "measure_header"
+            line_type = "measure_header"
         elif EventState.match(line):
-            return "event_header"
+            line_type = "event_header"
         elif len(line) == 136 and not self._state.is_start():
-            return "origin_block"
+            line_type = "origin_block"
         elif len(line) == 38 and not self._state.is_start():
-            return "measure_block"
+            line_type = "measure_block"
         elif MeasureUKScaleBlockState.match(line):
-            return "measure_unknown_scale_block"
+            line_type = "measure_unknown_scale_block"
         else:
-            return "junk"
+            line_type = "junk"
+
+        return line_type
 
     def _transition(self, next_state):
         """
@@ -632,8 +488,8 @@ class Importer(BaseImporter):
         initializing the new state
         """
         self._state = next_state
-        self._state.setup(self._catalogue, self._context)
-
-    def update_summary(self, output):
-        for object_type, nr in output.items():
-            self._summary[object_type] = self._summary.get(object_type, 0) + nr
+        if self._state.context is None:
+            self._state.context = dict(origins={},
+                                       current_event=None,
+                                       current_event_source=None)
+        self._state.setup(self._catalogue)

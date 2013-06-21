@@ -25,9 +25,11 @@ import sqlalchemy
 from sqlalchemy import orm
 from sqlalchemy.events import event as sqlevent
 import geoalchemy
-from eqcatalogue.models import (EventSource, Event, MagnitudeMeasure, Agency,
-                                Origin, MeasureMetadata, METADATA_TYPES)
+from eqcatalogue.models import MagnitudeMeasure
+from eqcatalogue.log import logger
 
+
+LOG = logger(__name__)
 DLL_LIBRARY = "libspatialite.dll"
 DYLIB_LIBRARY = "libspatialite.dylib"
 SO_LIBRARY = "libspatialite.so.3"
@@ -40,7 +42,7 @@ class Engine(object):
     """
     DEFAULT_FILENAME = "eqcatalogue.db"
 
-    def __init__(self, memory=False, filename=None):
+    def __init__(self, memory=False, filename=None, drop=False):
         """Setup a sqlalchemy connection to spatialite with the proper
         metadata.
 
@@ -49,29 +51,32 @@ class Engine(object):
 
         :param filename: the filename of the database used. Unused if
         `memory` is True
+
+        :param drop: drop the content of the database
         """
 
-        to_be_initialized = False
+        self.to_be_initialized = drop
         if memory:
+            # set echo=True in debugging
             self._engine = sqlalchemy.create_engine('sqlite://', module=sqlite)
-            to_be_initialized = True
+            self.to_be_initialized = True
         else:
             filename = filename or self.DEFAULT_FILENAME
             if not os.path.exists(filename):
-                to_be_initialized = True
+                self.to_be_initialized = True
             self._engine = sqlalchemy.create_engine(
                 'sqlite:///%s' % filename,
                 module=sqlite,
                 poolclass=sqlalchemy.pool.QueuePool,
-                pool_size=1,
-                )
-        sqlevent.listen(self._engine,
-                        "first_connect",
-                        _connect)
-        self.session = orm.sessionmaker(bind=self._engine)()
-        self._metadata = sqlalchemy.MetaData(self._engine)
-        self._create_schema()
-        if to_be_initialized:
+                pool_size=1)
+        self.session = None
+        self._metadata = None
+        sqlevent.listen(self._engine, "first_connect", self._connect)
+        self._engine.connect()
+        orm.clear_mappers()
+        self._create_schema_magnitudemeasure()
+
+        if self.to_be_initialized:
             self.recreate()
 
     def recreate(self):
@@ -81,191 +86,72 @@ class Engine(object):
         self._metadata.drop_all()
         self._metadata.create_all(self._engine)
 
-    def _create_schema_eventsource(self):
-        """Create Event Source Schema"""
-        metadata = self._metadata
-
-        eventsource = sqlalchemy.Table(
-            'catalogue_eventsource', metadata,
-            sqlalchemy.Column('id', sqlalchemy.Integer,
-                              primary_key=True),
-            sqlalchemy.Column('created_at',
-                              sqlalchemy.DateTime,
-                              default=datetime.now()),
-            sqlalchemy.Column('name',
-                              sqlalchemy.String(255), unique=True))
-        orm.Mapper(EventSource, eventsource)
-        geoalchemy.GeometryDDL(eventsource)
-
-    def _create_schema_agency(self):
-        """Create the schema for the Agency model"""
-
-        metadata = self._metadata
-
-        agency = sqlalchemy.Table(
-            'catalogue_agency', metadata,
-            sqlalchemy.Column('id',
-                              sqlalchemy.Integer, primary_key=True),
-            sqlalchemy.Column('created_at',
-                              sqlalchemy.DateTime, default=datetime.now()),
-            sqlalchemy.Column('source_key',
-                              sqlalchemy.String(), nullable=False, index=True),
-            sqlalchemy.Column('eventsource_id',
-                              sqlalchemy.Integer,
-                              sqlalchemy.ForeignKey(
-                    'catalogue_eventsource.id'),
-                    nullable=False))
-        orm.Mapper(Agency, agency, properties={
-                'eventsource': orm.relationship(
-                    EventSource,
-                    lazy='noload',
-                    backref=orm.backref('agencies'))
-                })
-        geoalchemy.GeometryDDL(agency)
-
-    def _create_schema_event(self):
-        """Create the schema for the Event model"""
-
-        metadata = self._metadata
-
-        event = sqlalchemy.Table(
-            'catalogue_event', metadata,
-            sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True),
-            sqlalchemy.Column('created_at',
-                              sqlalchemy.DateTime, default=datetime.now()),
-            sqlalchemy.Column('source_key',
-                              sqlalchemy.String(), nullable=False, index=True),
-            sqlalchemy.Column('name',
-                              sqlalchemy.String(), nullable=True),
-            sqlalchemy.Column('eventsource_id', sqlalchemy.Integer,
-                              sqlalchemy.ForeignKey(
-                    'catalogue_eventsource.id'),
-                    nullable=False))
-        orm.Mapper(Event, event, properties={
-                'eventsource': orm.relationship(EventSource,
-                                                backref=orm.backref('events'))
-                })
-        geoalchemy.GeometryDDL(event)
-
     def _create_schema_magnitudemeasure(self):
-        """Create the schema for the magnitude measure model"""
-
-        metadata = self._metadata
-
-        magnitudemeasure = sqlalchemy.Table(
-            'catalogue_magnitudemeasure', metadata,
-            sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True),
-            sqlalchemy.Column('created_at',
-                              sqlalchemy.DateTime, default=datetime.now()),
-            sqlalchemy.Column('event_id',
-                              sqlalchemy.Integer,
-                              sqlalchemy.ForeignKey('catalogue_event.id'),
-                              nullable=False),
-            sqlalchemy.Column('agency_id',
-                              sqlalchemy.Integer,
-                              sqlalchemy.ForeignKey('catalogue_agency.id'),
-                              nullable=False),
-            sqlalchemy.Column('origin_id',
-                              sqlalchemy.Integer,
-                              sqlalchemy.ForeignKey('catalogue_origin.id'),
-                              nullable=False),
-            sqlalchemy.Column('scale', sqlalchemy.String()),
-            sqlalchemy.Column('value', sqlalchemy.Float(), index=True),
-            sqlalchemy.Column('standard_error',
-                              sqlalchemy.Float(),
-                              nullable=True))
-
-        orm.Mapper(MagnitudeMeasure, magnitudemeasure, properties={
-                'event': orm.relationship(Event,
-                                          backref=orm.backref('measures')),
-                'agency': orm.relationship(Agency,
-                                           backref=orm.backref('measures')),
-                'origin': orm.relationship(Origin,
-                                           backref=orm.backref('measures'))
-                })
-        geoalchemy.GeometryDDL(magnitudemeasure)
-
-    def _create_schema_origin(self):
-        """Create the schema for the Origin model"""
-        metadata = self._metadata
-        origin = sqlalchemy.Table(
-            'catalogue_origin', metadata,
-            sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True),
-            sqlalchemy.Column('created_at',
-                              sqlalchemy.DateTime, default=datetime.now()),
-            sqlalchemy.Column('source_key',
-                              sqlalchemy.String(), nullable=False),
-            sqlalchemy.Column('eventsource_id',
-                              sqlalchemy.Integer,
-                              sqlalchemy.ForeignKey(
-                                  'catalogue_eventsource.id'),
-                              nullable=False),
-            sqlalchemy.Column('time', sqlalchemy.DateTime,
-                              nullable=False, index=True),
-            sqlalchemy.Column('time_error', sqlalchemy.Float(), nullable=True),
-            sqlalchemy.Column('time_rms', sqlalchemy.Float(), nullable=True),
-            geoalchemy.GeometryExtensionColumn('position',
-                                               geoalchemy.Point(2, srid=4326),
-                                               nullable=False),
-            sqlalchemy.Column('semi_minor_90error',
-                              sqlalchemy.Float(),
-                              nullable=True),
-            sqlalchemy.Column('semi_major_90error',
-                              sqlalchemy.Float(), nullable=True),
-            sqlalchemy.Column('depth', sqlalchemy.Float(), nullable=True),
-            sqlalchemy.Column('depth_error',
-                              sqlalchemy.Float(), nullable=True))
-        orm.Mapper(Origin, origin, properties={
-            'eventsource': orm.relationship(
-                EventSource,
-                backref=orm.backref('origins')),
-            'position': geoalchemy.GeometryColumn(
-                origin.c.position)})
-        geoalchemy.GeometryDDL(origin)
-
-    def _create_schema_measuremetadata(self):
-        """Create the schema for the measure metadata model"""
-
-        metadata = self._metadata
-
-        measuremetadata = sqlalchemy.Table(
-            'catalogue_measuremetadata', metadata,
-            sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True),
-            sqlalchemy.Column('created_at', sqlalchemy.DateTime,
-                              default=datetime.now()),
-            sqlalchemy.Column(
-                'magnitudemeasure_id', sqlalchemy.Integer,
-                sqlalchemy.ForeignKey(
-                    'catalogue_magnitudemeasure.id'),
-                nullable=False),
-            sqlalchemy.Column('name',
-                              sqlalchemy.Enum(*METADATA_TYPES),
-                              nullable=False),
-            sqlalchemy.Column('value', sqlalchemy.Float(), nullable=False))
-        orm.Mapper(MeasureMetadata, measuremetadata, properties={
-                'magnitudemeasure': orm.relationship(
-                    MagnitudeMeasure,
-                    backref=orm.backref('metadata'))})
-        geoalchemy.GeometryDDL(measuremetadata)
-
-    def _create_schema(self):
         """
         Create and contains the model definition. We used
         non-declarative model mapping, as we need to define models at
         runtime (not at module import time). Actually, only at runtime
         we can load the spatialite extension and then the spatialite
         metadata needed by geoalchemy to build the orm (s. #_setup
-        method)
-        """
+        method)"""
 
-        orm.clear_mappers()
+        measure = sqlalchemy.Table(
+            'catalogue_magnitudemeasure', self._metadata,
+            sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True),
+            sqlalchemy.Column('created_at',
+                              sqlalchemy.DateTime, default=datetime.now()),
 
-        self._create_schema_eventsource()
-        self._create_schema_agency()
-        self._create_schema_event()
-        self._create_schema_magnitudemeasure()
-        self._create_schema_origin()
-        self._create_schema_measuremetadata()
+            sqlalchemy.Column('event_source',
+                              sqlalchemy.String(255),
+                              nullable=False,
+                              index=True),
+
+            sqlalchemy.Column('event_key',
+                              sqlalchemy.String(), nullable=False, index=True),
+            sqlalchemy.Column('event_name',
+                              sqlalchemy.String(), nullable=True),
+
+            sqlalchemy.Column('agency',
+                              sqlalchemy.String(), nullable=False, index=True),
+
+            sqlalchemy.Column('origin_key',
+                              sqlalchemy.String(), nullable=False, index=True),
+
+            sqlalchemy.Column('time', sqlalchemy.DateTime,
+                              nullable=False, index=True),
+            sqlalchemy.Column('time_error', sqlalchemy.Float(), nullable=True),
+            sqlalchemy.Column('time_rms', sqlalchemy.Float(), nullable=True),
+            geoalchemy.GeometryExtensionColumn(
+                'position', geoalchemy.Point(2, srid=4326), nullable=False),
+            sqlalchemy.Column('semi_minor_90error',
+                              sqlalchemy.Float(),
+                              nullable=True),
+            sqlalchemy.Column('semi_major_90error',
+                              sqlalchemy.Float(), nullable=True),
+            sqlalchemy.Column('depth', sqlalchemy.Float(),
+                              nullable=True, index=True),
+            sqlalchemy.Column('depth_error',
+                              sqlalchemy.Float(), nullable=True),
+            sqlalchemy.Column('azimuth_error',
+                              sqlalchemy.Float(),
+                              nullable=True),
+            sqlalchemy.Column('scale', sqlalchemy.String(), index=True),
+            sqlalchemy.Column('value', sqlalchemy.Float(), index=True),
+            sqlalchemy.Column('standard_error',
+                              sqlalchemy.Float(),
+                              nullable=True,
+                              index=True))
+
+        sqlalchemy.schema.UniqueConstraint(
+            measure.c.event_source,
+            measure.c.event_key,
+            measure.c.origin_key,
+            measure.c.time,
+            measure.c.agency,
+            measure.c.scale)
+        orm.Mapper(MagnitudeMeasure, measure, properties={
+            'position': geoalchemy.GeometryColumn(measure.c.position)})
+        geoalchemy.GeometryDDL(measure)
 
     @staticmethod
     def position_from_latlng(latitude, longitude):
@@ -276,6 +162,15 @@ class Engine(object):
         position = geoalchemy.WKTSpatialElement(
             'POINT(%s %s)' % (longitude, latitude))
         return position
+
+    def _connect(self, dbapi_connection, _connection_rec=None):
+        """Enable load extension on connect. Event handler triggered
+        by sqlalchemy"""
+
+        dbapi_connection.enable_load_extension(True)
+        _load_extension(dbapi_connection)
+        self.session = orm.sessionmaker(bind=self._engine)()
+        self._metadata = sqlalchemy.MetaData(self._engine)
 
 
 def _initialize_spatialite_db(connection):
@@ -318,18 +213,13 @@ def _load_extension(session):
     Check your spatialite and pysqlite2 installation
     Errors %s""" % exceptions)
 
+    LOG.debug("Spatialite extension loaded")
     # spatialite needs this initialization on the first usage. This
     # should be probably go into a package installation script
     try:
+        session.execute("select st_x(GeomFromText('POINT(5 5)', 4326))")
         session.execute('select * from spatial_ref_sys')
+        LOG.debug("Spatialite already present")
     except sqlite.OperationalError:
         _initialize_spatialite_db(session)
-
-
-def _connect(dbapi_connection, connection_rec=None):
-    """Enable load extension on connect. Event handler triggered
-    by sqlalchemy"""
-    dbapi_connection.enable_load_extension(True)
-    _load_extension(dbapi_connection)
-    if connection_rec:
-        pass
+        LOG.debug("Spatialite initialized")

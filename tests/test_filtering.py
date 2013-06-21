@@ -36,48 +36,27 @@ def load_fixtures(session):
         reader = CsvEqCatalogueReader(eq_source)
         entries = [entry for entry in reader.read(Converter())]
 
-    event_source = models.EventSource(name='query_catalogue')
-    session.add(event_source)
-    for entry in entries:
-        inserted_agency = session.query(models.Agency).filter(
-                models.Agency.source_key == entry['solutionAgency'])
-        if not inserted_agency.count():
-            agency = models.Agency(source_key=entry['solutionAgency'],
-                    eventsource=event_source)
-            session.add(agency)
-        else:
-            agency = inserted_agency.all()[0]
+    event_source = 'query_catalogue'
 
-        inserted_event = session.query(
-                models.Event).filter_by(
-                source_key=entry['eventKey'])
-        if not inserted_event.count():
-            event = models.Event(source_key=entry['eventKey'],
-                eventsource=event_source)
-            session.add(event)
-        else:
-            event = inserted_event.all()[0]
+    for entry in entries:
+        agency = entry['solutionAgency']
 
         entry_time = datetime(entry['year'], entry['month'], entry['day'],
-                                entry['hour'], entry['minute'],
-                                int(entry['second']))
+                              entry['hour'], entry['minute'],
+                              int(entry['second']))
         entry_pos = 'POINT(%f %f)' % (entry['Longitude'], entry['Latitude'])
-        origin = models.Origin(
+        origin = dict(
             time=entry_time, position=WKTSpatialElement(entry_pos),
-            eventsource=event_source,
-            source_key=entry['eventKey'], depth=entry['depth'])
+            origin_key=entry['eventKey'], depth=entry['depth'])
 
-        mag_measure = models.MagnitudeMeasure(agency=agency, event=event,
-                origin=origin, scale=entry['mag_type'],
-            value=entry['magnitude'], standard_error=0.2)
+        mag_measure = models.MagnitudeMeasure(
+            agency=agency,
+            scale=entry['mag_type'],
+            value=entry['magnitude'], standard_error=0.2,
+            event_key=entry['eventKey'],
+            event_source=event_source, **origin)
 
-        measure_meta = models.MeasureMetadata(
-                metadata_type='stations', value=entry['stations'],
-                magnitudemeasure=mag_measure)
-
-        session.add(origin)
         session.add(mag_measure)
-        session.add(measure_meta)
 
 
 class ACriteriaShould(unittest.TestCase):
@@ -97,9 +76,6 @@ class ACriteriaShould(unittest.TestCase):
     def test_behave_as_a_container(self):
         measure = random.choice(filtering.Criteria())
         self.assertTrue(measure in filtering.Criteria())
-
-    def test_return_events(self):
-        self.assertEqual(5, len(filtering.Criteria().events()))
 
     def test_group_measures(self):
         # we only test the presence of the interface as the proper
@@ -218,7 +194,7 @@ class ACriteriaShould(unittest.TestCase):
         result = measures1 & measures2
         self.assertEqual(2, len(result))
         for m in result:
-            self.assertEqual('BJI', m.agency.source_key)
+            self.assertEqual(u'BJI', m.agency)
             self.assertTrue(m.value > value)
 
         measure = random.choice(result)
@@ -262,7 +238,7 @@ class TestCriteriaFactory(unittest.TestCase):
         self.TESTS = [
             ['before', filtering.Before, datetime.now()],
             ['after', filtering.After, datetime.now()],
-            ['time_between', filtering.TimeBetween,
+            ['time__between', filtering.TimeBetween,
                 [datetime.now(), datetime.now()]],
             ['agency__in', filtering.WithAgencies, ["LEIC"]],
             ['scale__in', filtering.WithMagnitudeScales, ["Mw"]],
@@ -288,4 +264,4 @@ class TestCriteriaFactory(unittest.TestCase):
             agency__in=['ISC', 'NEIC'], magnitude__gt=5)))
 
         self.assertRaises(exceptions.InvalidCriteria,
-                filtering.C, kwargs={'wtf': 3})
+                          filtering.C, kwargs={'wtf': 3})
