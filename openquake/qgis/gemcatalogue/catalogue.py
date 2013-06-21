@@ -63,7 +63,7 @@ class EqCatalogue:
         ).path() + "/python/plugins/eqcatalogue"
         # initialize locale
         localePath = ""
-        locale = QSettings().value("locale/userLocale").toString()[0:2]
+        locale = QSettings().value("locale/userLocale")[0:2]
         self.dockIsVisible = True
 
         if QFileInfo(self.plugin_dir).exists():
@@ -225,9 +225,9 @@ class EqCatalogue:
         provider = vlayer.dataProvider()
         vlayer.startEditing()
         provider.addAttributes([
-            QgsField('agency', QVariant.String),
-            QgsField('event_name', QVariant.String),
-            QgsField('event_measure', QVariant.String),
+            QgsField('agency', str),
+            QgsField('event_name', str),
+            QgsField('event_measure', str),
         ])
         features = []
         for i, row in enumerate(data):
@@ -235,9 +235,9 @@ class EqCatalogue:
             feat = QgsFeature()
             geom = QgsGeometry.fromPoint(QgsPoint(x, y))
             feat.setGeometry(geom)
-            feat.setAttributes([QVariant(str(row.agency)),
-                                QVariant(row.event.name),
-                                QVariant(str(row))])
+            feat.setAttributes([str(row.agency),
+                                row.event.name,
+                                str(row)])
             features.append(feat)
         provider.addFeatures(features)
         vlayer.commitChanges()

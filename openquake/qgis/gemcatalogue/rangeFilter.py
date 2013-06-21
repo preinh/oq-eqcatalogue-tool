@@ -228,17 +228,7 @@ class RangeFilter(QtGui.QWidget):
 
     @classmethod
     def _getValue(self, value):
-        if not isinstance(value, QtCore.QVariant):
-            return value
-
-        if not value.isValid():
-            return
-
-        val, ok = value.toInt()
-        if ok:
-            return val
-
-        return int(float(value.toString()))
+        return value
 
 
 class DoubleRangeFilter(RangeFilter):
@@ -275,17 +265,7 @@ class DoubleRangeFilter(RangeFilter):
 
     @classmethod
     def _getValue(self, value):
-        if not isinstance(value, QtCore.QVariant):
-            return value
-
-        if not value.isValid():
-            return
-
-        val, ok = value.toDouble()
-        if ok:
-            return val
-
-        return float(value.toString())
+        return value
 
 
 class DateRangeFilter(RangeFilter):
@@ -340,25 +320,7 @@ class DateRangeFilter(RangeFilter):
 
     @classmethod
     def _getValue(self, val):
-        if not isinstance(val, QtCore.QVariant):
-            return self._convertToValue(val)
-
-        if not val.isValid():
-            return
-
-        ok = False
-        if val.type() == QtCore.QVariant.Int:
-            newval, ok = val.toInt()
-        elif val.type() in (
-            QtCore.QVariant.Date, QtCore.QVariant.DateTime,
-            QtCore.QVariant.String):
-            newval = val.toDate()
-            ok = newval.isValid()
-
-        if not ok:
-            return
-
-        return self._convertToValue(newval)
+        return self._convertToValue(val)
 
     @classmethod
     def _convertToDateTime(self, val):

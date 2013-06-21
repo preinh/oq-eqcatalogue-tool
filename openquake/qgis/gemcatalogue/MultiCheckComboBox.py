@@ -397,7 +397,7 @@ class MultiCheckComboModel(QtGui.QStandardItemModel):
                 role (UserRole): 	Qt.UserRole
 
             Return:
-                (QVariant)	return the value for specific role.
+                return the value for specific role.
         """
         value = super(MultiCheckComboModel, self).data(index, role)
         if index.isValid() and role == QtCore.Qt.CheckStateRole:
@@ -413,7 +413,7 @@ class MultiCheckComboModel(QtGui.QStandardItemModel):
 
             Args:
                 index (QModelIndex): Index of the item that has to change.
-                value (QVariant): Value for the specific role.
+                value : Value for the specific role.
                 role (UserRole): Qt.UserRole
 
             Return:
