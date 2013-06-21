@@ -225,9 +225,9 @@ class EqCatalogue:
         provider = vlayer.dataProvider()
         vlayer.startEditing()
         provider.addAttributes([
-            QgsField('agency', str),
-            QgsField('event_name', str),
-            QgsField('event_measure', str),
+            QgsField('agency', QVariant.String),
+            QgsField('event_name', QVariant.String),
+            QgsField('event_measure', QVariant.String),
         ])
         features = []
         for i, row in enumerate(data):

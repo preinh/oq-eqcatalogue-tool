@@ -167,7 +167,7 @@ class MultiCheckComboBox(QtGui.QComboBox):
                                                -1,
                                                QtCore.Qt.MatchExactly)
             for mIndex in modelIndexList:
-                itemList << mIndex.data().toString()
+                itemList.append(mIndex.data())
         return itemList
 
     def setCheckedItems(self, items):
@@ -317,7 +317,7 @@ class MultiCheckComboBox(QtGui.QComboBox):
             self.setEditText(self._selectAllText)
             pass
         else:
-            self.setEditText(itemList.join(self._separator))
+            self.setEditText(self._separator.join(itemList))
         self.emit(QtCore.SIGNAL('checkedItemsChanged(PyQt_PyObject)'),
                   itemList)
 
@@ -401,7 +401,7 @@ class MultiCheckComboModel(QtGui.QStandardItemModel):
         """
         value = super(MultiCheckComboModel, self).data(index, role)
         if index.isValid() and role == QtCore.Qt.CheckStateRole:
-            if not value.isValid():
+            if value is None:
                 return QtCore.Qt.Unchecked
             else:
                 return value
