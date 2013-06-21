@@ -100,7 +100,7 @@ class MultiCheckComboBox(QtGui.QComboBox):
             Args:
                 index (QModelIndex): Model index of the item.
         """
-        if self._model.itemData(index, QtCore.Qt.CheckStateRole).toInt():
+        if self._model.itemData(index, QtCore.Qt.CheckStateRole):
             return QtCore.Qt.Checked
             QtCore.Qt.UnChecked
 
@@ -154,9 +154,9 @@ class MultiCheckComboBox(QtGui.QComboBox):
         """ Function to get the checked items label as list.
 
             Returns:
-                (QStringList) list of item labels.
+                list of item labels.
         """
-        itemList = QtCore.QStringList()
+        itemList = []
         if self._model:
             modelIndex = self._model.index(0,
                                            self.modelColumn(),
@@ -174,7 +174,7 @@ class MultiCheckComboBox(QtGui.QComboBox):
         """ Function to set the checked state for the given items.
 
             Args:
-                items (QStringList): list of item labels.
+                items: list of item labels.
         """
         for item in items:
             index = self.Findtext(item)
@@ -192,7 +192,7 @@ class MultiCheckComboBox(QtGui.QComboBox):
                 (list) : list of items Checked or UnChecked based
                         on the status.
         """
-        itemList = QtCore.QStringList()
+        itemList = []
         searchState = QtCore.Qt.Checked
         assignState = QtCore.Qt.Unchecked
         if check:
@@ -329,7 +329,7 @@ class MultiCheckComboBox(QtGui.QComboBox):
                 index (QModelIndex): Index of the item that has to change.
         """
         value = self.itemData(index, QtCore.Qt.CheckStateRole)
-        if value.toInt()[0]:
+        if value:
             state = QtCore.Qt.Unchecked
         else:
             state = QtCore.Qt.Checked
