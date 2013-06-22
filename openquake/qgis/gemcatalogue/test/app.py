@@ -28,7 +28,7 @@ class QgisInterface(QObject):
                         SIGNAL('layerWasAdded(QgsMapLayer *)'),
                         self.addLayer)
 
-    @pyqtSlot('QStringList')
+    @pyqtSlot('list')
     def addLayers(self, theLayers):
         """Handle layers being added to the registry so they show up in canvas.
 

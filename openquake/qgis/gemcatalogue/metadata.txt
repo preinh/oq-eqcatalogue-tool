@@ -10,7 +10,7 @@
 
 [general]
 name=GEM EarthQuake Catalogue
-qgisMinimumVersion=1.8
+qgisMinimumVersion=2.0
 description=earthquake catalogue tool
 version=0.1
 author=GEM Foundation
