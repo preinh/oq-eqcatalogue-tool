@@ -100,7 +100,7 @@ class MultiCheckComboBox(QtGui.QComboBox):
             Args:
                 index (QModelIndex): Model index of the item.
         """
-        if self._model.itemData(index, QtCore.Qt.CheckStateRole).toInt():
+        if self._model.itemData(index, QtCore.Qt.CheckStateRole):
             return QtCore.Qt.Checked
             QtCore.Qt.UnChecked
 
@@ -154,9 +154,9 @@ class MultiCheckComboBox(QtGui.QComboBox):
         """ Function to get the checked items label as list.
 
             Returns:
-                (QStringList) list of item labels.
+                list of item labels.
         """
-        itemList = QtCore.QStringList()
+        itemList = []
         if self._model:
             modelIndex = self._model.index(0,
                                            self.modelColumn(),
@@ -167,14 +167,14 @@ class MultiCheckComboBox(QtGui.QComboBox):
                                                -1,
                                                QtCore.Qt.MatchExactly)
             for mIndex in modelIndexList:
-                itemList << mIndex.data().toString()
+                itemList.append(mIndex.data())
         return itemList
 
     def setCheckedItems(self, items):
         """ Function to set the checked state for the given items.
 
             Args:
-                items (QStringList): list of item labels.
+                items: list of item labels.
         """
         for item in items:
             index = self.Findtext(item)
@@ -192,7 +192,7 @@ class MultiCheckComboBox(QtGui.QComboBox):
                 (list) : list of items Checked or UnChecked based
                         on the status.
         """
-        itemList = QtCore.QStringList()
+        itemList = []
         searchState = QtCore.Qt.Checked
         assignState = QtCore.Qt.Unchecked
         if check:
@@ -317,7 +317,7 @@ class MultiCheckComboBox(QtGui.QComboBox):
             self.setEditText(self._selectAllText)
             pass
         else:
-            self.setEditText(itemList.join(self._separator))
+            self.setEditText(self._separator.join(itemList))
         self.emit(QtCore.SIGNAL('checkedItemsChanged(PyQt_PyObject)'),
                   itemList)
 
@@ -329,7 +329,7 @@ class MultiCheckComboBox(QtGui.QComboBox):
                 index (QModelIndex): Index of the item that has to change.
         """
         value = self.itemData(index, QtCore.Qt.CheckStateRole)
-        if value.toInt()[0]:
+        if value:
             state = QtCore.Qt.Unchecked
         else:
             state = QtCore.Qt.Checked
@@ -397,11 +397,11 @@ class MultiCheckComboModel(QtGui.QStandardItemModel):
                 role (UserRole): 	Qt.UserRole
 
             Return:
-                (QVariant)	return the value for specific role.
+                return the value for specific role.
         """
         value = super(MultiCheckComboModel, self).data(index, role)
         if index.isValid() and role == QtCore.Qt.CheckStateRole:
-            if not value.isValid():
+            if value is None:
                 return QtCore.Qt.Unchecked
             else:
                 return value
@@ -413,7 +413,7 @@ class MultiCheckComboModel(QtGui.QStandardItemModel):
 
             Args:
                 index (QModelIndex): Index of the item that has to change.
-                value (QVariant): Value for the specific role.
+                value : Value for the specific role.
                 role (UserRole): Qt.UserRole
 
             Return:
