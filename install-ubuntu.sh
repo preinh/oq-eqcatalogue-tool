@@ -8,6 +8,8 @@ sudo apt-get install -y python-mock python-coverage python-nose
 sudo apt-get install -y python-pysqlite2 python-sqlalchemy
 sudo apt-get install -y python-twill python-matplotlib
 sudo pip install geoalchemy
+# directories created before the installation to avoid permission
+# issues: the buggy installer create a .qgis2 directory as root
 mkdir $HOME/.qgis2
 mkdir $HOME/.qgis2/python
 mkdir $HOME/.qgis2/python/plugins
