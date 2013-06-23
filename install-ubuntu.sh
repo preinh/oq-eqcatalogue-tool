@@ -18,7 +18,7 @@ sudo sed -i "$ a\deb     http://qgis.org/debian-nightly `lsb_release -cs` main\n
 sudo gpg --keyserver keyserver.ubuntu.com --recv 997D3880
 sudo gpg --export --armor 997D3880 | sudo apt-key add -
 sudo apt-get update
-sudo apt-get install -y qgis
+sudo apt-get install -y qgis python-qgis
 
 export PYTHONPATH=$HOME/oq-eqcatalogue-tool
 ./run_tests
