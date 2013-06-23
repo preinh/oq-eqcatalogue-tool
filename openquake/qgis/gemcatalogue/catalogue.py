@@ -63,7 +63,7 @@ class EqCatalogue:
         ).path() + "/python/plugins/eqcatalogue"
         # initialize locale
         localePath = ""
-        locale = QSettings().value("locale/userLocale")[0:2]
+        locale = str(QSettings().value("locale/userLocale"))[0:2]
         self.dockIsVisible = True
 
         if QFileInfo(self.plugin_dir).exists():
@@ -166,13 +166,11 @@ class EqCatalogue:
         ed = ExposureDownloader(OQ_PLATFORM)
         ed.login('bob', 'tomcat')
         fname = ed.download(lat_min, lon_min, lat_max, lon_max)
+        # don't remove the file, otherwise there will concurrency problems
         uri = 'file://%s?delimiter=%s&xField=%s&yField=%s&crs=epsg:4326&' \
-            'skipLines=25&trimFields=yes' % (fname, ',', 'lat', 'lon')
-        try:
-            vlayer = QgsVectorLayer(uri, 'exposure_export', 'delimitedtext')
-            QgsMapLayerRegistry.instance().addMapLayer(vlayer)
-        finally:
-            os.remove(fname)
+            'skipLines=25&trimFields=yes' % (fname, ',', 'lon', 'lat')
+        vlayer = QgsVectorLayer(uri, 'exposure_export', 'delimitedtext')
+        QgsMapLayerRegistry.instance().addMapLayer(vlayer)
 
     def update_map(self, agencies_selected, mscales_selected, mag_range,
                    date_range):
