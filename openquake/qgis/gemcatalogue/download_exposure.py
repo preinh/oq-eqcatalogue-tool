@@ -34,7 +34,8 @@ class ExposureDownloader(object):
             os.close(fd)
             with open(fname, 'w') as csv:
                 csv.write(result)
-            print 'Downloaded %d lines' % result.count('\n')
+            print 'Downloaded %d lines into %s' % (
+                result.count('\n'), fname)
             return fname
         else:
             raise ExposureDownloadError(result)
