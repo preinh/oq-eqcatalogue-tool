@@ -165,11 +165,10 @@ class EqCatalogue:
     def show_exposure(self, hostname, username, password):
         self.dock.enableBusyCursor()
         try:
-            drawer = self.dock.polygonDrawer
             crs = self.iface.mapCanvas().mapRenderer().destinationCrs()
             xform = QgsCoordinateTransform(
                 crs, QgsCoordinateReferenceSystem(4326))
-            extent = xform.transform(drawer.geometry().boundingBox())
+            extent = xform.transform(self.dock.selectedExtent())
             lon_min, lon_max = extent.xMinimum(), extent.xMaximum()
             lat_min, lat_max = extent.yMinimum(), extent.yMaximum()
 

@@ -9,7 +9,7 @@ from openquake.qgis.gemcatalogue.platform_settings \
     import PlatformSettingsDialog
 from openquake.qgis.gemcatalogue import log_msg
 from collections import namedtuple
-from MapTools import PolygonDrawer
+from extentSelector import ExtentSelector
 
 Range = namedtuple('Range', 'low_value high_value')
 
@@ -21,21 +21,13 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
         self.gemcatalogue = gemcatalogue
         self.setupUi(self)
         self.add_range_sliders()
-        self._prevMapTool = None
         self.canvas = self.iface.mapCanvas()
 
-        # Spatial filtering wdg.
-        self.polygonDrawer = PolygonDrawer(self.canvas,
-                                           {'color': QtGui.QColor("#666666"),
-                                            'enableSnap': False,
-                                            'keepAfterEnd': True})
-        self.polygonDrawer.setAction(self.drawBtn)
-        self.connect(self.polygonDrawer, QtCore.SIGNAL("geometryEmitted"),
+        self.extentSelector = ExtentSelector()
+        self.extentSelector.setCanvas(self.canvas)
+
+        self.connect(self.extentSelector, QtCore.SIGNAL("rectangleCreated"),
                      self.polygonCreated)
-        self.connect(self.drawBtn, QtCore.SIGNAL("clicked()"),
-                     self.drawPolygon)
-        self.connect(self.clearBtn, QtCore.SIGNAL("clicked()"),
-                     self.clearPolygon)
 
     def closeEvent(self, event):
         self.emit(QtCore.SIGNAL("closed"), self)
@@ -125,60 +117,20 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
         self.mscalesComboBox.addItems(magnitude_scales)
         self.mscalesComboBox.checkAll(True)
 
-    def storePrevMapTool(self):
-        prevMapTool = self.canvas.mapTool()
-        if prevMapTool not in (self.polygonDrawer,):
-            self._prevMapTool = prevMapTool
+    @QtCore.pyqtSlot()
+    def on_drawBtn_clicked(self):
+        self.hasValidGeoFilter = False
+        self.extentSelector.start()
+        self.extentSelector.getExtent()
 
-    def restorePrevMapTool(self):
-        self.polygonDrawer.stopCapture()
-        if self._prevMapTool:
-            self.canvas.setMapTool(self._prevMapTool)
+    @QtCore.pyqtSlot()
+    def on_clearBtn_clicked(self):
+        self.extentSelector.stop()
 
-    def showRubberBands(self, show=True):
-        """ show/hide all the rubberbands """
-        if self.polygonDrawer.isEmittingPoints:
-            self.polygonDrawer.reset()
-        else:
-            if show:
-                self.polygonDrawer.rubberBand.show()
-            else:
-                self.polygonDrawer.rubberBand.hide()
+    def polygonCreated(self):
+        self.hasValidGeoFilter = True
+        log_msg(self.hasValidGeoFilter)
+        self.extentSelector.show()
 
-    def showEvent(self, event):
-        self.showRubberBands(True)
-        QtGui.QWidget.showEvent(self, event)
-
-    def hideEvent(self, event):
-        self.showRubberBands(False)
-        self.restorePrevMapTool()
-        QtGui.QWidget.hideEvent(self, event)
-
-    def drawPolygon(self):
-        # store the previous maptool
-        self.storePrevMapTool()
-
-        # set the polygon drawer as current maptool
-        self.polygonDrawer.startCapture()
-
-    def clearPolygon(self):
-        # remove the displayed polygon
-        self.polygonDrawer.reset()
-
-    def polygonCreated(self, polygon):
-    # restore the previous maptool
-        self.restorePrevMapTool()
-        if polygon:
-            log_msg(polygon.exportToWkt())
-
-    def deleteLater(self, *args):
-        self.clearPolygon()
-
-        # restore the previous maptool
-        self.restorePrevMapTool()
-
-        # delete the polygon drawer maptool
-        self.polygonDrawer.deleteLater()
-        self.polygonDrawer = None
-
-        QtGui.QWidget.deleteLater(self, *args)
+    def selectedExtent(self):
+        return self.extentSelector.getExtent()
