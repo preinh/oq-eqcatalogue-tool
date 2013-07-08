@@ -177,7 +177,7 @@ class MultiCheckComboBox(QtGui.QComboBox):
                 items: list of item labels.
         """
         for item in items:
-            index = self.Findtext(item)
+            index = self.findText(item)
             state = QtCore.Qt.Unchecked if index == -1 else QtCore.Qt.Checked
             self.setItemCheckState(index, state)
 
