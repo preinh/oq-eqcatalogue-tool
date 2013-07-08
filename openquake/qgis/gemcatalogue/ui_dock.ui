@@ -158,17 +158,7 @@
       </layout>
      </widget>
     </item>
-    <item row="5" column="0">
-     <widget class="QPushButton" name="filterBtn">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
-      <property name="text">
-       <string>Filter</string>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="0">
+    <item row="13" column="0">
      <spacer name="verticalSpacer">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
@@ -181,24 +171,55 @@
       </property>
      </spacer>
     </item>
-    <item row="4" column="0">
-     <layout class="QHBoxLayout" name="horizontalLayout">
+    <item row="2" column="0">
+     <layout class="QVBoxLayout" name="verticalLayout">
       <property name="topMargin">
-       <number>10</number>
+       <number>0</number>
       </property>
       <item>
-       <widget class="QPushButton" name="drawBtn">
-        <property name="text">
-         <string>Draw</string>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <property name="topMargin">
+         <number>0</number>
         </property>
-       </widget>
+        <item>
+         <widget class="QPushButton" name="drawBtn">
+          <property name="text">
+           <string>Draw</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="clearBtn">
+          <property name="text">
+           <string>Clear</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
-       <widget class="QPushButton" name="clearBtn">
-        <property name="text">
-         <string>Clear</string>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <property name="topMargin">
+         <number>0</number>
         </property>
-       </widget>
+        <item>
+         <widget class="QPushButton" name="filterBtn">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="text">
+           <string>Filter</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="downloadBtn">
+          <property name="text">
+           <string>Download</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </item>

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'eqcatalogue_qgis/ui_dock.ui'
+# Form implementation generated from reading ui file 'ui_dock.ui'
 #
-# Created: Thu Mar 21 11:07:53 2013
+# Created: Mon Jul  8 12:04:07 2013
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -14,14 +14,12 @@ try:
 except AttributeError:
     _fromUtf8 = lambda s: s
 
-
 class Ui_Dock(object):
     def setupUi(self, Dock):
         Dock.setObjectName(_fromUtf8("Dock"))
         Dock.resize(435, 508)
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(_fromUtf8(":/plugins/inasafe/icon.png")),
-                       QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        icon.addPixmap(QtGui.QPixmap(_fromUtf8(":/plugins/inasafe/icon.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         Dock.setWindowIcon(icon)
         self.dockWidgetContents = QtGui.QWidget()
         self.dockWidgetContents.setObjectName(_fromUtf8("dockWidgetContents"))
@@ -42,22 +40,18 @@ class Ui_Dock(object):
         self.mrangeLabel.setObjectName(_fromUtf8("mrangeLabel"))
         self.gridLayout_3.addWidget(self.mrangeLabel, 12, 0, 1, 1)
         self.mscalesComboBox = MultiCheckComboBox(self.grpQuestion)
-        self.mscalesComboBox.setInsertPolicy(
-            QtGui.QComboBox.InsertAlphabetically)
+        self.mscalesComboBox.setInsertPolicy(QtGui.QComboBox.InsertAlphabetically)
         self.mscalesComboBox.setObjectName(_fromUtf8("mscalesComboBox"))
         self.gridLayout_3.addWidget(self.mscalesComboBox, 11, 0, 1, 2)
         self.agenciesComboBox = MultiCheckComboBox(self.grpQuestion)
-        self.agenciesComboBox.setInsertPolicy(
-            QtGui.QComboBox.InsertAlphabetically)
+        self.agenciesComboBox.setInsertPolicy(QtGui.QComboBox.InsertAlphabetically)
         self.agenciesComboBox.setObjectName(_fromUtf8("agenciesComboBox"))
         self.gridLayout_3.addWidget(self.agenciesComboBox, 8, 0, 1, 2)
         self.agencyLabel = QtGui.QLabel(self.grpQuestion)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum,
-                                       QtGui.QSizePolicy.Preferred)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(
-            self.agencyLabel.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(self.agencyLabel.sizePolicy().hasHeightForWidth())
         self.agencyLabel.setSizePolicy(sizePolicy)
         self.agencyLabel.setMargin(10)
         self.agencyLabel.setObjectName(_fromUtf8("agencyLabel"))
@@ -81,12 +75,10 @@ class Ui_Dock(object):
         self.horizontalLayout_3.setContentsMargins(-1, 10, -1, -1)
         self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
         self.selectDbComboBox = QtGui.QComboBox(self.grpQuestion)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred,
-                                       QtGui.QSizePolicy.Fixed)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(
-            self.selectDbComboBox.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(self.selectDbComboBox.sizePolicy().hasHeightForWidth())
         self.selectDbComboBox.setSizePolicy(sizePolicy)
         self.selectDbComboBox.setObjectName(_fromUtf8("selectDbComboBox"))
         self.horizontalLayout_3.addWidget(self.selectDbComboBox)
@@ -95,15 +87,13 @@ class Ui_Dock(object):
         self.horizontalLayout_3.addWidget(self.addDbBtn)
         self.gridLayout_3.addLayout(self.horizontalLayout_3, 5, 0, 1, 2)
         self.gridLayout.addWidget(self.grpQuestion, 0, 0, 1, 1)
-        self.filterBtn = QtGui.QPushButton(self.dockWidgetContents)
-        self.filterBtn.setEnabled(True)
-        self.filterBtn.setObjectName(_fromUtf8("filterBtn"))
-        self.gridLayout.addWidget(self.filterBtn, 5, 0, 1, 1)
-        spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum,
-                                       QtGui.QSizePolicy.Expanding)
-        self.gridLayout.addItem(spacerItem, 6, 0, 1, 1)
+        spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.gridLayout.addItem(spacerItem, 13, 0, 1, 1)
+        self.verticalLayout = QtGui.QVBoxLayout()
+        self.verticalLayout.setContentsMargins(-1, 0, -1, -1)
+        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.horizontalLayout = QtGui.QHBoxLayout()
-        self.horizontalLayout.setContentsMargins(-1, 10, -1, -1)
+        self.horizontalLayout.setContentsMargins(-1, 0, -1, -1)
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         self.drawBtn = QtGui.QPushButton(self.dockWidgetContents)
         self.drawBtn.setObjectName(_fromUtf8("drawBtn"))
@@ -111,7 +101,19 @@ class Ui_Dock(object):
         self.clearBtn = QtGui.QPushButton(self.dockWidgetContents)
         self.clearBtn.setObjectName(_fromUtf8("clearBtn"))
         self.horizontalLayout.addWidget(self.clearBtn)
-        self.gridLayout.addLayout(self.horizontalLayout, 4, 0, 1, 1)
+        self.verticalLayout.addLayout(self.horizontalLayout)
+        self.horizontalLayout_4 = QtGui.QHBoxLayout()
+        self.horizontalLayout_4.setContentsMargins(-1, 0, -1, -1)
+        self.horizontalLayout_4.setObjectName(_fromUtf8("horizontalLayout_4"))
+        self.filterBtn = QtGui.QPushButton(self.dockWidgetContents)
+        self.filterBtn.setEnabled(True)
+        self.filterBtn.setObjectName(_fromUtf8("filterBtn"))
+        self.horizontalLayout_4.addWidget(self.filterBtn)
+        self.downloadBtn = QtGui.QPushButton(self.dockWidgetContents)
+        self.downloadBtn.setObjectName(_fromUtf8("downloadBtn"))
+        self.horizontalLayout_4.addWidget(self.downloadBtn)
+        self.verticalLayout.addLayout(self.horizontalLayout_4)
+        self.gridLayout.addLayout(self.verticalLayout, 2, 0, 1, 1)
         Dock.setWidget(self.dockWidgetContents)
         self.mscalesLabel.setBuddy(self.mscalesComboBox)
 
@@ -119,41 +121,18 @@ class Ui_Dock(object):
         QtCore.QMetaObject.connectSlotsByName(Dock)
 
     def retranslateUi(self, Dock):
-        Dock.setWindowTitle(
-            QtGui.QApplication.translate("Dock", "Events Catalogue", None,
-                                         QtGui.QApplication.UnicodeUTF8))
-        self.grpQuestion.setTitle(QtGui.QApplication.translate("Dock",
-                                                               "Use criteria to filter the catalogue",
-                                                               None,
-                                                               QtGui.QApplication.UnicodeUTF8))
-        self.mrangeLabel.setText(
-            QtGui.QApplication.translate("Dock", "Define magnitude range:",
-                                         None, QtGui.QApplication.UnicodeUTF8))
-        self.agencyLabel.setText(
-            QtGui.QApplication.translate("Dock", "Select one or more agencies:",
-                                         None, QtGui.QApplication.UnicodeUTF8))
-        self.mscalesLabel.setText(QtGui.QApplication.translate("Dock",
-                                                               "Select one or more magnitude scales:",
-                                                               None,
-                                                               QtGui.QApplication.UnicodeUTF8))
-        self.drangeLabel.setText(
-            QtGui.QApplication.translate("Dock", "Define date range:", None,
-                                         QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("Dock",
-                                                        "Select one of the availables db:",
-                                                        None,
-                                                        QtGui.QApplication.UnicodeUTF8))
-        self.addDbBtn.setText(QtGui.QApplication.translate("Dock", "...", None,
-                                                           QtGui.QApplication.UnicodeUTF8))
-        self.filterBtn.setText(
-            QtGui.QApplication.translate("Dock", "Filter", None,
-                                         QtGui.QApplication.UnicodeUTF8))
-        self.drawBtn.setText(QtGui.QApplication.translate("Dock", "Draw", None,
-                                                          QtGui.QApplication.UnicodeUTF8))
-        self.clearBtn.setText(
-            QtGui.QApplication.translate("Dock", "Clear", None,
-                                         QtGui.QApplication.UnicodeUTF8))
-
+        Dock.setWindowTitle(QtGui.QApplication.translate("Dock", "Events Catalogue", None, QtGui.QApplication.UnicodeUTF8))
+        self.grpQuestion.setTitle(QtGui.QApplication.translate("Dock", "Use criteria to filter the catalogue", None, QtGui.QApplication.UnicodeUTF8))
+        self.mrangeLabel.setText(QtGui.QApplication.translate("Dock", "Define magnitude range:", None, QtGui.QApplication.UnicodeUTF8))
+        self.agencyLabel.setText(QtGui.QApplication.translate("Dock", "Select one or more agencies:", None, QtGui.QApplication.UnicodeUTF8))
+        self.mscalesLabel.setText(QtGui.QApplication.translate("Dock", "Select one or more magnitude scales:", None, QtGui.QApplication.UnicodeUTF8))
+        self.drangeLabel.setText(QtGui.QApplication.translate("Dock", "Define date range:", None, QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(QtGui.QApplication.translate("Dock", "Select one of the availables db:", None, QtGui.QApplication.UnicodeUTF8))
+        self.addDbBtn.setText(QtGui.QApplication.translate("Dock", "...", None, QtGui.QApplication.UnicodeUTF8))
+        self.drawBtn.setText(QtGui.QApplication.translate("Dock", "Draw", None, QtGui.QApplication.UnicodeUTF8))
+        self.clearBtn.setText(QtGui.QApplication.translate("Dock", "Clear", None, QtGui.QApplication.UnicodeUTF8))
+        self.filterBtn.setText(QtGui.QApplication.translate("Dock", "Filter", None, QtGui.QApplication.UnicodeUTF8))
+        self.downloadBtn.setText(QtGui.QApplication.translate("Dock", "Download", None, QtGui.QApplication.UnicodeUTF8))
 
 from MultiCheckComboBox import MultiCheckComboBox
 from rangeFilter import DoubleRangeFilter, DateRangeFilter

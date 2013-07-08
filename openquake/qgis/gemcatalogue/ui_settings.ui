@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Dialog</class>
- <widget class="QDialog" name="Dialog">
+ <class>PlatformSettings</class>
+ <widget class="QDialog" name="PlatformSettings">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -25,7 +25,7 @@
     </widget>
    </item>
    <item row="0" column="1">
-    <widget class="QLineEdit" name="user"/>
+    <widget class="QLineEdit" name="usernameEdit"/>
    </item>
    <item row="1" column="0">
     <widget class="QLabel" name="label_2">
@@ -35,7 +35,7 @@
     </widget>
    </item>
    <item row="1" column="1">
-    <widget class="QLineEdit" name="password">
+    <widget class="QLineEdit" name="passwordEdit">
      <property name="echoMode">
       <enum>QLineEdit::Password</enum>
      </property>
@@ -59,16 +59,22 @@
     </widget>
    </item>
    <item row="2" column="1">
-    <widget class="QLineEdit" name="host"/>
+    <widget class="QLineEdit" name="hostnameEdit"/>
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>usernameEdit</tabstop>
+  <tabstop>passwordEdit</tabstop>
+  <tabstop>hostnameEdit</tabstop>
+  <tabstop>buttonBox</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>Dialog</receiver>
+   <receiver>PlatformSettings</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -84,7 +90,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>Dialog</receiver>
+   <receiver>PlatformSettings</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
