@@ -106,9 +106,7 @@
         </widget>
        </item>
        <item row="13" column="0">
-        <widget class="DoubleRangeFilter" name="mag_range" native="true">
-         <zorder>label_4</zorder>
-        </widget>
+        <widget class="DoubleRangeFilter" name="mag_range" native="true"/>
        </item>
        <item row="4" column="0">
         <widget class="QLabel" name="label">
@@ -254,6 +252,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="downloadBtn">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="text">
            <string>Download</string>
           </property>

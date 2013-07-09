@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_dock.ui'
 #
-# Created: Tue Jul  9 12:19:21 2013
+# Created: Tue Jul  9 16:17:57 2013
 #      by: PyQt4 UI code generator 4.9.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -125,6 +125,7 @@ class Ui_Dock(object):
         self.filterBtn.setObjectName(_fromUtf8("filterBtn"))
         self.horizontalLayout_4.addWidget(self.filterBtn)
         self.downloadBtn = QtGui.QPushButton(self.dockWidgetContents)
+        self.downloadBtn.setEnabled(False)
         self.downloadBtn.setObjectName(_fromUtf8("downloadBtn"))
         self.horizontalLayout_4.addWidget(self.downloadBtn)
         self.buttons.addLayout(self.horizontalLayout_4)

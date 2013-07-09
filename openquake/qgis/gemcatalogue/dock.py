@@ -24,11 +24,12 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
         self.canvas = self.iface.mapCanvas()
         self.extentSelector = ExtentSelector(self.canvas)
 
-        self.connect(self.extentSelector, QtCore.SIGNAL("rectangleCreated"),
+        self.connect(self.extentSelector.tool,
+                     QtCore.SIGNAL("rectangleCreated()"),
                      self.polygonCreated)
 
     def closeEvent(self, event):
-        self.emit(QtCore.SIGNAL("closed"), self)
+        self.emit(QtCore.SIGNAL("closed()"), self)
         return QtGui.QDockWidget.closeEvent(self, event)
 
     def enableBusyCursor(self):
@@ -121,18 +122,18 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
 
     @QtCore.pyqtSlot()
     def on_drawBtn_clicked(self):
-        self.hasValidGeoFilter = False
         self.extentSelector.start()
         self.extentSelector.getExtent()
 
     @QtCore.pyqtSlot()
     def on_clearBtn_clicked(self):
         self.extentSelector.stop()
+        self.downloadBtn.setEnabled(False)
 
     def polygonCreated(self):
-        self.hasValidGeoFilter = True
-        log_msg(self.hasValidGeoFilter)
-        self.extentSelector.show()
+        print 1234345
+        # self.extentSelector.show()
+        self.downloadBtn.setEnabled(True)
 
     def selectedExtent(self):
         return self.extentSelector.getExtent()
