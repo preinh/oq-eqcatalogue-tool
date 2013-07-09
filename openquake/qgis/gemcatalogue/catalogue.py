@@ -140,15 +140,21 @@ class EqCatalogue:
         self.catalogue_db = CatalogueDatabase(filename=db_filename)
         agencies = list(self.catalogue_db.get_agencies())
         mscales = list(self.catalogue_db.get_measure_scales())
+        dates = self.catalogue_db.get_dates()
         self.dock.set_agencies(agencies)
         self.dock.set_magnitude_scales(mscales)
+        self.dock.set_dates(dates)
 
     def create_db(self, catalogue_filename, fmt, db_filename):
         cat_db = CatalogueDatabase(filename=db_filename)
         parser = FMT_MAP[fmt]
-        with open(catalogue_filename, 'rb') as cat_file:
-            store_events(parser, cat_file, cat_db)
-        self.dock.update_selectDbComboBox(db_filename)
+        self.dock.enableBusyCursor()
+        try:
+            with open(catalogue_filename, 'rb') as cat_file:
+                store_events(parser, cat_file, cat_db)
+            self.dock.update_selectDbComboBox(db_filename)
+        finally:
+            self.dock.disableBusyCursor()
         return cat_db
 
     def show_import_dialog(self):
@@ -178,6 +184,7 @@ class EqCatalogue:
             try:
                 fname = ed.download(lat_min, lon_min, lat_max, lon_max)
             except ExposureDownloadError as e:
+                self.dock.disableBusyCursor()
                 QMessageBox.warning(
                     self.dock, 'Exposure Download Error', str(e))
                 return

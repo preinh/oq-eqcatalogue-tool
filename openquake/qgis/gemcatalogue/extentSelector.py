@@ -1,45 +1,35 @@
-# -*- coding: utf-8 -*-
+#  -*- coding: utf-8 -*-
+#  vim: tabstop=4 shiftwidth=4 softtabstop=4
 
-"""
-***************************************************************************
-    extentSelector.py
-    ---------------------
-    Date                 : December 2010
-    Copyright            : (C) 2010 by Giuseppe Sucameli
-    Email                : brush dot tyler at gmail dot com
-***************************************************************************
-*                                                                         *
-*   This program is free software; you can redistribute it and/or modify  *
-*   it under the terms of the GNU General Public License as published by  *
-*   the Free Software Foundation; either version 2 of the License, or     *
-*   (at your option) any later version.                                   *
-*                                                                         *
-***************************************************************************
-"""
+#  Copyright (c) 2013, GEM Foundation
 
-__author__ = 'Giuseppe Sucameli'
-__date__ = 'December 2010'
-__copyright__ = '(C) 2010, Giuseppe Sucameli'
-# This will get replaced with a git SHA1 when you do a git archive
-__revision__ = '$Format:%H$'
+#  OpenQuake is free software: you can redistribute it and/or modify it
+#  under the terms of the GNU Affero General Public License as published
+#  by the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+
+#  OpenQuake is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+#  You should have received a copy of the GNU Affero General Public License
+#  along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
+
+# Adapted from extentSelector.py by Giuseppe Sucameli
 
 from PyQt4.QtCore import *
 from qgis.core import *
 from qgis.gui import *
 
-class ExtentSelector(QObject):
-    def __init__(self, parent=None):
-        QObject.__init__(self, parent)
-        self.canvas = None
-        self.tool = None
-        self.previousMapTool = None
-        self.isStarted = False
 
-    def setCanvas(self, canvas):
+class ExtentSelector(QObject):
+    def __init__(self, canvas, parent=None):
+        QObject.__init__(self, parent)
         self.canvas = canvas
-        self.tool = RectangleMapTool(self.canvas)
-        self.previousMapTool = self.canvas.mapTool()
-        self.connect(self.tool, SIGNAL("deactivated()"), self.pause)
+        self.isStarted = False
+        self.tool = RectangleMapTool(canvas)
+        self.previousMapTool = canvas.mapTool()
 
     def stop(self):
         if not self.isStarted:
@@ -59,12 +49,6 @@ class ExtentSelector(QObject):
         self.isStarted = True
         self.emit(SIGNAL("selectionStarted()"))
 
-    def pause(self):
-        if not self.isStarted:
-            return
-
-        self.emit(SIGNAL("selectionPaused()"))
-
     def getExtent(self):
         return self.tool.rectangle()
 
@@ -75,6 +59,7 @@ class RectangleMapTool(QgsMapToolEmitPoint):
         QgsMapToolEmitPoint.__init__(self, self.canvas)
 
         self.rubberBand = QgsRubberBand(self.canvas, QGis.Polygon)
+        # QGis.Polygon shades the region covered by the rubber band
         self.rubberBand.setColor(Qt.red)
         self.rubberBand.setWidth(1)
 
@@ -89,13 +74,10 @@ class RectangleMapTool(QgsMapToolEmitPoint):
         self.startPoint = self.toMapCoordinates(e.pos())
         self.endPoint = self.startPoint
         self.isEmittingPoint = True
-
         self.showRect(self.startPoint, self.endPoint)
 
     def canvasReleaseEvent(self, e):
         self.isEmittingPoint = False
-        #if self.rectangle() != None:
-        #  self.emit( SIGNAL("rectangleCreated()") )
         self.emit(SIGNAL("rectangleCreated()"))
 
     def canvasMoveEvent(self, e):
@@ -118,29 +100,12 @@ class RectangleMapTool(QgsMapToolEmitPoint):
         self.rubberBand.addPoint(point1, False)
         self.rubberBand.addPoint(point2, False)
         self.rubberBand.addPoint(point3, False)
-        self.rubberBand.addPoint(point4, True)    # true to update canvas
+        self.rubberBand.addPoint(point4, True)  # true to update canvas
         self.rubberBand.show()
 
     def rectangle(self):
-        if self.startPoint == None or self.endPoint == None:
-            return None
-        elif self.startPoint.x() == self.endPoint.x() or self.startPoint.y() == self.endPoint.y():
-            return None
-
+        if self.startPoint is None or self.endPoint is None \
+                or self.startPoint.x() == self.endPoint.x() \
+                or self.startPoint.y() == self.endPoint.y():
+            return
         return QgsRectangle(self.startPoint, self.endPoint)
-
-    def setRectangle(self, rect):
-        if rect == self.rectangle():
-            return False
-
-        if rect == None:
-            self.reset()
-        else:
-            self.startPoint = QgsPoint(rect.xMaximum(), rect.yMaximum())
-            self.endPoint = QgsPoint(rect.xMinimum(), rect.yMinimum())
-            self.showRect(self.startPoint, self.endPoint)
-        return True
-
-    def deactivate(self):
-        QgsMapTool.deactivate(self)
-        self.emit(SIGNAL("deactivated()"))

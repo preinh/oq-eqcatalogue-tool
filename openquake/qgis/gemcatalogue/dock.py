@@ -22,9 +22,7 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
         self.setupUi(self)
         self.add_range_sliders()
         self.canvas = self.iface.mapCanvas()
-
-        self.extentSelector = ExtentSelector()
-        self.extentSelector.setCanvas(self.canvas)
+        self.extentSelector = ExtentSelector(self.canvas)
 
         self.connect(self.extentSelector, QtCore.SIGNAL("rectangleCreated"),
                      self.polygonCreated)
@@ -116,6 +114,14 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
         self.mscalesComboBox.clear()
         self.mscalesComboBox.addItems(magnitude_scales)
         self.mscalesComboBox.checkAll(True)
+
+    def set_dates(self, dates):
+        print dates
+        min_date, max_date = dates
+        self.date_range.setMinimum(QtCore.QDate(min_date))
+        self.date_range.setMaximum(QtCore.QDate(max_date))
+        self.date_range.setLowValue(QtCore.QDate(min_date))
+        self.date_range.setHighValue(QtCore.QDate(max_date))
 
     @QtCore.pyqtSlot()
     def on_drawBtn_clicked(self):

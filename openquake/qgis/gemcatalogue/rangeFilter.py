@@ -1,23 +1,24 @@
-# -*- coding: utf-8 -*-
+#  -*- coding: utf-8 -*-
+#  vim: tabstop=4 shiftwidth=4 softtabstop=4
 
-"""
-/***************************************************************************
-Name                 : RangeFilter
-Description          : Int/Double/Date filter for ranges
-Date                 : Jun 20, 2012
-copyright            : (C) 2012 by Giuseppe Sucameli
-email                : brush.tyler@gmail.com
- ***************************************************************************/
+#  Copyright (c) 2013, GEM Foundation
 
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
-"""
+#  OpenQuake is free software: you can redistribute it and/or modify it
+#  under the terms of the GNU Affero General Public License as published
+#  by the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+
+#  OpenQuake is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+#  You should have received a copy of the GNU Affero General Public License
+#  along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
+
+# -*- Coding: utf-8 -*-
+
+# adapted from RangeFilter by Giuseppe Sucameli
 
 from PyQt4 import QtGui, QtCore
 from rangeSlider import RangeSlider
@@ -37,11 +38,6 @@ class RangeFilter(QtGui.QWidget):
         self._createSlider()
         self.connect(self.slider, QtCore.SIGNAL("sliderReleased()"),
                      self._released)
-
-        #self.setMinimum( 0 )
-        #self.setLowValue( 0 )
-        #self.setMaximum( 100 )
-        #self.setHighValue( 100 )
 
         self.recreateUi()
 
@@ -100,8 +96,8 @@ class RangeFilter(QtGui.QWidget):
         val = self._getValue(val)
         if val is None:
             return False
-        return val >= self._getValue(self.lowValue()) and \
-               val <= self._getValue(self.highValue())
+        return (self._getValue(self.lowValue()) <= val <=
+                self._getValue(self.highValue()))
 
     def _toSliderValue(self, val):
         return val
@@ -193,10 +189,10 @@ class RangeFilter(QtGui.QWidget):
 
     def _updateValues(self):
         # avoid multiple signals when values don't change
-        if hasattr(self, '_lastLowValueOnReleased') and hasattr(self,
-                                            '_lastHighValueOnReleased'):
-            if self._lastLowValueOnReleased == self.lowValue() \
-                and self._lastHighValueOnReleased == self.highValue():
+        if hasattr(self, '_lastLowValueOnReleased') and \
+                hasattr(self, '_lastHighValueOnReleased'):
+            if self._lastLowValueOnReleased == self.lowValue() and \
+                    self._lastHighValueOnReleased == self.highValue():
                 return False
 
         self._lastLowValueOnReleased = self.lowValue()
@@ -227,7 +223,7 @@ class RangeFilter(QtGui.QWidget):
         self.setHighValue(self._fromSliderValue(val))
 
     @classmethod
-    def _getValue(self, value):
+    def _getValue(cls, value):
         return value
 
 
@@ -319,30 +315,30 @@ class DateRangeFilter(RangeFilter):
         return self._convertToValue(val * 3600 + self.minimum().toTime_t())
 
     @classmethod
-    def _getValue(self, val):
-        return self._convertToValue(val)
+    def _getValue(cls, val):
+        return cls._convertToValue(val)
 
     @classmethod
-    def _convertToDateTime(self, val):
+    def _convertToDateTime(cls, val):
         if isinstance(val, (int, long)):
-            return self._fixupDateTime(QtCore.QDateTime.fromTime_t(val))
+            return cls._fixupDateTime(QtCore.QDateTime.fromTime_t(val))
         elif isinstance(val, (date, datetime)):
-            return self._fixupDateTime(
+            return cls._fixupDateTime(
                 QtCore.QDateTime(val.year, val.month, val.day, 0, 0, 0))
         elif isinstance(val, QtCore.QDate):
-            return self._fixupDateTime(
+            return cls._fixupDateTime(
                 QtCore.QDateTime(val, QtCore.QTime(0, 0, 0)))
         elif isinstance(val, QtCore.QDateTime):
-            return self._fixupDateTime(val)
+            return cls._fixupDateTime(val)
 
     @classmethod
-    def _convertToValue(self, val):
-        dt = self._convertToDateTime(val)
+    def _convertToValue(cls, val):
+        dt = cls._convertToDateTime(val)
         if dt:
             return dt.toTime_t()
 
     @classmethod
-    def _fixupDateTime(self, dt):
+    def _fixupDateTime(cls, dt):
         if not dt or not dt.isValid():
             return
         if dt <= QtCore.QDateTime(1970, 1, 1, 1, 0, 0):
@@ -374,7 +370,7 @@ if __name__ == "__main__":
 
     elif sys.argv[1] == 'date':
         rangeFilter = DateRangeFilter()
-        rangeFilter.setMinimum(QtCore.QDate(1970, 01, 01))
+        rangeFilter.setMinimum(QtCore.QDate(1960, 01, 01))
         rangeFilter.setLowValue(QtCore.QDate(1980, 01, 01))
         rangeFilter.setMaximum(QtCore.QDate(2020, 12, 31))
         rangeFilter.setHighValue(QtCore.QDate(2010, 12, 31))

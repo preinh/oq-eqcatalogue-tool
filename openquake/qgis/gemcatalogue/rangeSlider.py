@@ -110,10 +110,6 @@ class RangeSlider(QtGui.QSlider):
                 slider_min = gr.y()
                 slider_max = gr.bottom() - handle_length + 1
 
-            #print "min/max", self.minimum(), self.maximum()
-            #print "slider", slider_max, slider_min, handle_length
-            #print "value", value
-
             opt.subControls = (QtGui.QStyle.SC_SliderGroove
                                | QtGui.QStyle.SC_SliderHandle)
 
@@ -130,19 +126,12 @@ class RangeSlider(QtGui.QSlider):
                     opt.sliderPosition = self.minimum() + (
                         self.maximum() - value)
 
-                    #print "old", opt.rect.x(), opt.rect.width()
                     opt.rect.setX(slider_min)
                     opt.rect.setWidth(slider_length)
-                    #print "new", opt.rect.x(), opt.rect.width()
 
                 else:
-                    #print "old", opt.rect.y(), opt.rect.height()
                     opt.rect.setY(slider_min)
                     opt.rect.setHeight(slider_length)
-                    #print "new", opt.rect.y(), opt.rect.height()
-
-                    #print ("opt", opt.sliderValue, opt.sliderPosition,
-                    # opt.upsideDown)
 
             else:
                 # do not highlight the second part when has focus to avoid
@@ -155,11 +144,12 @@ class RangeSlider(QtGui.QSlider):
                 if self.orientation() == QtCore.Qt.Horizontal:
                     opt.upsideDown = self.invertedAppearance()
 
-                    pos = style.sliderPositionFromValue(0,
-                                            self.maximum() - self.minimum(),
-                                            value - self.minimum(),
-                                            slider_max - slider_min - 4,
-                                            opt.upsideDown)
+                    pos = style.sliderPositionFromValue(
+                        0,
+                        self.maximum() - self.minimum(),
+                        value - self.minimum(),
+                        slider_max - slider_min - 4,
+                        opt.upsideDown)
 
                     #print "pos", pos
                     #print "old", opt.rect.x(), opt.rect.width()
@@ -170,11 +160,12 @@ class RangeSlider(QtGui.QSlider):
                 else:
                     opt.upsideDown = not self.invertedAppearance()
 
-                    pos = style.sliderPositionFromValue(0,
-                                            self.maximum() - self.minimum(),
-                                            self.maximum() - value,
-                                            slider_max - slider_min - 4,
-                                            opt.upsideDown)
+                    pos = style.sliderPositionFromValue(
+                        0,
+                        self.maximum() - self.minimum(),
+                        self.maximum() - value,
+                        slider_max - slider_min - 4,
+                        opt.upsideDown)
 
                     #print "pos", pos
                     #print "old", opt.rect.y(), opt.rect.height()
@@ -321,11 +312,12 @@ class RangeSlider(QtGui.QSlider):
             slider_min = gr.y() + handle_length / 2
             slider_max = gr.bottom() - handle_length / 2 + 1
 
-        return self.minimum() + style.sliderValueFromPosition(0,
-                                            self.maximum() - self.minimum(),
-                                            pos - slider_min,
-                                            slider_max - slider_min,
-                                            opt.upsideDown)
+        return self.minimum() + style.sliderValueFromPosition(
+            0,
+            self.maximum() - self.minimum(),
+            pos - slider_min,
+            slider_max - slider_min,
+            opt.upsideDown)
 
 
 if __name__ == "__main__":
