@@ -31,15 +31,15 @@ PLUGIN_UPLOAD = $(CURDIR)/plugin_upload.py
 
 PLUGINNAME = eqcatalogue
 
-PY_MODULES = eqcatalogue eqcatalogue_qgis
+PY_MODULES = eqcatalogue gemcatalogue
 
 FILES = __init__.py metadata.txt
 
 EXTRAS = icon.png 
 
-UI_FILES = eqcatalogue_qgis/ui_dock.py eqcatalogue_qgis/ui_importer_dialog.py
-		   
-RESOURCE_FILES = eqcatalogue_qgis/resources_rc.py
+UI_FILES = ui_dock.py ui_importer_dialog.py ui_settings.py
+
+RESOURCE_FILES = resources_rc.py
 
 HELP = docs/build/html
 

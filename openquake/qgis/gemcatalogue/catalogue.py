@@ -27,6 +27,7 @@
 """
 
 import uuid
+import os
 import httplib
 import tempfile
 # Import the PyQt and QGIS libraries
@@ -38,15 +39,17 @@ import resources_rc
 # Import the code for the dialog
 from openquake.qgis.gemcatalogue.dock import Dock
 from openquake.qgis.gemcatalogue.importer_dialog import ImporterDialog
+from openquake.qgis.gemcatalogue.download_exposure import \
+    ExposureDownloader, ExposureDownloadError
+from openquake.qgis.gemcatalogue.platform_settings \
+    import PlatformSettingsDialog
 
 from eqcatalogue import CatalogueDatabase, filtering
 from eqcatalogue.importers import V1, Iaspei, store_events
-import os
+
 
 FMT_MAP = {ImporterDialog.ISF_PATTERN: V1,
            ImporterDialog.IASPEI_PATTERN: Iaspei}
-
-OQ_PLATFORM = "oq-platform-mn.gem.lan"
 
 
 def to_year(value):
@@ -63,7 +66,7 @@ class EqCatalogue:
         ).path() + "/python/plugins/eqcatalogue"
         # initialize locale
         localePath = ""
-        locale = QSettings().value("locale/userLocale")[0:2]
+        locale = str(QSettings().value("locale/userLocale"))[0:2]
         self.dockIsVisible = True
 
         if QFileInfo(self.plugin_dir).exists():
@@ -95,9 +98,9 @@ class EqCatalogue:
             QIcon(":/plugins/eqcatalogue/icon.png"),
             u"Import catalogue file in db", self.iface.mainWindow())
 
-        self.get_exposure_action = QAction(
+        self.get_platform_settings = QAction(
             QIcon(":/plugins/eqcatalogue/icon.png"),
-            u"Get the exposure from the GEM platform", self.iface.mainWindow())
+            u"Settings for the GEM platform", self.iface.mainWindow())
 
         # connect the action to the run method
         QObject.connect(self.dock, SIGNAL("visibilityChanged(bool)"),
@@ -105,13 +108,13 @@ class EqCatalogue:
         QObject.connect(self.show_catalogue_action, SIGNAL("triggered()"),
                         self.toggle_dock)
         self.import_action.triggered.connect(self.show_import_dialog)
-        self.get_exposure_action.triggered.connect(self.show_exposure)
+        self.get_platform_settings.triggered.connect(self.platform_settings)
 
         # Add toolbar button and menu item
         self.iface.addToolBarIcon(self.show_catalogue_action)
         self.iface.addPluginToMenu(u"&eqcatalogue", self.show_catalogue_action)
         self.iface.addPluginToMenu(u"&eqcatalogue", self.import_action)
-        self.iface.addPluginToMenu(u"&eqcatalogue", self.get_exposure_action)
+        self.iface.addPluginToMenu(u"&eqcatalogue", self.get_platform_settings)
 
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dock)
 
@@ -121,7 +124,8 @@ class EqCatalogue:
         self.iface.removePluginMenu(
             u"&eqcatalogue", self.show_catalogue_action)
         self.iface.removePluginMenu(u"&eqcatalogue", self.import_action)
-        self.iface.removePluginMenu(u"&eqcatalogue", self.get_exposure_action)
+        self.iface.removePluginMenu(
+            u"&eqcatalogue", self.get_platform_settings)
 
     def toggle_dock(self):
         # show the dock
@@ -136,15 +140,21 @@ class EqCatalogue:
         self.catalogue_db = CatalogueDatabase(filename=db_filename)
         agencies = list(self.catalogue_db.get_agencies())
         mscales = list(self.catalogue_db.get_measure_scales())
+        dates = self.catalogue_db.get_dates()
         self.dock.set_agencies(agencies)
         self.dock.set_magnitude_scales(mscales)
+        self.dock.set_dates(dates)
 
     def create_db(self, catalogue_filename, fmt, db_filename):
         cat_db = CatalogueDatabase(filename=db_filename)
         parser = FMT_MAP[fmt]
-        with open(catalogue_filename, 'rb') as cat_file:
-            store_events(parser, cat_file, cat_db)
-        self.dock.update_selectDbComboBox(db_filename)
+        self.dock.enableBusyCursor()
+        try:
+            with open(catalogue_filename, 'rb') as cat_file:
+                store_events(parser, cat_file, cat_db)
+            self.dock.update_selectDbComboBox(db_filename)
+        finally:
+            self.dock.disableBusyCursor()
         return cat_db
 
     def show_import_dialog(self):
@@ -154,42 +164,37 @@ class EqCatalogue:
                            str(self.import_dialog.fmt),
                            self.import_dialog.save_file_path)
 
-    def show_exposure(self):
+    def platform_settings(self):
+        dialog = PlatformSettingsDialog(self.iface)
+        dialog.exec_()
 
-        crsSrc = self.iface.mapCanvas().mapRenderer().destinationCrs()
-        crsDest = QgsCoordinateReferenceSystem(4326)  # WGS 84 / UTM zone 33N
-        xform = QgsCoordinateTransform(crsSrc, crsDest)
-
-        extent = self.iface.mapCanvas().extent()
-        extent = xform.transform(extent)
-        lon_min, lon_max = extent.xMinimum(), extent.xMaximum()
-        lat_min, lat_max = extent.yMinimum(), extent.yMaximum()
-
-        # download data
-        c = httplib.HTTPSConnection(OQ_PLATFORM)
-        c.request("GET", '/exposure/population.json?lat1=%s&lng1=%s&'
-                  'lat2=%s&lng2=%s&output_type=csv' %
-                  (lat_min, lon_min, lat_max, lon_max))
-        response = c.getresponse()
-        assert response.status == 200, response.status
-
-        # save csv on a temporary file
-        fd, fname = tempfile.mkstemp(suffix='.csv')
-        os.close(fd)
-        # TODO: the server should give the size of the data
-        with open(fname, 'w') as csv:
-            while True:
-                data = response.read(10000)
-                if not data:
-                    break
-                csv.write(data)
-        uri = 'file://%s?delimiter=%s&xField=%s&yField=%s&crs=epsg:4326&' \
-            'skipLines=25&trimFields=yes' % (fname, ',', 'lat', 'lon')
+    def show_exposure(self, hostname, username, password):
+        self.dock.enableBusyCursor()
         try:
+            crs = self.iface.mapCanvas().mapRenderer().destinationCrs()
+            xform = QgsCoordinateTransform(
+                crs, QgsCoordinateReferenceSystem(4326))
+            extent = xform.transform(self.dock.selectedExtent())
+            lon_min, lon_max = extent.xMinimum(), extent.xMaximum()
+            lat_min, lat_max = extent.yMinimum(), extent.yMaximum()
+
+            # download data
+            ed = ExposureDownloader(hostname)
+            ed.login(username, password)
+            try:
+                fname = ed.download(lat_min, lon_min, lat_max, lon_max)
+            except ExposureDownloadError as e:
+                self.dock.disableBusyCursor()
+                QMessageBox.warning(
+                    self.dock, 'Exposure Download Error', str(e))
+                return
+            # don't remove the file, otherwise there will concurrency problems
+            uri = 'file://%s?delimiter=%s&xField=%s&yField=%s&crs=epsg:4326&' \
+                'skipLines=25&trimFields=yes' % (fname, ',', 'lon', 'lat')
             vlayer = QgsVectorLayer(uri, 'exposure_export', 'delimitedtext')
             QgsMapLayerRegistry.instance().addMapLayer(vlayer)
         finally:
-            return  # os.remove(fname)
+            self.dock.disableBusyCursor()
 
     def update_map(self, agencies_selected, mscales_selected, mag_range,
                    date_range):
@@ -208,8 +213,8 @@ class EqCatalogue:
 
     def create_layer(self, data):
         dock = self.dock
-        date_range = ':'.join([to_year(dock.date_range.lowValue()),
-                               to_year(dock.date_range.highValue())])
+        date_range = ':'.join([to_year(dock.minDateDe.dateTime()),
+                               to_year(dock.maxDateDe.dateTime())])
         mag_range = ':'.join([str(dock.mag_range.lowValue()),
                               str(dock.mag_range.highValue())])
         agencies = ','.join(map(str, dock.agenciesComboBox.checkedItems()))
