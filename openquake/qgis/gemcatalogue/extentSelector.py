@@ -24,6 +24,9 @@ from qgis.gui import *
 
 
 class ExtentSelector(QObject):
+    selectionStopped = pyqtSignal()
+    selectionStarted = pyqtSignal()
+
     def __init__(self, canvas, parent=None):
         QObject.__init__(self, parent)
         self.canvas = canvas
@@ -39,7 +42,7 @@ class ExtentSelector(QObject):
         self.canvas.unsetMapTool(self.tool)
         if self.previousMapTool != self.tool:
             self.canvas.setMapTool(self.previousMapTool)
-        self.emit(SIGNAL("selectionStopped()"))
+        self.selectionStopped.emit()
 
     def start(self):
         prevMapTool = self.canvas.mapTool()
@@ -47,13 +50,15 @@ class ExtentSelector(QObject):
             self.previousMapTool = prevMapTool
         self.canvas.setMapTool(self.tool)
         self.isStarted = True
-        self.emit(SIGNAL("selectionStarted()"))
+        self.selectionStarted.emit()
 
     def getExtent(self):
         return self.tool.rectangle()
 
 
 class RectangleMapTool(QgsMapToolEmitPoint):
+    rectangleCreated = pyqtSignal()
+
     def __init__(self, canvas):
         self.canvas = canvas
         QgsMapToolEmitPoint.__init__(self, self.canvas)
@@ -78,7 +83,7 @@ class RectangleMapTool(QgsMapToolEmitPoint):
 
     def canvasReleaseEvent(self, e):
         self.isEmittingPoint = False
-        self.emit(SIGNAL("rectangleCreated()"))
+        self.rectangleCreated.emit()
 
     def canvasMoveEvent(self, e):
         if not self.isEmittingPoint:

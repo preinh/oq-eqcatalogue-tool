@@ -24,9 +24,7 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
         self.canvas = self.iface.mapCanvas()
         self.extentSelector = ExtentSelector(self.canvas)
 
-        self.connect(self.extentSelector.tool,
-                     QtCore.SIGNAL("rectangleCreated()"),
-                     self.polygonCreated)
+        self.extentSelector.tool.rectangleCreated.connect(self.polygonCreated)
 
     def closeEvent(self, event):
         self.emit(QtCore.SIGNAL("closed()"), self)
@@ -131,8 +129,6 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
         self.downloadBtn.setEnabled(False)
 
     def polygonCreated(self):
-        print 1234345
-        # self.extentSelector.show()
         self.downloadBtn.setEnabled(True)
 
     def selectedExtent(self):
