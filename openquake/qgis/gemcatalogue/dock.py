@@ -7,7 +7,6 @@ from PyQt4 import QtGui, QtCore
 from ui_dock import Ui_Dock
 from openquake.qgis.gemcatalogue.platform_settings \
     import PlatformSettingsDialog
-from openquake.qgis.gemcatalogue import log_msg
 from collections import namedtuple
 from extentSelector import ExtentSelector
 
@@ -109,7 +108,6 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
         self.mscalesComboBox.checkAll(True)
 
     def set_dates(self, dates):
-        print dates
         min_date, max_date = dates
         self.minDateDe.setDateTimeRange(
             QtCore.QDateTime(min_date), QtCore.QDateTime(max_date))
