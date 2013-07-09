@@ -246,7 +246,7 @@ class EqCatalogue:
         vlayer.triggerRepaint()
 
     def load_countries(self):
-        display_name = 'World Countries'
+        display_name = 'Population density'
         uri = os.path.join(self.data_dir, 'Countries.shp')
         vlayer = QgsVectorLayer(uri, display_name, 'ogr')
         QgsMapLayerRegistry.instance().addMapLayers([vlayer])
