@@ -213,8 +213,8 @@ class EqCatalogue:
 
     def create_layer(self, data):
         dock = self.dock
-        date_range = ':'.join([to_year(dock.date_range.lowValue()),
-                               to_year(dock.date_range.highValue())])
+        date_range = ':'.join([to_year(dock.minDateDe.dateTime()),
+                               to_year(dock.maxDateDe.dateTime())])
         mag_range = ':'.join([str(dock.mag_range.lowValue()),
                               str(dock.mag_range.highValue())])
         agencies = ','.join(map(str, dock.agenciesComboBox.checkedItems()))

@@ -52,13 +52,10 @@
        <property name="verticalSpacing">
         <number>1</number>
        </property>
-       <item row="15" column="0">
-        <widget class="DateRangeFilter" name="date_range" native="true"/>
-       </item>
        <item row="12" column="0">
         <widget class="QLabel" name="mrangeLabel">
          <property name="text">
-          <string>Define magnitude range:</string>
+          <string>Define magnitude range</string>
          </property>
          <property name="margin">
           <number>10</number>
@@ -88,7 +85,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>Select one or more agencies:</string>
+          <string>Select one or more agencies</string>
          </property>
          <property name="margin">
           <number>10</number>
@@ -98,7 +95,7 @@
        <item row="9" column="0">
         <widget class="QLabel" name="mscalesLabel">
          <property name="text">
-          <string>Select one or more magnitude scales:</string>
+          <string>Select one or more magnitude scales</string>
          </property>
          <property name="margin">
           <number>10</number>
@@ -108,23 +105,15 @@
          </property>
         </widget>
        </item>
-       <item row="14" column="0">
-        <widget class="QLabel" name="drangeLabel">
-         <property name="text">
-          <string>Define date range:</string>
-         </property>
-         <property name="margin">
-          <number>10</number>
-         </property>
-        </widget>
-       </item>
        <item row="13" column="0">
-        <widget class="DoubleRangeFilter" name="mag_range" native="true"/>
+        <widget class="DoubleRangeFilter" name="mag_range" native="true">
+         <zorder>label_4</zorder>
+        </widget>
        </item>
        <item row="4" column="0">
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>Select one of the availables db:</string>
+          <string>Select one of the availables db</string>
          </property>
          <property name="margin">
           <number>10</number>
@@ -155,6 +144,57 @@
          </item>
         </layout>
        </item>
+       <item row="15" column="0" colspan="2">
+        <layout class="QFormLayout" name="formLayout">
+         <property name="fieldGrowthPolicy">
+          <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+         </property>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>From</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QDateTimeEdit" name="maxDateDe">
+           <property name="displayFormat">
+            <string>dd.MM.yyyy hh:mm:ss</string>
+           </property>
+           <property name="calendarPopup">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QDateTimeEdit" name="minDateDe">
+           <property name="displayFormat">
+            <string>dd.MM.yyyy hh:mm:ss</string>
+           </property>
+           <property name="calendarPopup">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>To</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="14" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Define time range</string>
+         </property>
+         <property name="margin">
+          <number>10</number>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>
@@ -172,7 +212,7 @@
      </spacer>
     </item>
     <item row="2" column="0">
-     <layout class="QVBoxLayout" name="verticalLayout">
+     <layout class="QVBoxLayout" name="buttons">
       <property name="topMargin">
        <number>0</number>
       </property>
@@ -231,12 +271,6 @@
    <class>MultiCheckComboBox</class>
    <extends>QComboBox</extends>
    <header>MultiCheckComboBox</header>
-  </customwidget>
-  <customwidget>
-   <class>DateRangeFilter</class>
-   <extends>QWidget</extends>
-   <header>rangeFilter</header>
-   <container>1</container>
   </customwidget>
   <customwidget>
    <class>DoubleRangeFilter</class>

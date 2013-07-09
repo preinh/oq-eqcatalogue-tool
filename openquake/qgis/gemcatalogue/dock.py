@@ -46,12 +46,6 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
         self.mag_range.setLowValue(5)
         self.mag_range.setHighValue(8)
 
-        self.date_range.setOrientation(QtCore.Qt.Horizontal)
-        self.date_range.setMinimum(QtCore.QDate(1970, 01, 01))
-        self.date_range.setMaximum(QtCore.QDate.currentDate())
-        self.date_range.setLowValue(QtCore.QDate(1970, 01, 01))
-        self.date_range.setHighValue(QtCore.QDate.currentDate())
-
     def update_selectDbComboBox(self, db_sel):
         if db_sel is not None and db_sel != '':
             if self.selectDbComboBox.count() == 0:
@@ -82,8 +76,8 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
         mscales_selected = self.mscalesComboBox.checkedItems()
         mvalues_selected = Range(self.mag_range.lowValue(),
                                  self.mag_range.highValue())
-        dvalues_selected = ((self.date_range.lowValue()).toPyDateTime(),
-                            (self.date_range.highValue()).toPyDateTime())
+        dvalues_selected = (self.minDateDe.dateTime().toPyDateTime(),
+                            self.maxDateDe.dateTime().toPyDateTime())
 
         self.gemcatalogue.update_map(agencies_selected, mscales_selected,
                                      mvalues_selected, dvalues_selected)
@@ -118,10 +112,12 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
     def set_dates(self, dates):
         print dates
         min_date, max_date = dates
-        self.date_range.setMinimum(QtCore.QDate(min_date))
-        self.date_range.setMaximum(QtCore.QDate(max_date))
-        self.date_range.setLowValue(QtCore.QDate(min_date))
-        self.date_range.setHighValue(QtCore.QDate(max_date))
+        self.minDateDe.setDateTimeRange(
+            QtCore.QDateTime(min_date), QtCore.QDateTime(max_date))
+        self.maxDateDe.setDateTimeRange(
+            QtCore.QDateTime(min_date), QtCore.QDateTime(max_date))
+        self.minDateDe.setDateTime(QtCore.QDateTime(min_date))
+        self.maxDateDe.setDateTime(QtCore.QDateTime(max_date))
 
     @QtCore.pyqtSlot()
     def on_drawBtn_clicked(self):
