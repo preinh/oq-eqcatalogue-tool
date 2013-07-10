@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_dock.ui'
 #
-# Created: Wed Jul 10 20:48:38 2013
+# Created: Wed Jul 10 21:07:09 2013
 #      by: PyQt4 UI code generator 4.9.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -57,7 +57,6 @@ class Ui_Dock(object):
         self.unselectedAgenciesList.setObjectName(_fromUtf8("unselectedAgenciesList"))
         self.horizontalLayout_2.addWidget(self.unselectedAgenciesList)
         self.verticalLayout_6 = QtGui.QVBoxLayout()
-        self.verticalLayout_6.setSizeConstraint(QtGui.QLayout.SetDefaultConstraint)
         self.verticalLayout_6.setContentsMargins(0, -1, 0, -1)
         self.verticalLayout_6.setObjectName(_fromUtf8("verticalLayout_6"))
         self.selectAllAgencies = QtGui.QPushButton(self.agenciesListSelector)
@@ -79,15 +78,36 @@ class Ui_Dock(object):
         self.selectedAgenciesList.setObjectName(_fromUtf8("selectedAgenciesList"))
         self.horizontalLayout_2.addWidget(self.selectedAgenciesList)
         self.verticalLayout.addWidget(self.agenciesListSelector)
-        self.magnScalesGrb = QtGui.QGroupBox(self.dockWidgetContents)
-        self.magnScalesGrb.setObjectName(_fromUtf8("magnScalesGrb"))
-        self.verticalLayout_5 = QtGui.QVBoxLayout(self.magnScalesGrb)
+        self.magnitudesListSelector = QtGui.QGroupBox(self.dockWidgetContents)
+        self.magnitudesListSelector.setObjectName(_fromUtf8("magnitudesListSelector"))
+        self.horizontalLayout_5 = QtGui.QHBoxLayout(self.magnitudesListSelector)
+        self.horizontalLayout_5.setObjectName(_fromUtf8("horizontalLayout_5"))
+        self.unselectedMagnitudesList = QtGui.QListWidget(self.magnitudesListSelector)
+        self.unselectedMagnitudesList.setAlternatingRowColors(True)
+        self.unselectedMagnitudesList.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
+        self.unselectedMagnitudesList.setObjectName(_fromUtf8("unselectedMagnitudesList"))
+        self.horizontalLayout_5.addWidget(self.unselectedMagnitudesList)
+        self.verticalLayout_5 = QtGui.QVBoxLayout()
         self.verticalLayout_5.setObjectName(_fromUtf8("verticalLayout_5"))
-        self.mscalesComboBox = MultiCheckComboBox(self.magnScalesGrb)
-        self.mscalesComboBox.setInsertPolicy(QtGui.QComboBox.InsertAlphabetically)
-        self.mscalesComboBox.setObjectName(_fromUtf8("mscalesComboBox"))
-        self.verticalLayout_5.addWidget(self.mscalesComboBox)
-        self.verticalLayout.addWidget(self.magnScalesGrb)
+        self.selectAllMagnitudes = QtGui.QPushButton(self.magnitudesListSelector)
+        self.selectAllMagnitudes.setObjectName(_fromUtf8("selectAllMagnitudes"))
+        self.verticalLayout_5.addWidget(self.selectAllMagnitudes)
+        self.deselectAllMagnitudes = QtGui.QPushButton(self.magnitudesListSelector)
+        self.deselectAllMagnitudes.setObjectName(_fromUtf8("deselectAllMagnitudes"))
+        self.verticalLayout_5.addWidget(self.deselectAllMagnitudes)
+        self.selectMagnitudes = QtGui.QPushButton(self.magnitudesListSelector)
+        self.selectMagnitudes.setObjectName(_fromUtf8("selectMagnitudes"))
+        self.verticalLayout_5.addWidget(self.selectMagnitudes)
+        self.deselectMagnitudes = QtGui.QPushButton(self.magnitudesListSelector)
+        self.deselectMagnitudes.setObjectName(_fromUtf8("deselectMagnitudes"))
+        self.verticalLayout_5.addWidget(self.deselectMagnitudes)
+        self.horizontalLayout_5.addLayout(self.verticalLayout_5)
+        self.selectedMagnitudesList = QtGui.QListWidget(self.magnitudesListSelector)
+        self.selectedMagnitudesList.setAlternatingRowColors(True)
+        self.selectedMagnitudesList.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
+        self.selectedMagnitudesList.setObjectName(_fromUtf8("selectedMagnitudesList"))
+        self.horizontalLayout_5.addWidget(self.selectedMagnitudesList)
+        self.verticalLayout.addWidget(self.magnitudesListSelector)
         self.magnitudeGrb = QtGui.QGroupBox(self.dockWidgetContents)
         self.magnitudeGrb.setObjectName(_fromUtf8("magnitudeGrb"))
         self.verticalLayout_4 = QtGui.QVBoxLayout(self.magnitudeGrb)
@@ -163,7 +183,13 @@ class Ui_Dock(object):
         self.selectAgencies.setText(QtGui.QApplication.translate("Dock", ">", None, QtGui.QApplication.UnicodeUTF8))
         self.deselectAgencies.setText(QtGui.QApplication.translate("Dock", "<", None, QtGui.QApplication.UnicodeUTF8))
         self.selectedAgenciesList.setSortingEnabled(True)
-        self.magnScalesGrb.setTitle(QtGui.QApplication.translate("Dock", "Select one or more magnitude scales", None, QtGui.QApplication.UnicodeUTF8))
+        self.magnitudesListSelector.setTitle(QtGui.QApplication.translate("Dock", "Select one or more magnitude scales", None, QtGui.QApplication.UnicodeUTF8))
+        self.unselectedMagnitudesList.setSortingEnabled(True)
+        self.selectAllMagnitudes.setText(QtGui.QApplication.translate("Dock", ">>", None, QtGui.QApplication.UnicodeUTF8))
+        self.deselectAllMagnitudes.setText(QtGui.QApplication.translate("Dock", "<<", None, QtGui.QApplication.UnicodeUTF8))
+        self.selectMagnitudes.setText(QtGui.QApplication.translate("Dock", ">", None, QtGui.QApplication.UnicodeUTF8))
+        self.deselectMagnitudes.setText(QtGui.QApplication.translate("Dock", "<", None, QtGui.QApplication.UnicodeUTF8))
+        self.selectedMagnitudesList.setSortingEnabled(True)
         self.magnitudeGrb.setTitle(QtGui.QApplication.translate("Dock", "Define magnitude range", None, QtGui.QApplication.UnicodeUTF8))
         self.timeGrb.setTitle(QtGui.QApplication.translate("Dock", "Define time range", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("Dock", "From", None, QtGui.QApplication.UnicodeUTF8))
@@ -175,6 +201,5 @@ class Ui_Dock(object):
         self.filterBtn.setText(QtGui.QApplication.translate("Dock", "Filter", None, QtGui.QApplication.UnicodeUTF8))
         self.downloadBtn.setText(QtGui.QApplication.translate("Dock", "Download", None, QtGui.QApplication.UnicodeUTF8))
 
-from MultiCheckComboBox import MultiCheckComboBox
 from rangeFilter import DoubleRangeFilter
 import resources_rc

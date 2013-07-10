@@ -71,7 +71,7 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
     @QtCore.pyqtSlot()
     def on_filterBtn_clicked(self):
         agencies_selected = self.get_selected_items(self.agenciesListSelector)
-        mscales_selected = self.mscalesComboBox.checkedItems()
+        mscales_selected = self.get_selected_items(self.magnitudesListSelector)
         mvalues_selected = Range(self.mag_range.lowValue(),
                                  self.mag_range.highValue())
         dvalues_selected = (self.minDateDe.dateTime().toPyDateTime(),
@@ -101,9 +101,7 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
         self.add_items(self.agenciesListSelector, selected=agencies)
 
     def set_magnitude_scales(self, magnitude_scales):
-        self.mscalesComboBox.clear()
-        self.mscalesComboBox.addItems(magnitude_scales)
-        self.mscalesComboBox.checkAll(True)
+        self.add_items(self.magnitudesListSelector, selected=magnitude_scales)
 
     def set_dates(self, dates):
         min_date, max_date = dates
@@ -130,19 +128,6 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
     def selectedExtent(self):
         return self.extentSelector.getExtent()
 
-    #START LIST BUILDER
-    def get_selected_items(self, selector):
-        selectedList, _ = self._get_lists(selector)
-        for i in range(selectedList.count()):
-            yield selectedList.item(i).text()
-
-    def add_items(self, selector, selected=None, unselected=None):
-        selectedList, unselectedList = self._get_lists(selector)
-        if selected is not None:
-            selectedList.addItems(selected)
-        if unselected is not None:
-            unselectedList.addItems(unselected)
-
     @QtCore.pyqtSlot()
     def on_selectAllAgencies_clicked(self):
         self._select_all(self.agenciesListSelector)
@@ -158,6 +143,35 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
     @QtCore.pyqtSlot()
     def on_deselectAgencies_clicked(self):
         self._deselect(self.agenciesListSelector)
+
+    @QtCore.pyqtSlot()
+    def on_selectAllMagnitudes_clicked(self):
+        self._select_all(self.magnitudesListSelector)
+
+    @QtCore.pyqtSlot()
+    def on_deselectAllMagnitudes_clicked(self):
+        self._deselect_all(self.magnitudesListSelector)
+
+    @QtCore.pyqtSlot()
+    def on_selectMagnitudes_clicked(self):
+        self._select(self.magnitudesListSelector)
+
+    @QtCore.pyqtSlot()
+    def on_deselectMagnitudes_clicked(self):
+        self._deselect(self.magnitudesListSelector)
+
+    #START LIST BUILDER
+    def get_selected_items(self, selector):
+        selectedList, _ = self._get_lists(selector)
+        for i in range(selectedList.count()):
+            yield selectedList.item(i).text()
+
+    def add_items(self, selector, selected=None, unselected=None):
+        selectedList, unselectedList = self._get_lists(selector)
+        if selected is not None:
+            selectedList.addItems(selected)
+        if unselected is not None:
+            unselectedList.addItems(unselected)
 
     def _select_all(self, selector):
         selectedList, unselectedList = self._get_lists(selector)

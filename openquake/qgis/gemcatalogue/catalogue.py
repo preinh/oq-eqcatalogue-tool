@@ -217,8 +217,10 @@ class EqCatalogue:
                                to_year(dock.maxDateDe.dateTime())])
         mag_range = ':'.join([str(dock.mag_range.lowValue()),
                               str(dock.mag_range.highValue())])
-        agencies = ','.join(map(str, dock.agenciesComboBox.checkedItems()))
-        mscales = ','.join(map(str, dock.mscalesComboBox.checkedItems()))
+        agencies = ','.join(map(str, dock.get_selected_items(
+            dock.agenciesListSelector)))
+        mscales = ','.join(map(str, dock.get_selected_items(
+            dock.magnitudesListSelector)))
 
         display_name = 'Events-%s-%s-%s-%s' % (
             date_range, mag_range, mscales, agencies)

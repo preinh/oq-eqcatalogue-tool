@@ -97,9 +97,6 @@
        </item>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_6">
-         <property name="sizeConstraint">
-          <enum>QLayout::SetDefaultConstraint</enum>
-         </property>
          <property name="leftMargin">
           <number>0</number>
          </property>
@@ -153,15 +150,66 @@
      </widget>
     </item>
     <item>
-     <widget class="QGroupBox" name="magnScalesGrb">
+     <widget class="QGroupBox" name="magnitudesListSelector">
       <property name="title">
        <string>Select one or more magnitude scales</string>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout_5">
+      <layout class="QHBoxLayout" name="horizontalLayout_5">
        <item>
-        <widget class="MultiCheckComboBox" name="mscalesComboBox">
-         <property name="insertPolicy">
-          <enum>QComboBox::InsertAlphabetically</enum>
+        <widget class="QListWidget" name="unselectedMagnitudesList">
+         <property name="alternatingRowColors">
+          <bool>true</bool>
+         </property>
+         <property name="selectionMode">
+          <enum>QAbstractItemView::MultiSelection</enum>
+         </property>
+         <property name="sortingEnabled">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <item>
+          <widget class="QPushButton" name="selectAllMagnitudes">
+           <property name="text">
+            <string>&gt;&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="deselectAllMagnitudes">
+           <property name="text">
+            <string>&lt;&lt;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="selectMagnitudes">
+           <property name="text">
+            <string>&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="deselectMagnitudes">
+           <property name="text">
+            <string>&lt;</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QListWidget" name="selectedMagnitudesList">
+         <property name="alternatingRowColors">
+          <bool>true</bool>
+         </property>
+         <property name="selectionMode">
+          <enum>QAbstractItemView::MultiSelection</enum>
+         </property>
+         <property name="sortingEnabled">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -302,11 +350,6 @@
   </widget>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>MultiCheckComboBox</class>
-   <extends>QComboBox</extends>
-   <header>MultiCheckComboBox</header>
-  </customwidget>
   <customwidget>
    <class>DoubleRangeFilter</class>
    <extends>QWidget</extends>
