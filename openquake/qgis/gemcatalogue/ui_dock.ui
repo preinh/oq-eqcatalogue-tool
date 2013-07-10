@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>435</width>
-    <height>508</height>
+    <width>318</width>
+    <height>689</height>
    </rect>
   </property>
   <property name="windowIcon">
@@ -52,7 +52,7 @@
        <property name="verticalSpacing">
         <number>1</number>
        </property>
-       <item row="12" column="0">
+       <item row="15" column="0">
         <widget class="QLabel" name="mrangeLabel">
          <property name="text">
           <string>Define magnitude range</string>
@@ -62,15 +62,8 @@
          </property>
         </widget>
        </item>
-       <item row="11" column="0" colspan="2">
+       <item row="14" column="0" colspan="2">
         <widget class="MultiCheckComboBox" name="mscalesComboBox">
-         <property name="insertPolicy">
-          <enum>QComboBox::InsertAlphabetically</enum>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="0" colspan="2">
-        <widget class="MultiCheckComboBox" name="agenciesComboBox">
          <property name="insertPolicy">
           <enum>QComboBox::InsertAlphabetically</enum>
          </property>
@@ -92,7 +85,7 @@
          </property>
         </widget>
        </item>
-       <item row="9" column="0">
+       <item row="12" column="0">
         <widget class="QLabel" name="mscalesLabel">
          <property name="text">
           <string>Select one or more magnitude scales</string>
@@ -105,7 +98,7 @@
          </property>
         </widget>
        </item>
-       <item row="13" column="0">
+       <item row="16" column="0">
         <widget class="DoubleRangeFilter" name="mag_range" native="true"/>
        </item>
        <item row="4" column="0">
@@ -142,7 +135,7 @@
          </item>
         </layout>
        </item>
-       <item row="15" column="0" colspan="2">
+       <item row="18" column="0" colspan="2">
         <layout class="QFormLayout" name="formLayout">
          <property name="fieldGrowthPolicy">
           <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
@@ -183,7 +176,7 @@
          </item>
         </layout>
        </item>
-       <item row="14" column="0">
+       <item row="17" column="0">
         <widget class="QLabel" name="label_4">
          <property name="text">
           <string>Define time range</string>
@@ -191,6 +184,98 @@
          <property name="margin">
           <number>10</number>
          </property>
+        </widget>
+       </item>
+       <item row="11" column="0" colspan="2">
+        <widget class="MultiCheckComboBox" name="agenciesComboBox">
+         <property name="insertPolicy">
+          <enum>QComboBox::InsertAlphabetically</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0" colspan="2">
+        <widget class="QWidget" name="agenciesListSelector" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>200</height>
+          </size>
+         </property>
+         <widget class="QListWidget" name="selectedAgenciesList">
+          <property name="geometry">
+           <rect>
+            <x>200</x>
+            <y>10</y>
+            <width>100</width>
+            <height>130</height>
+           </rect>
+          </property>
+          <property name="alternatingRowColors">
+           <bool>true</bool>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::MultiSelection</enum>
+          </property>
+         </widget>
+         <widget class="QWidget" name="verticalLayoutWidget">
+          <property name="geometry">
+           <rect>
+            <x>110</x>
+            <y>10</y>
+            <width>87</width>
+            <height>128</height>
+           </rect>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item>
+            <widget class="QPushButton" name="selectAllAgencies">
+             <property name="text">
+              <string>&gt;&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="deselectAllAgencies">
+             <property name="text">
+              <string>&lt;&lt;</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="selectAgencies">
+             <property name="text">
+              <string>&gt;</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="deselectAgencies">
+             <property name="text">
+              <string>&lt;</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QListWidget" name="unselectedAgenciesList">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>10</y>
+            <width>100</width>
+            <height>130</height>
+           </rect>
+          </property>
+          <property name="alternatingRowColors">
+           <bool>true</bool>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::MultiSelection</enum>
+          </property>
+          <property name="sortingEnabled">
+           <bool>true</bool>
+          </property>
+         </widget>
         </widget>
        </item>
       </layout>

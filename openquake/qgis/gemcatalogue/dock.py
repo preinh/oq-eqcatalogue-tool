@@ -70,7 +70,7 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
 
     @QtCore.pyqtSlot()
     def on_filterBtn_clicked(self):
-        agencies_selected = self.agenciesComboBox.checkedItems()
+        agencies_selected = self.get_selected_items(self.agenciesListSelector)
         mscales_selected = self.mscalesComboBox.checkedItems()
         mvalues_selected = Range(self.mag_range.lowValue(),
                                  self.mag_range.highValue())
@@ -98,9 +98,7 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
         self.gemcatalogue.update_catalogue_db(selectedDb)
 
     def set_agencies(self, agencies):
-        self.agenciesComboBox.clear()
-        self.agenciesComboBox.addItems(agencies)
-        self.agenciesComboBox.checkAll(True)
+        self.add_items(self.agenciesListSelector, selected=agencies)
 
     def set_magnitude_scales(self, magnitude_scales):
         self.mscalesComboBox.clear()
@@ -131,3 +129,71 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
 
     def selectedExtent(self):
         return self.extentSelector.getExtent()
+
+    #START LIST BUILDER
+    def get_selected_items(self, selector):
+        selectedList, _ = self._get_lists(selector)
+        for i in range(selectedList.count()):
+            yield selectedList.item(i).text()
+
+    def add_items(self, selector, selected=None, unselected=None):
+        selectedList, unselectedList = self._get_lists(selector)
+        if selected is not None:
+            selectedList.addItems(selected)
+        if unselected is not None:
+            unselectedList.addItems(unselected)
+
+    @QtCore.pyqtSlot()
+    def on_selectAllAgencies_clicked(self):
+        self._select_all(self.agenciesListSelector)
+
+    @QtCore.pyqtSlot()
+    def on_deselectAllAgencies_clicked(self):
+        self._deselect_all(self.agenciesListSelector)
+
+    @QtCore.pyqtSlot()
+    def on_selectAgencies_clicked(self):
+        self._select(self.agenciesListSelector)
+
+    @QtCore.pyqtSlot()
+    def on_deselectAgencies_clicked(self):
+        self._deselect(self.agenciesListSelector)
+
+    def _select_all(self, selector):
+        selectedList, unselectedList = self._get_lists(selector)
+        unselectedList.selectAll()
+        self._do_move(unselectedList, selectedList)
+
+    def _deselect_all(self, selector):
+        selectedList, unselectedList = self._get_lists(selector)
+        selectedList.selectAll()
+        self._do_move(selectedList, unselectedList)
+        
+    def _select(self, selector):
+        selectedList, unselectedList = self._get_lists(selector)
+        self._do_move(unselectedList, selectedList)
+
+    def _deselect(self, selector):
+        selectedList, unselectedList = self._get_lists(selector)
+        self._do_move(selectedList, unselectedList)
+        
+    def _do_move(self, fromList, toList):
+        for item in fromList.selectedItems():
+            toList.addItem(fromList.takeItem(fromList.row(item)))
+
+    def _get_lists(self, selector):
+        """
+
+        :param selector: takes a widget named like agenciesListSelector
+        :return: two QListWidgets
+        """
+        selectorName = selector.objectName()
+        stem = selectorName.replace('Selector', '')
+        stem = stem[0].capitalize() + stem[1:]
+
+        selectedList = selector.findChild(
+            QtGui.QListWidget, 'selected%s' % stem)
+        unselectedList = selector.findChild(
+            QtGui.QListWidget, 'unselected%s' % stem)
+
+        return selectedList, unselectedList
