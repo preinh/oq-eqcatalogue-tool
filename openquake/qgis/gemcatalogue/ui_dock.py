@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_dock.ui'
 #
-# Created: Wed Jul 10 20:15:26 2013
+# Created: Wed Jul 10 20:26:52 2013
 #      by: PyQt4 UI code generator 4.9.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -35,11 +35,11 @@ class Ui_Dock(object):
         self.mrangeLabel = QtGui.QLabel(self.grpQuestion)
         self.mrangeLabel.setMargin(10)
         self.mrangeLabel.setObjectName(_fromUtf8("mrangeLabel"))
-        self.gridLayout_3.addWidget(self.mrangeLabel, 15, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.mrangeLabel, 14, 0, 1, 1)
         self.mscalesComboBox = MultiCheckComboBox(self.grpQuestion)
         self.mscalesComboBox.setInsertPolicy(QtGui.QComboBox.InsertAlphabetically)
         self.mscalesComboBox.setObjectName(_fromUtf8("mscalesComboBox"))
-        self.gridLayout_3.addWidget(self.mscalesComboBox, 14, 0, 1, 2)
+        self.gridLayout_3.addWidget(self.mscalesComboBox, 13, 0, 1, 2)
         self.agencyLabel = QtGui.QLabel(self.grpQuestion)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Maximum, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
@@ -52,10 +52,10 @@ class Ui_Dock(object):
         self.mscalesLabel = QtGui.QLabel(self.grpQuestion)
         self.mscalesLabel.setMargin(10)
         self.mscalesLabel.setObjectName(_fromUtf8("mscalesLabel"))
-        self.gridLayout_3.addWidget(self.mscalesLabel, 12, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.mscalesLabel, 11, 0, 1, 1)
         self.mag_range = DoubleRangeFilter(self.grpQuestion)
         self.mag_range.setObjectName(_fromUtf8("mag_range"))
-        self.gridLayout_3.addWidget(self.mag_range, 16, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.mag_range, 15, 0, 1, 1)
         self.label = QtGui.QLabel(self.grpQuestion)
         self.label.setMargin(10)
         self.label.setObjectName(_fromUtf8("label"))
@@ -92,15 +92,11 @@ class Ui_Dock(object):
         self.label_3 = QtGui.QLabel(self.grpQuestion)
         self.label_3.setObjectName(_fromUtf8("label_3"))
         self.formLayout.setWidget(1, QtGui.QFormLayout.LabelRole, self.label_3)
-        self.gridLayout_3.addLayout(self.formLayout, 18, 0, 1, 2)
+        self.gridLayout_3.addLayout(self.formLayout, 17, 0, 1, 2)
         self.label_4 = QtGui.QLabel(self.grpQuestion)
         self.label_4.setMargin(10)
         self.label_4.setObjectName(_fromUtf8("label_4"))
-        self.gridLayout_3.addWidget(self.label_4, 17, 0, 1, 1)
-        self.agenciesComboBox = MultiCheckComboBox(self.grpQuestion)
-        self.agenciesComboBox.setInsertPolicy(QtGui.QComboBox.InsertAlphabetically)
-        self.agenciesComboBox.setObjectName(_fromUtf8("agenciesComboBox"))
-        self.gridLayout_3.addWidget(self.agenciesComboBox, 11, 0, 1, 2)
+        self.gridLayout_3.addWidget(self.label_4, 16, 0, 1, 1)
         self.agenciesListSelector = QtGui.QWidget(self.grpQuestion)
         self.agenciesListSelector.setMinimumSize(QtCore.QSize(0, 200))
         self.agenciesListSelector.setObjectName(_fromUtf8("agenciesListSelector"))

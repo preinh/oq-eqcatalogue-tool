@@ -52,7 +52,7 @@
        <property name="verticalSpacing">
         <number>1</number>
        </property>
-       <item row="15" column="0">
+       <item row="14" column="0">
         <widget class="QLabel" name="mrangeLabel">
          <property name="text">
           <string>Define magnitude range</string>
@@ -62,7 +62,7 @@
          </property>
         </widget>
        </item>
-       <item row="14" column="0" colspan="2">
+       <item row="13" column="0" colspan="2">
         <widget class="MultiCheckComboBox" name="mscalesComboBox">
          <property name="insertPolicy">
           <enum>QComboBox::InsertAlphabetically</enum>
@@ -85,7 +85,7 @@
          </property>
         </widget>
        </item>
-       <item row="12" column="0">
+       <item row="11" column="0">
         <widget class="QLabel" name="mscalesLabel">
          <property name="text">
           <string>Select one or more magnitude scales</string>
@@ -98,7 +98,7 @@
          </property>
         </widget>
        </item>
-       <item row="16" column="0">
+       <item row="15" column="0">
         <widget class="DoubleRangeFilter" name="mag_range" native="true"/>
        </item>
        <item row="4" column="0">
@@ -135,7 +135,7 @@
          </item>
         </layout>
        </item>
-       <item row="18" column="0" colspan="2">
+       <item row="17" column="0" colspan="2">
         <layout class="QFormLayout" name="formLayout">
          <property name="fieldGrowthPolicy">
           <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
@@ -176,20 +176,13 @@
          </item>
         </layout>
        </item>
-       <item row="17" column="0">
+       <item row="16" column="0">
         <widget class="QLabel" name="label_4">
          <property name="text">
           <string>Define time range</string>
          </property>
          <property name="margin">
           <number>10</number>
-         </property>
-        </widget>
-       </item>
-       <item row="11" column="0" colspan="2">
-        <widget class="MultiCheckComboBox" name="agenciesComboBox">
-         <property name="insertPolicy">
-          <enum>QComboBox::InsertAlphabetically</enum>
          </property>
         </widget>
        </item>
