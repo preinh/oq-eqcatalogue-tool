@@ -9,6 +9,7 @@ from openquake.qgis.gemcatalogue.platform_settings \
     import PlatformSettingsDialog
 from collections import namedtuple
 from extentSelector import ExtentSelector
+from list_multi_select_widget import ListMultiSelectWidget
 
 Range = namedtuple('Range', 'low_value high_value')
 
@@ -22,6 +23,12 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
         self.add_range_sliders()
         self.canvas = self.iface.mapCanvas()
         self.extentSelector = ExtentSelector(self.canvas)
+        self.agenciesWidget = ListMultiSelectWidget(
+            'Select one or more agencies')
+        self.magnitudesWidget = ListMultiSelectWidget(
+            'Select one or more magnitude scales')
+        self.verticalLayout.insertWidget(1, self.agenciesWidget)
+        self.verticalLayout.insertWidget(2, self.magnitudesWidget)
 
         self.extentSelector.tool.rectangleCreated.connect(self.polygonCreated)
 
@@ -60,6 +67,21 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
                 self.selectDbComboBox.blockSignals(False)
                 self.selectDbComboBox.setCurrentIndex(0)
 
+    def set_agencies(self, agencies):
+        self.agenciesWidget.add_selected_items(agencies)
+
+    def set_magnitude_scales(self, magnitude_scales):
+        self.magnitudesWidget.add_selected_items(magnitude_scales)
+
+    def set_dates(self, dates):
+        min_date, max_date = dates
+        self.minDateDe.setDateTimeRange(
+            QtCore.QDateTime(min_date), QtCore.QDateTime(max_date))
+        self.maxDateDe.setDateTimeRange(
+            QtCore.QDateTime(min_date), QtCore.QDateTime(max_date))
+        self.minDateDe.setDateTime(QtCore.QDateTime(min_date))
+        self.maxDateDe.setDateTime(QtCore.QDateTime(max_date))
+
     @QtCore.pyqtSlot()
     def on_addDbBtn_clicked(self):
         db_sel = unicode(QtGui.QFileDialog.getOpenFileName(
@@ -70,8 +92,8 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
 
     @QtCore.pyqtSlot()
     def on_filterBtn_clicked(self):
-        agencies_selected = self.get_selected_items(self.agenciesListSelector)
-        mscales_selected = self.get_selected_items(self.magnitudesListSelector)
+        agencies_selected = self.agenciesWidget.get_selected_items()
+        mscales_selected = self.magnitudesWidget.get_selected_items()
         mvalues_selected = Range(self.mag_range.lowValue(),
                                  self.mag_range.highValue())
         dvalues_selected = (self.minDateDe.dateTime().toPyDateTime(),
@@ -97,21 +119,6 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
     def on_selectDbComboBox_currentIndexChanged(self, selectedDb):
         self.gemcatalogue.update_catalogue_db(selectedDb)
 
-    def set_agencies(self, agencies):
-        self.add_items(self.agenciesListSelector, selected=agencies)
-
-    def set_magnitude_scales(self, magnitude_scales):
-        self.add_items(self.magnitudesListSelector, selected=magnitude_scales)
-
-    def set_dates(self, dates):
-        min_date, max_date = dates
-        self.minDateDe.setDateTimeRange(
-            QtCore.QDateTime(min_date), QtCore.QDateTime(max_date))
-        self.maxDateDe.setDateTimeRange(
-            QtCore.QDateTime(min_date), QtCore.QDateTime(max_date))
-        self.minDateDe.setDateTime(QtCore.QDateTime(min_date))
-        self.maxDateDe.setDateTime(QtCore.QDateTime(max_date))
-
     @QtCore.pyqtSlot()
     def on_drawBtn_clicked(self):
         self.extentSelector.start()
@@ -127,87 +134,3 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
 
     def selectedExtent(self):
         return self.extentSelector.getExtent()
-
-    @QtCore.pyqtSlot()
-    def on_selectAllAgencies_clicked(self):
-        self._select_all(self.agenciesListSelector)
-
-    @QtCore.pyqtSlot()
-    def on_deselectAllAgencies_clicked(self):
-        self._deselect_all(self.agenciesListSelector)
-
-    @QtCore.pyqtSlot()
-    def on_selectAgencies_clicked(self):
-        self._select(self.agenciesListSelector)
-
-    @QtCore.pyqtSlot()
-    def on_deselectAgencies_clicked(self):
-        self._deselect(self.agenciesListSelector)
-
-    @QtCore.pyqtSlot()
-    def on_selectAllMagnitudes_clicked(self):
-        self._select_all(self.magnitudesListSelector)
-
-    @QtCore.pyqtSlot()
-    def on_deselectAllMagnitudes_clicked(self):
-        self._deselect_all(self.magnitudesListSelector)
-
-    @QtCore.pyqtSlot()
-    def on_selectMagnitudes_clicked(self):
-        self._select(self.magnitudesListSelector)
-
-    @QtCore.pyqtSlot()
-    def on_deselectMagnitudes_clicked(self):
-        self._deselect(self.magnitudesListSelector)
-
-    #START LIST BUILDER
-    def get_selected_items(self, selector):
-        selectedList, _ = self._get_lists(selector)
-        for i in range(selectedList.count()):
-            yield selectedList.item(i).text()
-
-    def add_items(self, selector, selected=None, unselected=None):
-        selectedList, unselectedList = self._get_lists(selector)
-        if selected is not None:
-            selectedList.addItems(selected)
-        if unselected is not None:
-            unselectedList.addItems(unselected)
-
-    def _select_all(self, selector):
-        selectedList, unselectedList = self._get_lists(selector)
-        unselectedList.selectAll()
-        self._do_move(unselectedList, selectedList)
-
-    def _deselect_all(self, selector):
-        selectedList, unselectedList = self._get_lists(selector)
-        selectedList.selectAll()
-        self._do_move(selectedList, unselectedList)
-        
-    def _select(self, selector):
-        selectedList, unselectedList = self._get_lists(selector)
-        self._do_move(unselectedList, selectedList)
-
-    def _deselect(self, selector):
-        selectedList, unselectedList = self._get_lists(selector)
-        self._do_move(selectedList, unselectedList)
-        
-    def _do_move(self, fromList, toList):
-        for item in fromList.selectedItems():
-            toList.addItem(fromList.takeItem(fromList.row(item)))
-
-    def _get_lists(self, selector):
-        """
-
-        :param selector: takes a widget named like agenciesListSelector
-        :return: two QListWidgets
-        """
-        selectorName = selector.objectName()
-        stem = selectorName.replace('Selector', '')
-        stem = stem[0].capitalize() + stem[1:]
-
-        selectedList = selector.findChild(
-            QtGui.QListWidget, 'selected%s' % stem)
-        unselectedList = selector.findChild(
-            QtGui.QListWidget, 'unselected%s' % stem)
-
-        return selectedList, unselectedList
