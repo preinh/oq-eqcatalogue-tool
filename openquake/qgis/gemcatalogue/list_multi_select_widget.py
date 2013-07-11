@@ -80,6 +80,9 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
             toList.addItem(fromList.takeItem(fromList.row(item)))
 
     def _setupUI(self):
+        self.setSizePolicy(
+            QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Ignored)
+
         self.main_horizontal_layout = QtGui.QHBoxLayout(self)
 
         #unselected widget
@@ -93,17 +96,16 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
         #buttons
         self.buttons_vertical_layout = QtGui.QVBoxLayout()
         self.buttons_vertical_layout.setContentsMargins(0, -1, 0, -1)
-        self.select_all_btn = QtGui.QPushButton(self)
-        self.select_all_btn.setText('>>')
+
+        self.select_all_btn = SmallQPushButton('>>')
+        self.deselect_all_btn = SmallQPushButton('<<')
+        self.select_btn = SmallQPushButton('>')
+        self.deselect_btn = SmallQPushButton('<')
+
+        #add buttons
         self.buttons_vertical_layout.addWidget(self.select_all_btn)
-        self.deselect_all_btn = QtGui.QPushButton(self)
-        self.deselect_all_btn.setText('<<')
         self.buttons_vertical_layout.addWidget(self.deselect_all_btn)
-        self.select_btn = QtGui.QPushButton(self)
-        self.select_btn.setText('>')
         self.buttons_vertical_layout.addWidget(self.select_btn)
-        self.deselect_btn = QtGui.QPushButton(self)
-        self.deselect_btn.setText('<')
         self.buttons_vertical_layout.addWidget(self.deselect_btn)
 
         #add sub widgets
@@ -119,3 +121,13 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
         widget.setDragDropOverwriteMode(False)
         widget.setDefaultDropAction(QtCore.Qt.MoveAction)
         widget.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
+
+
+class SmallQPushButton(QtGui.QPushButton):
+    def __init__(self, text):
+        QtGui.QPushButton.__init__(self)
+        self.setText(text)
+        buttons_size_policy = QtGui.QSizePolicy(
+            QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
+        self.setSizePolicy(buttons_size_policy)
+        self.setMaximumSize(QtCore.QSize(30, 16777215))
