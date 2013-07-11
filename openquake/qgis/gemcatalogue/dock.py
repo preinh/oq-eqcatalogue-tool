@@ -68,10 +68,10 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
                 self.selectDbComboBox.setCurrentIndex(0)
 
     def set_agencies(self, agencies):
-        self.agenciesWidget.add_selected_items(agencies)
+        self.agenciesWidget.set_selected_items(agencies)
 
     def set_magnitude_scales(self, magnitude_scales):
-        self.magnitudesWidget.add_selected_items(magnitude_scales)
+        self.magnitudesWidget.set_selected_items(magnitude_scales)
 
     def set_dates(self, dates):
         min_date, max_date = dates

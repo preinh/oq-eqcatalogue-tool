@@ -47,19 +47,35 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
 
     def add_selected_items(self, items):
         """
-        :param items list of strings to be inserted in the selected list
+        :param items list of strings to be added in the selected list
         """
         self._add_items(self.selected_widget, items)
 
     def add_unselected_items(self, items):
         """
-        :param items list of strings to be inserted in the unselected list
+        :param items list of strings to be added in the unselected list
         """
         self._add_items(self.unselected_widget, items)
+
+    def set_selected_items(self, items):
+        """
+        :param items list of strings to be set as the selected list
+        """
+        self._set_items(self.selected_widget, items)
+
+    def set_unselected_items(self, items):
+        """
+        :param items list of strings to be set as the unselected list
+        """
+        self._set_items(self.unselected_widget, items)
 
     def _get_items(self, widget):
         for i in range(widget.count()):
             yield widget.item(i).text()
+
+    def _set_items(self, widget, items):
+        widget.clear()
+        self._add_items(widget, items)
 
     def _add_items(self, widget, items):
         widget.addItems(items)
