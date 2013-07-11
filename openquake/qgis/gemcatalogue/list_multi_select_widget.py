@@ -19,7 +19,7 @@ from PyQt4 import QtGui, QtCore
 class ListMultiSelectWidget(QtGui.QGroupBox):
     """Widget to show two parallel lists and move elements between the two"""
 
-    def __init__(self, title):
+    def __init__(self, parent=None, title=None):
         QtGui.QGroupBox.__init__(self)
         self.setTitle(title)
 

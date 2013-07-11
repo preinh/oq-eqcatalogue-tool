@@ -24,9 +24,9 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
         self.canvas = self.iface.mapCanvas()
         self.extentSelector = ExtentSelector(self.canvas)
         self.agenciesWidget = ListMultiSelectWidget(
-            'Select one or more agencies')
+            title='Select one or more agencies')
         self.magnitudesWidget = ListMultiSelectWidget(
-            'Select one or more magnitude scales')
+            title='Select one or more magnitude scales')
         self.verticalLayout.insertWidget(1, self.agenciesWidget)
         self.verticalLayout.insertWidget(2, self.magnitudesWidget)
 
