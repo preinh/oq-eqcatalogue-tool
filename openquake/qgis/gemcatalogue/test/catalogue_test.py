@@ -43,7 +43,7 @@ class CatalogueTestCase(unittest.TestCase):
             'Events-2008:2008-5.0:8.0-mb,MS-IASPEI')
         self.assertEqual(feature_count, 0)
 
-        # 61 features with magnitude in the range [1, 8]
+        # 58 features with magnitude in the range [1, 8]
         self.eqcat.dock.mag_range.setLowValue(1)
         self.eqcat.dock.mag_range.setHighValue(8)
         feature_count = self._filter_button(
@@ -70,8 +70,6 @@ class CatalogueTestCase(unittest.TestCase):
         QtTest.QTest.mouseClick(btn, QtCore.Qt.LeftButton)
         events = QgsMapLayerRegistry.instance().mapLayersByName(
             layername)
-        for l in QgsMapLayerRegistry.instance().mapLayers():
-            print l
         assert events, 'Could not find layer named %s' % layername
         return events[0].featureCount()
 
