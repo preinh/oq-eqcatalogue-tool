@@ -40,29 +40,30 @@ class CatalogueTestCase(unittest.TestCase):
         # no features with the default selections
         self._import_data(IASPEI, ImporterDialog.IASPEI_PATTERN)
         feature_count = self._filter_button(
-            'Events-1970:2013-5.0:8.0-MS,mb-IASPEI')
+            'Events-2008:2008-5.0:8.0-mb,MS-IASPEI')
         self.assertEqual(feature_count, 0)
 
-        # 61 features with magnitude in the range [1, 8]
+        # 58 features with magnitude in the range [1, 8]
         self.eqcat.dock.mag_range.setLowValue(1)
         self.eqcat.dock.mag_range.setHighValue(8)
         feature_count = self._filter_button(
-            'Events-1970:2013-1.0:8.0-MS,mb-IASPEI')
-        self.assertEqual(feature_count, 61)
+            'Events-2008:2008-1.0:8.0-mb,MS-IASPEI')
+        self.assertEqual(feature_count,58)
 
     def test_ISF(self):
         self._import_data(ISF, ImporterDialog.ISF_PATTERN)
         feature_count = self._filter_button(
-            'Events-1970:2013-5.0:8.0-ME,mbtmp,ms1mx,Ms,mb,Ms7,ML,mB,M,Mw,'
-            'Ms1,MW,MLv,MS,mb1mx,Mb,MD,mb1,Muk-GUC,BKK,JMA,NIED,IGQ,KMA,MOS,'
-            'NEIC,BJI,GCMT,DJA,ISCJB,ISC,SJA,IDC,SZGRF,MAN')
-        self.assertEqual(feature_count, 174)
+            'Events-2010:2010-5.0:8.0-M,mb,mB,Mb,mb1,mb1mx,mbtmp,MD,ME,ML,MLv,'
+            'Ms,MS,Ms1,ms1mx,Ms7,Muk,Mw,MW-BJI,BKK,DJA,GCMT,GUC,IDC,IGQ,ISC,'
+            'ISCJB,JMA,MAN,MOS,NEIC,NIED,SJA,SZGRF')
+        self.assertEqual(feature_count, 173)
 
     def test_load_countries(self):
         self.eqcat.load_countries()
+        layerName = 'Population density'
         layer = QgsMapLayerRegistry.instance().mapLayersByName(
-            'World Countries')[-1]
-        self.assertEqual('World Countries', str(layer.name()))
+            layerName)[-1]
+        self.assertEqual(layerName, str(layer.name()))
 
     def _filter_button(self, layername):
         btn = self.eqcat.dock.filterBtn

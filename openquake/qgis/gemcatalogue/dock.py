@@ -9,6 +9,7 @@ from openquake.qgis.gemcatalogue.platform_settings \
     import PlatformSettingsDialog
 from collections import namedtuple
 from extentSelector import ExtentSelector
+from list_multi_select_widget import ListMultiSelectWidget
 
 Range = namedtuple('Range', 'low_value high_value')
 
@@ -22,6 +23,12 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
         self.add_range_sliders()
         self.canvas = self.iface.mapCanvas()
         self.extentSelector = ExtentSelector(self.canvas)
+        self.agenciesWidget = ListMultiSelectWidget(
+            title='Select one or more agencies')
+        self.magnitudesWidget = ListMultiSelectWidget(
+            title='Select one or more magnitude scales')
+        self.verticalLayout.insertWidget(1, self.agenciesWidget)
+        self.verticalLayout.insertWidget(2, self.magnitudesWidget)
 
         self.extentSelector.tool.rectangleCreated.connect(self.polygonCreated)
 
@@ -60,6 +67,21 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
                 self.selectDbComboBox.blockSignals(False)
                 self.selectDbComboBox.setCurrentIndex(0)
 
+    def set_agencies(self, agencies):
+        self.agenciesWidget.set_selected_items(agencies)
+
+    def set_magnitude_scales(self, magnitude_scales):
+        self.magnitudesWidget.set_selected_items(magnitude_scales)
+
+    def set_dates(self, dates):
+        min_date, max_date = dates
+        self.minDateDe.setDateTimeRange(
+            QtCore.QDateTime(min_date), QtCore.QDateTime(max_date))
+        self.maxDateDe.setDateTimeRange(
+            QtCore.QDateTime(min_date), QtCore.QDateTime(max_date))
+        self.minDateDe.setDateTime(QtCore.QDateTime(min_date))
+        self.maxDateDe.setDateTime(QtCore.QDateTime(max_date))
+
     @QtCore.pyqtSlot()
     def on_addDbBtn_clicked(self):
         db_sel = unicode(QtGui.QFileDialog.getOpenFileName(
@@ -70,15 +92,18 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
 
     @QtCore.pyqtSlot()
     def on_filterBtn_clicked(self):
-        agencies_selected = self.agenciesComboBox.checkedItems()
-        mscales_selected = self.mscalesComboBox.checkedItems()
+        agencies_selected = self.agenciesWidget.get_selected_items()
+        mscales_selected = self.magnitudesWidget.get_selected_items()
         mvalues_selected = Range(self.mag_range.lowValue(),
                                  self.mag_range.highValue())
         dvalues_selected = (self.minDateDe.dateTime().toPyDateTime(),
                             self.maxDateDe.dateTime().toPyDateTime())
 
+        selected_extent = self.selectedExtent()
+
         self.gemcatalogue.update_map(agencies_selected, mscales_selected,
-                                     mvalues_selected, dvalues_selected)
+                                     mvalues_selected, dvalues_selected,
+                                     selected_extent)
 
     @QtCore.pyqtSlot()
     def on_downloadBtn_clicked(self):
@@ -96,25 +121,6 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
     @QtCore.pyqtSlot(str)
     def on_selectDbComboBox_currentIndexChanged(self, selectedDb):
         self.gemcatalogue.update_catalogue_db(selectedDb)
-
-    def set_agencies(self, agencies):
-        self.agenciesComboBox.clear()
-        self.agenciesComboBox.addItems(agencies)
-        self.agenciesComboBox.checkAll(True)
-
-    def set_magnitude_scales(self, magnitude_scales):
-        self.mscalesComboBox.clear()
-        self.mscalesComboBox.addItems(magnitude_scales)
-        self.mscalesComboBox.checkAll(True)
-
-    def set_dates(self, dates):
-        min_date, max_date = dates
-        self.minDateDe.setDateTimeRange(
-            QtCore.QDateTime(min_date), QtCore.QDateTime(max_date))
-        self.maxDateDe.setDateTimeRange(
-            QtCore.QDateTime(min_date), QtCore.QDateTime(max_date))
-        self.minDateDe.setDateTime(QtCore.QDateTime(min_date))
-        self.maxDateDe.setDateTime(QtCore.QDateTime(max_date))
 
     @QtCore.pyqtSlot()
     def on_drawBtn_clicked(self):
