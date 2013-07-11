@@ -17,7 +17,16 @@ from PyQt4 import QtGui, QtCore
 
 
 class ListMultiSelectWidget(QtGui.QGroupBox):
-    """Widget to show two parallel lists and move elements between the two"""
+    """Widget to show two parallel lists and move elements between the two
+
+    usage from code:
+        self.myWidget = ListMultiSelectWidget(title='myTitle')
+        self.myLayout.insertWidget(1, self.myWidget)
+    usage from designer:
+        insert a QGroupBox in your UI file
+        optionally give a title to the QGroupBox
+        promote it to ListMultiSelectWidget
+    """
 
     def __init__(self, parent=None, title=None):
         QtGui.QGroupBox.__init__(self)
