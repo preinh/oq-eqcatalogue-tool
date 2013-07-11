@@ -197,7 +197,7 @@ class EqCatalogue:
             self.dock.disableBusyCursor()
 
     def update_map(self, agencies_selected, mscales_selected, mag_range,
-                   date_range):
+                   date_range, selected_extent):
         filter_agency = filtering.WithAgencies(
             [str(x) for x in agencies_selected])
         filter_mscales = filtering.WithMagnitudeScales(
@@ -206,8 +206,13 @@ class EqCatalogue:
                                      magnitude__lt=mag_range.high_value)
         filter_dvalues = filtering.C(time__between=date_range)
 
-        results = filter_agency & filter_mscales & \
-            filter_mvalues & filter_dvalues
+        results = filter_agency & filter_mscales & filter_mvalues\
+            & filter_dvalues
+
+        if selected_extent is not None:
+            filter_pvalues = filtering.WithinPolygon(
+                selected_extent.asWktPolygon())
+            results = results & filter_pvalues
 
         self.create_layer(results)
 

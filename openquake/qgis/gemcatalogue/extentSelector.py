@@ -112,5 +112,5 @@ class RectangleMapTool(QgsMapToolEmitPoint):
         if self.startPoint is None or self.endPoint is None \
                 or self.startPoint.x() == self.endPoint.x() \
                 or self.startPoint.y() == self.endPoint.y():
-            return
+            return None
         return QgsRectangle(self.startPoint, self.endPoint)

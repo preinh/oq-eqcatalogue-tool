@@ -99,8 +99,11 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
         dvalues_selected = (self.minDateDe.dateTime().toPyDateTime(),
                             self.maxDateDe.dateTime().toPyDateTime())
 
+        selected_extent = self.selectedExtent()
+
         self.gemcatalogue.update_map(agencies_selected, mscales_selected,
-                                     mvalues_selected, dvalues_selected)
+                                     mvalues_selected, dvalues_selected,
+                                     selected_extent)
 
     @QtCore.pyqtSlot()
     def on_downloadBtn_clicked(self):
