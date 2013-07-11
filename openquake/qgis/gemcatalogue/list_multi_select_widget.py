@@ -22,6 +22,9 @@ class ListMultiSelectWidget(QtGui.QGroupBox):
     def __init__(self, title):
         QtGui.QGroupBox.__init__(self)
         self.setTitle(title)
+
+        self.selected_widget = None
+        self.unselected_widget = None
         self._setupUI()
 
         #connect actions
@@ -130,4 +133,4 @@ class SmallQPushButton(QtGui.QPushButton):
         buttons_size_policy = QtGui.QSizePolicy(
             QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
         self.setSizePolicy(buttons_size_policy)
-        self.setMaximumSize(QtCore.QSize(30, 16777215))
+        self.setMaximumSize(QtCore.QSize(30, 30))
