@@ -55,7 +55,6 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
         if db_sel is not None and db_sel != '':
             if self.selectDbComboBox.count() == 0:
                 self.selectDbComboBox.addItem(db_sel)
-                self.gemcatalogue.load_countries()
             else:
                 item_index = self.selectDbComboBox.findText(db_sel)
                 self.selectDbComboBox.blockSignals(True)

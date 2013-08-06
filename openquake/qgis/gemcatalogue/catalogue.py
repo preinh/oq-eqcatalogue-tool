@@ -118,6 +118,10 @@ class EqCatalogue:
 
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dock)
 
+        # display world map
+        QObject.connect(self.iface, SIGNAL('initializationCompleted()'),
+                        self.load_countries)
+
     def unload(self):
         # Remove the plugin menu item and icon
         self.iface.removeToolBarIcon(self.show_catalogue_action)
