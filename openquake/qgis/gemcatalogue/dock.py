@@ -3,6 +3,7 @@
 """
 """
 from PyQt4 import QtGui, QtCore
+from antique_dates_widget import AntiqueDatesWidget
 
 from ui_dock import Ui_Dock
 from openquake.qgis.gemcatalogue.platform_settings \
@@ -27,8 +28,15 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
             title='Select one or more agencies')
         self.magnitudesWidget = ListMultiSelectWidget(
             title='Select one or more magnitude scales')
+
+        self.timeRangeWidget = AntiqueDatesWidget(
+            from_min_date=QtCore.QDate.currentDate().addYears(-100),
+            to_max_date=QtCore.QDate.currentDate(),
+            to_max_time=QtCore.QTime.currentTime())
+
         self.verticalLayout.insertWidget(1, self.agenciesWidget)
         self.verticalLayout.insertWidget(2, self.magnitudesWidget)
+        self.verticalLayout.insertWidget(3, self.timeRangeWidget)
 
         self.extentSelector.tool.rectangleCreated.connect(self.polygonCreated)
 
@@ -74,12 +82,8 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
 
     def set_dates(self, dates):
         min_date, max_date = dates
-        self.minDateDe.setDateTimeRange(
-            QtCore.QDateTime(min_date), QtCore.QDateTime(max_date))
-        self.maxDateDe.setDateTimeRange(
-            QtCore.QDateTime(min_date), QtCore.QDateTime(max_date))
-        self.minDateDe.setDateTime(QtCore.QDateTime(min_date))
-        self.maxDateDe.setDateTime(QtCore.QDateTime(max_date))
+        self.timeRangeWidget.set_from_min_datetime(QtCore.QDateTime(min_date))
+        self.timeRangeWidget.set_to_max_datetime(QtCore.QDateTime(max_date))
 
     @QtCore.pyqtSlot()
     def on_addDbBtn_clicked(self):
