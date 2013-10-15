@@ -124,6 +124,7 @@ class EqCatalogue:
 
     def unload(self):
         # Remove the plugin menu item and icon
+        self.dock.close()
         self.iface.removeToolBarIcon(self.show_catalogue_action)
         self.iface.removePluginMenu(
             u"&eqcatalogue", self.show_catalogue_action)
