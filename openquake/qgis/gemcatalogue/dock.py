@@ -3,7 +3,7 @@
 """
 """
 from PyQt4 import QtGui, QtCore
-from antique_dates_widget import AntiqueDatesWidget
+from extended_dates_widget import ExtendedDatesWidget
 
 from ui_dock import Ui_Dock
 from openquake.qgis.gemcatalogue.platform_settings \
@@ -29,7 +29,7 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
         self.magnitudesWidget = ListMultiSelectWidget(
             title='Select one or more magnitude scales')
 
-        self.timeRangeWidget = AntiqueDatesWidget(
+        self.timeRangeWidget = ExtendedDatesWidget(
             from_min_date=QtCore.QDate.currentDate().addYears(-100),
             to_max_date=QtCore.QDate.currentDate(),
             to_max_time=QtCore.QTime.currentTime())
