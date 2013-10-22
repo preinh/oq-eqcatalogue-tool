@@ -1,0 +1,304 @@
+#  -*- coding: utf-8 -*-
+#  vim: tabstop=4 shiftwidth=4 softtabstop=4
+
+#  Copyright (c) 2013, GEM Foundation
+
+#  OpenQuake is free software: you can redistribute it and/or modify it
+#  under the terms of the GNU Affero General Public License as published
+#  by the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+
+#  OpenQuake is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+
+#  You should have received a copy of the GNU Affero General Public License
+#  along with OpenQuake.  If not, see <http://www.gnu.org/licenses/>.
+
+# -*- Coding: utf-8 -*-
+
+# adapted from RangeFilter by Giuseppe Sucameli
+
+from PyQt4 import QtGui, QtCore
+from rangeSlider import RangeSlider
+from datetime import date, datetime
+
+
+class RangeFilter(QtGui.QWidget):
+    def __init__(self, *args):
+        super(RangeFilter, self).__init__(*args)
+
+        self._createSpinBoxes()
+        self.connect(self.minSpin, QtCore.SIGNAL("editingFinished()"),
+                     self._released)
+        self.connect(self.maxSpin, QtCore.SIGNAL("editingFinished()"),
+                     self._released)
+
+        self._createSlider()
+        self.connect(self.slider, QtCore.SIGNAL("sliderReleased()"),
+                     self._released)
+
+        self.recreateUi()
+
+    def _createSpinBoxes(self):
+        self.minSpin = QtGui.QSpinBox(self)
+        self.maxSpin = QtGui.QSpinBox(self)
+        self.connect(self.minSpin, QtCore.SIGNAL("valueChanged(int)"),
+                     self.setLowValue)
+        self.connect(self.maxSpin, QtCore.SIGNAL("valueChanged(int)"),
+                     self.setHighValue)
+
+    def _createSlider(self):
+        self.slider = RangeSlider(self)
+        self.connect(self.slider, QtCore.SIGNAL("sliderMoved(int)"),
+                     self._moved)
+
+    def recreateUi(self):
+        layout = self.layout()
+        if not layout:
+            layout = QtGui.QGridLayout(self)
+            layout.setMargin(0)
+            self.setLayout(layout)
+
+        else:
+            layout.removeWidget(self.maxSpin)
+            layout.removeWidget(self.slider)
+            layout.removeWidget(self.minSpin)
+
+        if self.slider.orientation() == QtCore.Qt.Horizontal:
+            layout.addWidget(self.minSpin, 0, 0)
+            layout.addWidget(self.slider, 0, 1)
+            layout.addWidget(self.maxSpin, 0, 2)
+            self.slider.setMinimumSize(QtCore.QSize(30, 0))
+
+        else:
+            layout.addWidget(self.maxSpin, 0, 0)
+            layout.addWidget(self.slider, 1, 0)
+            layout.addWidget(self.minSpin, 2, 0)
+            self.slider.setMinimumSize(QtCore.QSize(0, 30))
+
+    def orientation(self):
+        return self.slider.orientation()
+
+    def setOrientation(self, val):
+        self.slider.setOrientation(val)
+        self.recreateUi()
+
+    def isActive(self):
+        if self.lowValue() > self.minimum():
+            return True
+        if self.highValue() < self.maximum():
+            return True
+        return False
+
+    def checkValue(self, val):
+        val = self._getValue(val)
+        if val is None:
+            return False
+        return (self._getValue(self.lowValue()) <= val <=
+                self._getValue(self.highValue()))
+
+    def _toSliderValue(self, val):
+        return val
+
+    def _fromSliderValue(self, val):
+        return val
+
+    def minimum(self):
+        return self.minSpin.minimum()
+
+    def maximum(self):
+        return self.maxSpin.maximum()
+
+    def setMinimum(self, value):
+        val = self._getValue(value)
+        if val is None:
+            raise TypeError("invalid type for '%s'" % repr(value))
+
+        self.minSpin.setMinimum(val)
+        self.maxSpin.setMinimum(val)
+        self.slider.setMinimum(self._toSliderValue(val))
+
+    def setMaximum(self, value):
+        val = self._getValue(value)
+        if val is None:
+            raise TypeError("invalid type for '%s'" % repr(value))
+
+        self.minSpin.setMaximum(val)
+        self.maxSpin.setMaximum(val)
+        self.slider.setMaximum(self._toSliderValue(val))
+
+        # avoid resizing when the max value changes
+        minSpinSize = self.minSpin.sizeHint()
+        maxSpinSize = self.maxSpin.sizeHint()
+        w, h = max(minSpinSize.width(), maxSpinSize.width()), max(
+            minSpinSize.height(), maxSpinSize.height())
+        self.minSpin.setFixedSize(w, h)
+        self.maxSpin.setFixedSize(w, h)
+
+    def lowValue(self):
+        return self.minSpin.value()
+
+    def highValue(self):
+        return self.maxSpin.value()
+
+    def setLowValue(self, value):
+        val = self._getValue(value)
+        if val is None:
+            raise TypeError("invalid type for '%s'" % repr(value))
+
+        minVal = self._getValue(self.minimum())
+        if val < minVal:
+            val = minVal
+
+        if val == self._getValue(self.lowValue()):
+            return
+
+        self.minSpin.blockSignals(True)
+        self.slider.blockSignals(True)
+        self.minSpin.setValue(val)
+        self.maxSpin.setMinimum(val)
+        self.slider.setLowValue(self._toSliderValue(val))
+        self.minSpin.blockSignals(False)
+        self.slider.blockSignals(False)
+
+        self.emit(QtCore.SIGNAL("lowValueChanged"), val)
+
+    def setHighValue(self, value):
+        val = self._getValue(value)
+        if val is None:
+            raise TypeError("invalid type for '%s'" % repr(value))
+
+        maxVal = self._getValue(self.maximum())
+        if val > maxVal:
+            val = maxVal
+
+        if val == self._getValue(self.highValue()):
+            return
+
+        self.maxSpin.blockSignals(True)
+        self.slider.blockSignals(True)
+        self.maxSpin.setValue(val)
+        self.minSpin.setMaximum(val)
+        self.slider.setHighValue(self._toSliderValue(val))
+        self.maxSpin.blockSignals(False)
+        self.slider.blockSignals(False)
+
+        self.emit(QtCore.SIGNAL("highValueChanged"), val)
+
+    def _updateValues(self):
+        # avoid multiple signals when values don't change
+        if hasattr(self, '_lastLowValueOnReleased') and \
+                hasattr(self, '_lastHighValueOnReleased'):
+            if self._lastLowValueOnReleased == self.lowValue() and \
+                    self._lastHighValueOnReleased == self.highValue():
+                return False
+
+        self._lastLowValueOnReleased = self.lowValue()
+        self._lastHighValueOnReleased = self.highValue()
+        return True
+
+    def _moved(self, *args):
+        self._sliderLowValueChanged(self.slider.lowValue())
+        self._sliderHighValueChanged(self.slider.highValue())
+        self.emit(QtCore.SIGNAL("valuesChanged"), self.lowValue(),
+                  self.highValue())
+
+    def _released(self, *args):
+        if not self._updateValues():
+            return
+            # do not emit the signal now, wait the event loop
+        QtCore.QTimer.singleShot(0, self._onChangeFinished)
+
+    def _onChangeFinished(self):
+        self.emit(QtCore.SIGNAL("changeFinished"),
+                  self._lastLowValueOnReleased,
+                  self._lastHighValueOnReleased)
+
+    def _sliderLowValueChanged(self, val):
+        self.setLowValue(self._fromSliderValue(val))
+
+    def _sliderHighValueChanged(self, val):
+        self.setHighValue(self._fromSliderValue(val))
+
+    @classmethod
+    def _getValue(cls, value):
+        return value
+
+
+class DoubleRangeFilter(RangeFilter):
+    def __init__(self, *args):
+        super(DoubleRangeFilter, self).__init__(*args)
+
+    def _createSpinBoxes(self):
+        self.minSpin = QtGui.QDoubleSpinBox(self)
+        self.maxSpin = QtGui.QDoubleSpinBox(self)
+        self.connect(self.minSpin, QtCore.SIGNAL("valueChanged(double)"),
+                     self.setLowValue)
+        self.connect(self.maxSpin, QtCore.SIGNAL("valueChanged(double)"),
+                     self.setHighValue)
+
+    def decimals(self):
+        return self.minSpin.decimals()
+
+    def setDecimals(self, val):
+        self.minSpin.setDecimals(val)
+        self.maxSpin.setDecimals(val)
+
+        # update slider min/max and low/high values
+        self.slider.setMinimum(self._toSliderValue(self.minimum()))
+        self.slider.setLowValue(self._toSliderValue(self.minimum()))
+        self.slider.setMaximum(self._toSliderValue(self.maximum()))
+        self.slider.setHighValue(self._toSliderValue(self.maximum()))
+
+    def _toSliderValue(self, val):
+        return round(val * (10 ** self.decimals()),
+                     0)    # round to the closest integer
+
+    def _fromSliderValue(self, val):
+        return float(val) / (10 ** self.decimals())
+
+    @classmethod
+    def _getValue(self, value):
+        return value
+
+
+if __name__ == "__main__":
+    import sys
+
+    app = QtGui.QApplication(sys.argv)
+
+    if len(sys.argv) < 2 or sys.argv[1] == 'int':
+        rangeFilter = RangeFilter()
+        rangeFilter.setMinimum(-2)
+        rangeFilter.setLowValue(-2)
+        rangeFilter.setMaximum(7)
+        rangeFilter.setHighValue(7)
+
+    elif sys.argv[1] == 'double':
+        rangeFilter = DoubleRangeFilter()
+        rangeFilter.setDecimals(1)
+        rangeFilter.setMinimum(-0.3)
+        rangeFilter.setLowValue(-0.3)
+        rangeFilter.setMaximum(7.1)
+        rangeFilter.setHighValue(7.1)
+
+    else:
+        print "invalid argument %s" % sys.argv[1]
+        sys.exit(1)
+
+    rangeFilter.setOrientation(QtCore.Qt.Horizontal)
+    print "min:\t", rangeFilter.minimum(), "\t\tmax:\t", rangeFilter.maximum()
+    print "low:\t", rangeFilter.minimum(), "\t\thigh:\t", rangeFilter.maximum()
+
+    def echo(value):
+        print value
+
+    QtCore.QObject.connect(rangeFilter,
+                           QtCore.SIGNAL('lowValueChanged'), echo)
+    QtCore.QObject.connect(rangeFilter,
+                           QtCore.SIGNAL('highValueChanged'), echo)
+
+    rangeFilter.show()
+    sys.exit(app.exec_())

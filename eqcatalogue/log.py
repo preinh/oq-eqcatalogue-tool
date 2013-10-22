@@ -61,7 +61,8 @@ def setup_logger(log_level=logging.DEBUG,
     return root_logger
 
 
-if sys.argv[0].endswith("nosetests"):
+# for mysterious reasons QGIS may remove .argv from sys, hence the hasattr
+if hasattr(sys, 'argv') and sys.argv[0].endswith("nosetests"):
     setup_logger(logging.ERROR)
 else:
     setup_logger()

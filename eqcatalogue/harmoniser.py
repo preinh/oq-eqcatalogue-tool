@@ -151,9 +151,8 @@ class HarmoniserResult(object):
 
         :param **fmt_args: Any param to be passed to the serializer function
         """
-        serializer(
-            sorted(self.converted.values(), key=lambda x: x.origin.time),
-            **fmt_args)
+        serializer(sorted(self.converted.values(), key=lambda x: x.time),
+                   **fmt_args)
 
 
 class Harmoniser(object):

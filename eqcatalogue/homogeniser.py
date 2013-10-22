@@ -211,13 +211,6 @@ class Homogeniser(object):
 
         return self.selected_native_measures(), self.selected_target_measures()
 
-    def events(self):
-        """
-        :return: the current set of filtered events.
-        :rtype: a list of :py:class:`~eqcatalogue.models.Event` instances
-        """
-        return self._criteria.events()
-
     def measures(self):
         """
         :return: the current set of filtered measures.
