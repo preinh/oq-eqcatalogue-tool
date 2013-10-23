@@ -52,10 +52,6 @@ FMT_MAP = {ImporterDialog.ISF_PATTERN: V1,
            ImporterDialog.IASPEI_PATTERN: Iaspei}
 
 
-def to_year(value):
-    return str(value.toPyDateTime().year)
-
-
 class EqCatalogue:
     def __init__(self, iface):
         # Save reference to the QGIS interface
@@ -223,8 +219,10 @@ class EqCatalogue:
 
     def create_layer(self, data):
         dock = self.dock
-        date_range = ':'.join([to_year(dock.minDateDe.dateTime()),
-                               to_year(dock.maxDateDe.dateTime())])
+        date_range = ':'.join([
+            str(dock.timeRangeWidget.get_from_pydatetime().year),
+            str(dock.timeRangeWidget.get_to_pydatetime().year)
+        ])
         mag_range = ':'.join([str(dock.mag_range.lowValue()),
                               str(dock.mag_range.highValue())])
         agencies = ','.join(map(str, dock.agenciesWidget.get_selected_items()))
