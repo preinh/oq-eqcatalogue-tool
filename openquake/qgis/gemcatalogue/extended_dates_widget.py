@@ -287,7 +287,25 @@ class ExtendedDatesWidget(QGroupBox):
         return QDateTime(self.to_min_date, self.to_min_time)
 
     def get_to_max_datetime(self):
-        return QDateTime(self.to_max_date, self.to_max_time)
+        return QDateTime(self.to_max_date, self.to_max_time)    
+    
+    def get_from_min_pydatetime(self):
+        return self.get_from_min_datetime().toPyDateTime()
+
+    def get_from_pydatetime(self):
+        return self.get_from_min_datetime().toPyDateTime()
+
+    def get_from_max_pydatetime(self):
+        return self.get_from_min_datetime().toPyDateTime()
+
+    def get_to_pydatetime(self):
+        return self.get_from_min_datetime().toPyDateTime()
+
+    def get_to_min_pydatetime(self):
+        return self.get_from_min_datetime().toPyDateTime()
+
+    def get_to_max_pydatetime(self):
+        return self.get_from_min_datetime().toPyDateTime()
 
     def disable(self):
         self._set_enabled(False)
