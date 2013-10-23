@@ -29,10 +29,7 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
         self.magnitudesWidget = ListMultiSelectWidget(
             title='Select one or more magnitude scales')
 
-        self.timeRangeWidget = ExtendedDatesWidget(
-            from_min_date=QtCore.QDate.currentDate().addYears(-100),
-            to_max_date=QtCore.QDate.currentDate(),
-            to_max_time=QtCore.QTime.currentTime())
+        self.timeRangeWidget = ExtendedDatesWidget(enabled=False)
 
         self.verticalLayout.insertWidget(1, self.agenciesWidget)
         self.verticalLayout.insertWidget(2, self.magnitudesWidget)
@@ -82,6 +79,7 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
 
     def set_dates(self, dates):
         min_date, max_date = dates
+        self.timeRangeWidget.enable()
         self.timeRangeWidget.set_from_min_datetime(QtCore.QDateTime(min_date))
         self.timeRangeWidget.set_to_max_datetime(QtCore.QDateTime(max_date))
 
@@ -99,8 +97,8 @@ class Dock(QtGui.QDockWidget, Ui_Dock):
         mscales_selected = self.magnitudesWidget.get_selected_items()
         mvalues_selected = Range(self.mag_range.lowValue(),
                                  self.mag_range.highValue())
-        dvalues_selected = (self.minDateDe.dateTime().toPyDateTime(),
-                            self.maxDateDe.dateTime().toPyDateTime())
+        dvalues_selected = (self.timeRangeWidget.get_from_datetime(),
+                            self.timeRangeWidget.get_to_datetime())
 
         selected_extent = self.selectedExtent()
 
