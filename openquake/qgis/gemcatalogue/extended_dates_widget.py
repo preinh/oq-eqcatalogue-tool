@@ -85,6 +85,7 @@ class ExtendedDatesWidget(QGroupBox):
                  title='Define time range',
                  from_label='From',
                  to_label='To',
+                 enabled=True,
                  object_name='', parent=None, flags=0):
         QGroupBox.__init__(self)
 
@@ -116,6 +117,7 @@ class ExtendedDatesWidget(QGroupBox):
 
         self.setTitle(title)
         self._setup_ui()
+        self._set_enabled(enabled)
 
         # from time ranges and default
         if self.from_min_time is None or not self.from_min_time.isValid():
@@ -272,14 +274,32 @@ class ExtendedDatesWidget(QGroupBox):
     def get_from_min_datetime(self):
         return QDateTime(self.from_min_date, self.from_min_time)
 
+    def get_from_datetime(self):
+        return QDateTime(self.from_date, self.from_time)
+
     def get_from_max_datetime(self):
         return QDateTime(self.from_max_date, self.from_max_time)
+
+    def get_to_datetime(self):
+        return QDateTime(self.to_date, self.to_time)
 
     def get_to_min_datetime(self):
         return QDateTime(self.to_min_date, self.to_min_time)
 
     def get_to_max_datetime(self):
         return QDateTime(self.to_max_date, self.to_max_time)
+
+    def disable(self):
+        self._set_enabled(False)
+
+    def enable(self):
+        self._set_enabled(True)
+
+    def _set_enabled(self, enabled):
+        self._from_date_cw_btn.setEnabled(enabled)
+        self._from_time_te.setEnabled(enabled)
+        self._to_date_cw_btn.setEnabled(enabled)
+        self._to_time_te.setEnabled(enabled)
 
     def _update_ranges(self):
         """Guarantees that from_datetime is always <= to_datetime"""
